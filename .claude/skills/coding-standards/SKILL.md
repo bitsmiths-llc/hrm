@@ -37,8 +37,9 @@ general engineering rules, `ui/` for frontend/component rules.
 
 - [`typescript.md`](../../docs/rules/typescript.md) — strict mode, no `any`, no
   unexplained `as`/`@ts-ignore`, Zod at every boundary
-- [`file-placement.md`](../../docs/rules/file-placement.md) — schemas/types never
-  inlined in components or actions, no premature abstraction
+- [`file-placement.md`](../../docs/rules/file-placement.md) — schemas/types/content
+  data never inlined in components or actions, keep component/page files short, no
+  premature abstraction
 - [`react-query.md`](../../docs/rules/react-query.md) — query key centralization,
   invalidation, `useAction` vs `useMutation`
 - [`async-concurrency.md`](../../docs/rules/async-concurrency.md) — `Promise.all`,
@@ -62,6 +63,10 @@ general engineering rules, `ui/` for frontend/component rules.
 - [ ] No `any`; no unexplained `@ts-ignore`/`@ts-expect-error`/`as` cast
 - [ ] Types/schemas live in `src/types|schema/*`, not inlined in a component or action
       file (a component's own `Props` type is the one exception)
+- [ ] Static content/config data (feature lists, step copy, nav items, etc.) lives in
+      `src/constants/*`, not declared inline in a page or component
+- [ ] Component/page files are short (~150–180 lines of JSX/logic) — large pages are
+      split into section components under `src/components/<feature>/*`
 - [ ] Tables use `DataTable`; forms use React Hook Form + Zod + shadcn `Form`
 - [ ] Every UI surface uses shadcn primitives and Tailwind CSS — no ad-hoc HTML/CSS
 - [ ] Query keys come from `src/constants/query-keys.ts`; affected keys are invalidated
