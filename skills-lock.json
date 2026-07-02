@@ -6,6 +6,12 @@
       "sourceType": "github",
       "computedHash": "db85045827ebeb83ac8dbc992b69188755eeb74dcf01cbf5e694d58aa494a106"
     },
+    "prototype": {
+      "source": "plugin87/ux-ui-agent-skills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/prototype/SKILL.md",
+      "computedHash": "08c5b09df439558601519322b271e45bf25a1b545819157b19f0cf6aa83c388f"
+    },
     "react-hook-form-zod-shadcn": {
       "source": "sortweste/frontend-skills",
       "sourceType": "github",

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git ls-tree *)",
+      "Bash(git -C \"d:/Bitsmiths/hrm\" status --porcelain=v1 -uall .claude)",
+      "Bash(git -C \"d:/Bitsmiths/hrm\" diff -- skills-lock.json)",
+      "Edit(/.claude/skills/boilerplate-project-standards/**)",
+      "Edit(/.claude/skills/prototype/**)",
+      "Bash(git -C \"d:/Bitsmiths/hrm\" status --porcelain -uall -- CLAUDE.md .claude .cursor docs)",
+      "Bash(rm \"d:/Bitsmiths/hrm/.claude/docs/typescript.md\" \\\\ *)",
+      "Bash(mkdir -p \"d:/Bitsmiths/hrm/.claude/skills/coding-standards\")",
+      "Bash(mv \"d:/Bitsmiths/hrm/.claude/skills/boilerplate-project-standards/SKILL.md\" \"d:/Bitsmiths/hrm/.claude/skills/coding-standards/SKILL.md\")",
+      "Bash(rmdir \"d:/Bitsmiths/hrm/.claude/skills/boilerplate-project-standards\")",
+      "Edit(/.claude/skills/coding-standards/**)"
+    ],
+    "additionalDirectories": [
+      "d:\\Bitsmiths\\hrm\\.claude\\docs"
+    ]
+  }
+}
