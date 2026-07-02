@@ -1,24 +1,19 @@
-import { Building2, Sparkles } from 'lucide-react';
+import { Building2 } from 'lucide-react';
+import Link from 'next/link';
 
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 
 import { appConfig } from '@/config/app';
-
-const highlights = ['Employee records', 'Payroll', 'Time off & leave'] as const;
+import { paths } from '@/constants/paths';
 
 export default function Home() {
   return (
-    <div className='flex min-h-screen flex-col items-center justify-center gap-8 bg-background p-6 text-center sm:gap-10'>
+    <div className='flex min-h-screen flex-col items-center justify-center gap-8 bg-background p-6 text-center'>
       <div className='flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground'>
         <Building2 className='size-8' aria-hidden />
       </div>
 
-      <div className='flex max-w-xl flex-col gap-4'>
-        <Badge variant='secondary' className='mx-auto w-fit gap-1.5'>
-          <Sparkles className='size-3.5' aria-hidden />
-          Human Resource Management
-        </Badge>
+      <div className='flex max-w-xl flex-col gap-3'>
         <h1 className='text-3xl font-bold tracking-tight text-foreground sm:text-4xl'>
           Welcome to {appConfig.appName}
         </h1>
@@ -27,14 +22,15 @@ export default function Home() {
         </p>
       </div>
 
-      <Separator className='max-w-xs' />
-
-      <div className='flex flex-wrap items-center justify-center gap-2'>
-        {highlights.map((item) => (
-          <Badge key={item} variant='outline'>
-            {item}
-          </Badge>
-        ))}
+      <div className='flex flex-col gap-3 sm:flex-row'>
+        <Link href={paths.auth.register}>
+          <Button size='lg'>Register</Button>
+        </Link>
+        <Link href={paths.auth.login}>
+          <Button size='lg' variant='outline'>
+            Sign in
+          </Button>
+        </Link>
       </div>
     </div>
   );
