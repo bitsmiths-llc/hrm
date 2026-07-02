@@ -7,7 +7,8 @@ Read these documents in order. This file provides a brief overview and links to 
 - Overview (this file)
 - Repository `README.md` for stack summary and quick start
 - Canonical agent implementation standard:
-  - [`.cursor/skills/boilerplate-project-standards/SKILL.md`](../.cursor/skills/boilerplate-project-standards/SKILL.md)
+  - [`.claude/skills/coding-standards/SKILL.md`](../.claude/skills/coding-standards/SKILL.md) (Claude Code)
+  - [`CLAUDE.md`](../CLAUDE.md) — always-loaded short version for Claude Code
 
 ### 2) Prerequisites
 

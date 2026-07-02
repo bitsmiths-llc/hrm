@@ -22,7 +22,8 @@ import { DataTableColumnHeader } from '@/components/ui/data-table/column-header'
 import { Badge } from '@/components/ui/badge';
 
 import { onError } from '@/lib/show-error-toast';
-import { queryKeys } from '@/constants/query-keys';
+import { QueryKeys } from '@/constants/query-keys';
+// Example-only: add an entry to `QueryKeys` for your entity (e.g. `ITEMS = 'items'`)
 
 // Example-only: choose fields that make sense for your table
 type ItemRow = {
@@ -41,7 +42,7 @@ export function useItemTableColumns() {
 
   const resendAction = useAction(resendItem, {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeys.items.list] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ITEMS] });
       toast.success('Resent successfully');
     },
     onError,
@@ -49,7 +50,7 @@ export function useItemTableColumns() {
 
   const removeAction = useAction(removeItem, {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [queryKeys.items.list] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.ITEMS] });
       toast.success('Removed successfully');
     },
     onError,
@@ -102,15 +103,16 @@ export function useItemTableColumns() {
         ),
         cell: ({ row }) => {
           const status = row.original.status;
-          const variant =
+          // Badge only supports: default | secondary | destructive | outline
+          const variant: 'default' | 'secondary' | 'destructive' =
             status === 'pending'
-              ? 'warning'
+              ? 'secondary'
               : status === 'removed'
                 ? 'destructive'
-                : 'success';
+                : 'default';
           return (
             <div className='flex justify-center'>
-              <Badge className='capitalize' variant={variant as any}>
+              <Badge className='capitalize' variant={variant}>
                 {status}
               </Badge>
             </div>
