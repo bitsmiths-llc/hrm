@@ -19,7 +19,17 @@ inline `style={{}}`, plain CSS files, etc.).
 
 ### Tailwind CSS — semantic tokens only
 
-- Use semantic design tokens, never raw color values:
+- There is exactly one color config for the whole app, and it already supports dark
+  mode: HSL CSS variables in `src/app/globals.css` (`:root` = light, `.dark` =
+  dark), mapped to Tailwind class names in `tailwind.config.ts`
+  (`darkMode: ['class']`). Always use the semantic classes below — never a raw hex
+  value, never a Tailwind grey/blue/etc. scale, never inline `style={{ color: ... }}`.
+  One class works in both modes because it resolves through the CSS variable; a
+  hardcoded color doesn't.
+- To add or change a color (brand color, a new chart color, etc.), edit the
+  `:root`/`.dark` variable pair in `globals.css` and, if it's a new token, add it to
+  `theme.extend.colors` in `tailwind.config.ts` — don't invent a one-off hex class in
+  a component.
 
   | Use | Token | Not |
   |---|---|---|
@@ -32,9 +42,11 @@ inline `style={{}}`, plain CSS files, etc.).
   | Destructive action/error | `bg-destructive` / `text-destructive-foreground` | `bg-red-500` |
   | Focus ring | `ring-ring` | custom outline colors |
 
-- Never hardcode hex values or Tailwind's raw grey/blue/etc. color scales in a
-  `className`. Never use inline `style={{ color: ... }}` for something Tailwind can
-  express.
+- **Note:** the token config supports dark mode, but nothing currently toggles the
+  `.dark` class — there's no `next-themes` `ThemeProvider` wired into
+  `src/app/providers.tsx` yet (only `sonner.tsx` calls `useTheme()`, without a
+  provider above it). Follow the tokens regardless; wiring up an actual light/dark
+  toggle is a separate task.
 - Spacing follows the Tailwind 4px grid (`gap-1`/`p-1` = 4px, up through `gap-12`/`p-12`
   = 48px). Avoid arbitrary values (`gap-[13px]`, `p-[18px]`) unless there's a hard
   pixel-perfect constraint — if you reach for arbitrary values often, that's a sign to
@@ -50,6 +62,15 @@ inline `style={{}}`, plain CSS files, etc.).
   `border-t border-border` for a simple section border. Don't use raw `<hr />`.
 - Use `cn()` from `src/lib/utils.ts` for conditional class composition.
 
+### Buttons
+
+- Every clickable action uses the shadcn `Button` component
+  (`src/components/ui/button.tsx`) — never a raw `<button>` or an `<a>` styled to
+  look like one.
+- Use `isLoading` for async actions (never swap the label for "Loading..."), `icon`/
+  `iconLeft` for icons (never pass an icon as a raw child), and wrap `Button` with
+  `next/link` for navigation (never a `<Link>` inside a `Button`).
+
 ### Cards, badges, dialogs
 
 - Group related content in `Card` (`CardHeader`/`CardTitle`/`CardDescription`,
@@ -62,8 +83,9 @@ inline `style={{}}`, plain CSS files, etc.).
 
 ### Images and icons
 
-- `<Image>` from `next/image` for every image — never a raw `<img>`. Always pass
-  explicit `width`/`height` to prevent layout shift.
+- `<Image>` from `next/image` for every image — never a raw `<img>` and never a CSS
+  `background-image` for content that could be an `<Image>`. Always pass explicit
+  `width`/`height` to prevent layout shift.
 - Icons from `lucide-react` (size `16` inline with text, size `20` for UI actions) or
   `react-icons` when a shape isn't in Lucide. Import icons directly — never paste raw
   inline SVGs. Icon-only buttons need an `aria-label`.

@@ -12,8 +12,7 @@ mode, shadcn/ui + Tailwind, React Hook Form + Zod, next-safe-action, pnpm.
 
 - Canonical implementation standard: `.claude/skills/coding-standards/SKILL.md`
   — apply it to every coding task in this repo, especially frontend work. It indexes
-  the detailed, topic-by-topic rules under `.claude/docs/*`. (Cursor's equivalent is
-  `.cursor/skills/boilerplate-project-standards/SKILL.md`.)
+  the detailed, topic-by-topic rules under `.claude/docs/*`.
 - Docs index: `docs/index.md` (architecture, UI system, data layer, backend, QA)
 
 ## Priority when guidance conflicts

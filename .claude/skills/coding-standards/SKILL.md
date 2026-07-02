@@ -9,10 +9,6 @@ Apply these standards to every coding task in this repository, especially fronte
 work. Detailed, generic rules live one-per-topic under `.claude/docs/` — read the
 relevant file(s) before writing code, not after.
 
-The equivalent standard for Cursor is
-`.cursor/skills/boilerplate-project-standards/SKILL.md` (kept under its original name
-there; same content, different skill name per tool).
-
 ## Priority order when guidance conflicts
 
 1. Explicit user instruction in the current chat
