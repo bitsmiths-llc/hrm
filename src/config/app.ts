@@ -3,10 +3,9 @@ import { Metadata } from 'next';
 import { env } from '@/env';
 
 export const appConfig = {
-  title: 'Next.js App',
-  description:
-    'A modern Next.js application with Supabase, React Query, and TypeScript',
-  keywords: 'next.js, supabase, react-query, typescript, boilerplate',
+  title: 'Bitsmiths HRM',
+  description: 'Human resource management, built by Bitsmiths.',
+  keywords: 'hrm, human resources, employees, payroll, bitsmiths',
   logo: '/logo/main.png',
   defaultLocale: 'en-US',
   defaultCurrency: 'USD',
