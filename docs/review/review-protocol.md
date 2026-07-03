@@ -61,12 +61,18 @@ Also load the extra context below for any path the diff touches:
 
 ## Step 4 — Full review
 
-Walk the diff. Flag only substantive violations. For each finding, post one inline PR
-comment at the exact `file:line` with:
+Walk the diff. Flag only substantive violations. For each finding, post one **inline**
+PR comment anchored to the exact `file` and `line` with:
 
 - Severity prefix: `[BLOCKER]` / `[MAJOR]` / `[MINOR]` / `[NIT]`
 - The specific rule broken, citing the source file (e.g. `.claude/docs/rules/typescript.md`)
 - A concrete, one-step fix
+
+**How to post — required:** Use the `mcp__github_inline_comment__create_inline_comment`
+tool to attach each finding to its exact line in the diff. Every finding MUST be an inline
+comment — do not bury findings in the summary. Reserve the top-level summary (Step 5) for
+the verdict, change summary, and Domain Blockers checklist only. If a finding's line falls
+outside the diff hunks, note it in the summary instead.
 
 **Finding IDs:** number findings sequentially from 1. Begin every inline comment with
 `<!-- finding-id:N -->` as the very first line.
