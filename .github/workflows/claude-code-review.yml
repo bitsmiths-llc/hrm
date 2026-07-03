@@ -125,22 +125,55 @@ jobs:
             printf '\n\n---\n\nADDITIONAL REVIEWER FOCUS (apply on top of the protocol; blocker rules remain non-negotiable):\n%s\n' "$CUSTOM_PROMPT" >> /tmp/review-prompt.md
           fi
 
-      # Build the Linear MCP config so the reviewer can look up the PR's ticket
-      # (BIT-*) for acceptance-criteria context. Fail open: with no LINEAR_API_KEY
-      # secret, write an empty server list and the reviewer proceeds without it.
-      - name: Write Linear MCP config
+      # Pre-fetch the PR's Linear ticket(s) (BIT-*) via the GraphQL API and append
+      # them to the review prompt, so the reviewer sees acceptance criteria without
+      # needing a runtime MCP server. Fail open: any failure here (no key, no ticket
+      # ID, API error) must never break the review.
+      - name: Fetch Linear ticket context
         env:
+          GH_TOKEN: ${{ github.token }}
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          PR_NUMBER: ${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.event.issue.number }}
         run: |
-          if [ -n "$LINEAR_API_KEY" ]; then
-            jq -n --arg key "$LINEAR_API_KEY" \
-              '{mcpServers:{linear:{command:"npx",args:["-y","mcp-linear@0.1.8"],env:{LINEAR_API_KEY:$key}}}}' \
-              > /tmp/mcp-linear.json
-            echo "Linear MCP configured."
-          else
-            echo '{"mcpServers":{}}' > /tmp/mcp-linear.json
+          set +e
+          if [ -z "$LINEAR_API_KEY" ]; then
             echo "No LINEAR_API_KEY — reviewing without ticket context."
+            exit 0
           fi
+          # Only regex-matched ticket IDs from the PR text are ever interpolated
+          # below, so untrusted title/body content cannot reach the shell or query.
+          text=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json title,body --jq '.title + " " + .body')
+          ids=$(printf '%s' "$text" | grep -oE '\b[A-Z][A-Z0-9]*-[0-9]+\b' | sort -u | head -3)
+          if [ -z "$ids" ]; then
+            echo "No ticket ID in PR title/body — skipping ticket context."
+            exit 0
+          fi
+          printf '\n\n---\n\nLINEAR TICKET CONTEXT (pre-fetched, read-only reference for Step 2.5):\n' >> /tmp/review-prompt.md
+          for id in $ids; do
+            # Try direct lookup first; fall back to search if the schema rejects it.
+            resp=$(curl -sS --max-time 20 https://api.linear.app/graphql \
+              -H "Content-Type: application/json" \
+              -H "Authorization: $LINEAR_API_KEY" \
+              -d "{\"query\":\"query { issue(id: \\\"$id\\\") { identifier title description state { name } } }\"}")
+            node=$(printf '%s' "$resp" | jq -e '.data.issue // empty' 2>/dev/null)
+            if [ -z "$node" ]; then
+              resp=$(curl -sS --max-time 20 https://api.linear.app/graphql \
+                -H "Content-Type: application/json" \
+                -H "Authorization: $LINEAR_API_KEY" \
+                -d "{\"query\":\"query { searchIssues(term: \\\"$id\\\", first: 5) { nodes { identifier title description state { name } } } }\"}")
+              node=$(printf '%s' "$resp" | jq -e --arg id "$id" '[.data.searchIssues.nodes[]? | select(.identifier == $id)] | first // empty' 2>/dev/null)
+            fi
+            if [ -n "$node" ]; then
+              {
+                printf '\n### %s — %s (state: %s)\n\n' "$id" "$(printf '%s' "$node" | jq -r .title)" "$(printf '%s' "$node" | jq -r '.state.name // "unknown"')"
+                printf '%s\n' "$(printf '%s' "$node" | jq -r '.description // "(no description)"')"
+              } >> /tmp/review-prompt.md
+              echo "Fetched $id."
+            else
+              echo "Could not fetch $id — continuing without it. API said: $(printf '%s' "$resp" | jq -c '.errors // empty' 2>/dev/null | head -c 300)"
+            fi
+          done
+          exit 0
 
       # NOTE: no `trigger_phrase` here. The job `if:` already gates on
       # /claude-review; passing both trigger_phrase AND a prompt makes the v1
@@ -156,8 +189,7 @@ jobs:
           claude_args: |
             --max-turns 50
             --model claude-sonnet-4-6
-            --mcp-config /tmp/mcp-linear.json
-            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,mcp__github_comment__update_claude_comment,mcp__linear__linear_search_issues,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,mcp__github_comment__update_claude_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
           prompt: |
             Your complete review instructions are in /tmp/review-prompt.md.
             Read that file FIRST (before any other action), then follow it exactly.
