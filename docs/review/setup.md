@@ -6,6 +6,24 @@ setup. Tracked in Linear as **BIT-2**.
 
 ---
 
+## 0. Install the Claude GitHub App (required, one-time)
+
+`anthropics/claude-code-action` authenticates its **GitHub** side (posting review
+comments) via the **Claude GitHub App**. Without it the action fails with:
+`401 Unauthorized — Claude Code is not installed on this repository`.
+
+Install it once, on the account that owns the repo (`TayyabSohail`):
+
+- **Easiest:** run `claude` in a terminal → `/install-github-app` → follow the prompts
+  (installs the app and can set the token secret in one flow), **or**
+- **Manual:** open <https://github.com/apps/claude> → **Install** → select the
+  **`TayyabSohail`** account → **Only select repositories** → pick **`hrm`** → Install.
+
+> On a personal-account repo, only the account owner (Tayyab) can authorize the app
+> install — a collaborator, even with admin, cannot install it on someone else's account.
+
+---
+
 ## 1. Add secrets to GitHub
 
 **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
