@@ -1,0 +1,69 @@
+name: Claude Code — BitSmiths HRM
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  claude:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          claude_args: |
+            --max-turns 30
+            --model claude-sonnet-4-6
+          prompt: |
+            You are an assistant responding to an @claude mention in the BitSmiths HRM
+            repository: Next.js App Router + TypeScript (strict) + Supabase
+            (Auth/Postgres/RLS) + TanStack React Query + next-safe-action + React Hook
+            Form + Zod + shadcn/ui + Tailwind. Package manager: pnpm.
+
+            Before answering or making any changes, read:
+            - CLAUDE.md — project context, command list, priority order
+            - .claude/skills/coding-standards/SKILL.md — the canonical implementation standard
+            - docs/index.md — the docs map; open the specific guide for the area asked about
+            - The .claude/docs/rules/*.md file(s) relevant to the area mentioned:
+                typescript.md              (type safety, no unexplained any/as/@ts-ignore)
+                server-client-components.md (server/client boundary, 'use client' rules)
+                react-query.md             (queries, central QueryKeys, invalidation)
+                async-concurrency.md       (no await-in-loop, no N+1)
+                file-placement.md          (where schemas/types/actions/hooks live)
+                config-and-routes.md       (env via src/env.ts, centralized routes)
+            - For auth/Supabase questions: docs/backend/auth-and-supabase.md
+
+            Respond directly to what the user asked. If asked to make code changes:
+            - Run pnpm typecheck && pnpm lint after editing and report the result.
+            - Never push to main.
+            - Never edit off-limits paths without explicit approval in the same thread:
+                src/types/supabase.ts      (generated — run pnpm supa:types instead)
+                src/components/ui/**       (shadcn — add via pnpm ui add)
+                supabase/migrations/**     (schema changes — pair with pnpm supa:types)
+            - Never read process.env outside src/env.ts.
+            - Never import a server-only module (src/lib/server/**, src/lib/supabase/server.ts,
+              service-role client) into a 'use client' file.
+            - Never expose the Supabase service-role key to the client.

@@ -1,0 +1,323 @@
+name: Claude Code Review — BitSmiths HRM
+
+on:
+  # Auto-review fires ONCE per PR: on first open or when a draft is marked ready.
+  # Subsequent pushes do NOT re-trigger — request a fresh review with /claude-review.
+  pull_request:
+    types: [opened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+# /claude-review shares the same slot as the auto-review (new run cancels in-progress).
+# /final-review and /claude <prompt> get their own slots per PR.
+concurrency:
+  group: >-
+    ${{
+      (github.event_name == 'pull_request'
+        && format('pr-review-{0}', github.event.pull_request.number))
+      || (github.event_name == 'issue_comment'
+          && github.event.issue.pull_request != null
+          && github.event.comment.user.type != 'Bot'
+          && contains(github.event.comment.body, '/claude-review')
+          && format('pr-review-{0}', github.event.issue.number))
+      || (github.event_name == 'issue_comment'
+          && github.event.comment.user.type != 'Bot'
+          && contains(github.event.comment.body, '/final-review')
+          && format('final-review-{0}', github.event.issue.number))
+      || (github.event_name == 'issue_comment'
+          && github.event.comment.user.type != 'Bot'
+          && contains(github.event.comment.body, '/claude ')
+          && !contains(github.event.comment.body, '/claude-review')
+          && format('claude-agent-{0}', github.event.issue.number))
+      || format('pr-review-noop-{0}', github.run_id)
+    }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────
+  # Job 1 — Auto-review on PR open / draft-ready, or /claude-review comment
+  # ─────────────────────────────────────────────────────────────────
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: |
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.draft == false &&
+        !contains(github.event.pull_request.title, 'WIP') &&
+        !contains(github.event.pull_request.title, 'wip') &&
+        !contains(github.event.pull_request.title, 'Draft') &&
+        !contains(github.event.pull_request.title, 'DO NOT MERGE')
+      )
+      ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request != null &&
+        github.event.comment.user.type != 'Bot' &&
+        contains(github.event.comment.body, '/claude-review')
+      )
+    steps:
+      # For issue_comment triggers GITHUB_SHA points to main's HEAD, not the PR branch.
+      # Resolve the PR head SHA first so checkout lands on the right commit.
+      # Also extract any extra text after /claude-review as a custom focus prompt.
+      - name: Resolve PR head SHA and extract custom prompt
+        id: pr_ref
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          sha=$(gh pr view ${{ github.event.issue.number }} --repo ${{ github.repository }} --json headRefOid -q .headRefOid)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          # Strip the command token + trim. Do NOT pipe through `xargs`: it does
+          # shell-style quote/word splitting and exits non-zero on unbalanced
+          # quotes, backticks, or parens in a markdown comment — which fails the
+          # whole job, silently producing no review. sed strip + trim, fail open.
+          custom=$(printf '%s' "$COMMENT_BODY" \
+            | sed -E -e 's#/claude-review##g' \
+                     -e 's/^[[:space:]]+//' -e 's/[[:space:]]+$//') || custom=""
+          {
+            echo 'custom_prompt<<__CLAUDE_CUSTOM_EOF__'
+            printf '%s\n' "$custom"
+            echo '__CLAUDE_CUSTOM_EOF__'
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr_ref.outputs.sha || github.sha }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Assemble review prompt
+        env:
+          CUSTOM_PROMPT: ${{ steps.pr_ref.outputs.custom_prompt }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          # Prefer the protocol from the default branch so an older PR head still
+          # gets the latest review-protocol.md. Fall back to the checked-out PR copy
+          # when the default branch doesn't have it yet (e.g. the PR that first
+          # introduces this system). Write to a guaranteed file either way.
+          git fetch origin "$DEFAULT_BRANCH" --depth=1 --quiet || true
+          if git show "origin/${DEFAULT_BRANCH}:docs/review/review-protocol.md" > /tmp/review-prompt.md 2>/dev/null; then
+            echo "Loaded review protocol from origin/${DEFAULT_BRANCH}"
+          else
+            echo "Protocol not on ${DEFAULT_BRANCH} yet — using the PR branch copy"
+            cp docs/review/review-protocol.md /tmp/review-prompt.md
+          fi
+          if [ -n "$CUSTOM_PROMPT" ]; then
+            printf '\n\n---\n\nADDITIONAL REVIEWER FOCUS (apply on top of the protocol; blocker rules remain non-negotiable):\n%s\n' "$CUSTOM_PROMPT" >> /tmp/review-prompt.md
+          fi
+
+      # NOTE: no `trigger_phrase` here. The job `if:` already gates on
+      # /claude-review; passing both trigger_phrase AND a prompt makes the v1
+      # action post the "I'll get back to you" placeholder and exit without
+      # running the review. Omitting it = pure automation mode.
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_bots: 'claude'
+          track_progress: 'true'
+          show_full_output: 'true'
+          include_fix_links: true
+          mcp_config: |
+            {
+              "mcpServers": {
+                "linear": {
+                  "command": "npx",
+                  "args": ["-y", "mcp-linear@latest"],
+                  "env": {
+                    "LINEAR_API_KEY": "${{ secrets.LINEAR_API_KEY }}"
+                  }
+                }
+              }
+            }
+          claude_args: |
+            --max-turns 50
+            --model claude-sonnet-4-6
+          prompt: |
+            Your complete review instructions are in /tmp/review-prompt.md.
+            Read that file FIRST (before any other action), then follow it exactly.
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 2 — /final-review pre-merge PM report
+  # Restricted to the HRM team. Update the allowlist in docs/review/setup.md §2
+  # and here together.
+  # ─────────────────────────────────────────────────────────────────
+  final-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      github.event.comment.user.type != 'Bot' &&
+      contains(github.event.comment.body, '/final-review') &&
+      (
+        github.event.comment.user.login == 'RWPmadeZaeem' ||
+        github.event.comment.user.login == 'TayyabSohail'
+      )
+    steps:
+      - name: Resolve PR head SHA
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh pr view ${{ github.event.issue.number }} \
+            --repo ${{ github.repository }} --json headRefOid -q .headRefOid)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.sha }}
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: 'true'
+          show_full_output: 'true'
+          mcp_config: |
+            {
+              "mcpServers": {
+                "linear": {
+                  "command": "npx",
+                  "args": ["-y", "mcp-linear@latest"],
+                  "env": {
+                    "LINEAR_API_KEY": "${{ secrets.LINEAR_API_KEY }}"
+                  }
+                }
+              }
+            }
+          claude_args: |
+            --max-turns 50
+            --model claude-sonnet-4-6
+          prompt: |
+            Produce a final review report for PR #${{ github.event.issue.number }}.
+            Follow docs/review/final-review-protocol.md exactly, substituting {PR_NUMBER}
+            with ${{ github.event.issue.number }}.
+
+  # ─────────────────────────────────────────────────────────────────
+  # Job 3 — /claude <prompt> on-demand agent
+  # Triggered by "/claude some question or task" comments on PRs.
+  # NOTE: uses "/claude " (with trailing space) to avoid matching
+  #       /claude-review and /claude-fix which have their own jobs.
+  # ─────────────────────────────────────────────────────────────────
+  claude-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request != null &&
+      github.event.comment.user.type != 'Bot' &&
+      contains(github.event.comment.body, '/claude ') &&
+      !contains(github.event.comment.body, '/claude-review') &&
+      !contains(github.event.comment.body, '/claude-fix')
+    steps:
+      - name: Resolve PR branch and extract user prompt
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          branch=$(gh pr view ${{ github.event.issue.number }} \
+            --repo ${{ github.repository }} --json headRefName -q .headRefName)
+          sha=$(gh pr view ${{ github.event.issue.number }} \
+            --repo ${{ github.repository }} --json headRefOid -q .headRefOid)
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          # Extract everything after the first "/claude " token
+          PROMPT=$(echo "$COMMENT_BODY" | sed -nE 's|.*/claude (.+)|\1|p' | head -1)
+          if [ -z "$PROMPT" ]; then
+            echo "::error::No prompt content found after /claude"
+            exit 1
+          fi
+          {
+            echo "user_prompt<<CLAUDE_PROMPT_EOF"
+            echo "$PROMPT"
+            echo "CLAUDE_PROMPT_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.sha }}
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: 'true'
+          show_full_output: 'true'
+          mcp_config: |
+            {
+              "mcpServers": {
+                "linear": {
+                  "command": "npx",
+                  "args": ["-y", "mcp-linear@latest"],
+                  "env": {
+                    "LINEAR_API_KEY": "${{ secrets.LINEAR_API_KEY }}"
+                  }
+                }
+              }
+            }
+          claude_args: |
+            --max-turns 50
+            --model claude-sonnet-4-6
+          prompt: |
+            You are responding to a /claude comment on PR #${{ github.event.issue.number }}
+            in the BitSmiths HRM codebase (Next.js App Router + TypeScript strict +
+            Supabase + TanStack React Query + next-safe-action + shadcn/ui).
+            Branch: ${{ steps.pr.outputs.branch }}
+
+            USER REQUEST: ${{ steps.pr.outputs.user_prompt }}
+
+            Load first: CLAUDE.md, .claude/skills/coding-standards/SKILL.md, and the
+            relevant .claude/docs/rules/*.md for the area touched. For auth/Supabase work
+            also read docs/backend/auth-and-supabase.md.
+            Linear ticket: scan PR title/body for [A-Z]+-\d+; if found, call the Linear
+            MCP get_issue for context.
+
+            Decision tree:
+            - Read-only / question → post a PR comment, no file changes.
+            - Write / fix → make the change, run pnpm typecheck && pnpm lint.
+                If the user says "commit"/"push": commit and push to ${{ steps.pr.outputs.branch }}.
+                Otherwise: leave uncommitted, list touched files, ask the user to reply
+                "/claude go ahead and commit".
+            - Ambiguous → treat as read-only, post a plan and ask for confirmation.
+
+            Hard rules (non-negotiable — see docs/review/domain-blockers.md):
+            1. Never push to main.
+            2. src/types/supabase.ts (generated), src/components/ui/** (shadcn), and
+               supabase/migrations/** need explicit PR-thread approval before editing.
+            3. No --no-verify and no --force-push.
+            4. Fix all typecheck/lint errors before committing.
+            5. Never read process.env outside src/env.ts.
+            6. Never import a server-only module (src/lib/server/**, src/lib/supabase/server.ts,
+               service-role client) into a 'use client' file.
+            7. Never expose the Supabase service-role key to the client.
+            8. Always post at least one PR comment.
