@@ -53,6 +53,7 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@anthropic-ai/claude-code": "^2.1.199",
     "@eslint/eslintrc": "^3.3.1",
     "@types/node": "^22.15.18",
     "@types/react": "19.1.4",
