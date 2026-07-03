@@ -125,6 +125,23 @@ jobs:
             printf '\n\n---\n\nADDITIONAL REVIEWER FOCUS (apply on top of the protocol; blocker rules remain non-negotiable):\n%s\n' "$CUSTOM_PROMPT" >> /tmp/review-prompt.md
           fi
 
+      # Build the Linear MCP config so the reviewer can look up the PR's ticket
+      # (BIT-*) for acceptance-criteria context. Fail open: with no LINEAR_API_KEY
+      # secret, write an empty server list and the reviewer proceeds without it.
+      - name: Write Linear MCP config
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+        run: |
+          if [ -n "$LINEAR_API_KEY" ]; then
+            jq -n --arg key "$LINEAR_API_KEY" \
+              '{mcpServers:{linear:{command:"npx",args:["-y","mcp-linear@0.1.8"],env:{LINEAR_API_KEY:$key}}}}' \
+              > /tmp/mcp-linear.json
+            echo "Linear MCP configured."
+          else
+            echo '{"mcpServers":{}}' > /tmp/mcp-linear.json
+            echo "No LINEAR_API_KEY — reviewing without ticket context."
+          fi
+
       # NOTE: no `trigger_phrase` here. The job `if:` already gates on
       # /claude-review; passing both trigger_phrase AND a prompt makes the v1
       # action post the "I'll get back to you" placeholder and exit without
@@ -139,7 +156,8 @@ jobs:
           claude_args: |
             --max-turns 50
             --model claude-sonnet-4-6
-            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,mcp__github_comment__update_claude_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --mcp-config /tmp/mcp-linear.json
+            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,mcp__github_comment__update_claude_comment,mcp__linear__linear_search_issues,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
           prompt: |
             Your complete review instructions are in /tmp/review-prompt.md.
             Read that file FIRST (before any other action), then follow it exactly.

@@ -20,10 +20,11 @@ post "⏭️ Skipping review: PR marked as work-in-progress." and stop immediate
 ## Step 2.5 — Linear ticket context
 
 Scan the PR title and body for a ticket ID matching `[A-Z]+-\d+` (e.g. `BIT-2`). If found,
-call the Linear MCP `get_issue` tool to fetch title, description, and acceptance criteria.
-Hold this for Step 4 — flag if the implementation diverges from the ticket intent or leaves
-acceptance criteria unaddressed. Skip silently if no ticket ID is found or the Linear MCP
-is unavailable.
+call the Linear MCP `linear_search_issues` tool, searching for that identifier (e.g. query
+`BIT-2`), to fetch the ticket's title, description, and acceptance criteria. Hold this for
+Step 4 — flag if the implementation diverges from the ticket intent or leaves acceptance
+criteria unaddressed. Skip silently if no ticket ID is found or the Linear tool is
+unavailable (it is disabled when no `LINEAR_API_KEY` secret is set).
 
 ---
 
