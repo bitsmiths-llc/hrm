@@ -46,7 +46,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
       : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <Sidebar collapsible='icon'>
+    <Sidebar collapsible='icon' variant='inset'>
       <SidebarHeader className='px-3 py-3 group-data-[collapsible=icon]:px-2'>
         <Link href='/' className='flex items-center gap-2'>
           <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground'>

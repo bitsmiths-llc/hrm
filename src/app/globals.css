@@ -64,38 +64,41 @@ body {
     --brand-800: 152 94% 16%;
     --brand-900: 153 94% 8%;
 
-    --background: 153 94% 8%;
+    /* Dark mode is neutral (grey-900 family) — brand green is reserved for
+       actions, focus, and accents, not surfaces. */
+    --background: 0 0% 9%;
     --foreground: 0 0% 98%;
-    --card: 152 40% 10%;
+    --card: 0 0% 12%;
     --card-foreground: 0 0% 98%;
-    --popover: 152 40% 10%;
+    --popover: 0 0% 12%;
     --popover-foreground: 0 0% 98%;
     /* Primary action stays brand green in dark; white text stays legible on it */
     --primary: 152 96% 41%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 152 30% 16%;
+    --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 152 30% 16%;
-    --muted-foreground: 0 0% 70%;
-    --accent: 152 40% 18%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 0 0% 16%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 152 25% 18%;
-    --input: 152 25% 18%;
+    --border: 0 0% 17%;
+    --input: 0 0% 17%;
     --ring: 152 96% 41%;
     --chart-1: 152 96% 41%;
     --chart-2: 152 70% 55%;
     --chart-3: 152 50% 70%;
     --chart-4: 173 58% 45%;
     --chart-5: 43 74% 66%;
-    --sidebar-background: 152 40% 10%;
-    --sidebar-foreground: 0 0% 98%;
+    /* Near-black app frame; the inset content card sits on top of it */
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 82%;
     --sidebar-primary: 152 96% 41%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 152 40% 18%;
+    --sidebar-accent: 0 0% 14%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 152 25% 18%;
+    --sidebar-border: 0 0% 14%;
     --sidebar-ring: 152 96% 41%;
   }
 }
