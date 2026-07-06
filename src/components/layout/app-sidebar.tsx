@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -49,9 +49,13 @@ export function AppSidebar({ role }: AppSidebarProps) {
     <Sidebar collapsible='icon' variant='inset'>
       <SidebarHeader className='px-3 py-3 group-data-[collapsible=icon]:px-2'>
         <Link href='/' className='flex items-center gap-2'>
-          <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
-            <Building2 className='size-4' aria-hidden />
-          </div>
+          <Image
+            src={appConfig.logo}
+            alt='Bitsmiths logo'
+            width={28}
+            height={29}
+            className='shrink-0'
+          />
           <span className='text-sm font-semibold group-data-[collapsible=icon]:hidden'>
             {appConfig.title}
           </span>

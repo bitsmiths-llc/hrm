@@ -6,7 +6,7 @@ export const appConfig = {
   title: 'Bitsmiths HRM',
   description: 'Human resource management, built by Bitsmiths.',
   keywords: 'hrm, human resources, employees, payroll, bitsmiths',
-  logo: '/logo/main.png',
+  logo: '/logo.svg',
   defaultLocale: 'en-PK',
   defaultCurrency: 'PKR',
   defaultCountryCode: 'PK',
