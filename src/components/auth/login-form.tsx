@@ -4,10 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAction } from 'next-safe-action/hooks';
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FcGoogle } from 'react-icons/fc';
-import { toast } from 'sonner';
 
 import { signInWithPassword } from '@/actions/auth';
 
@@ -29,31 +26,14 @@ import {
 } from '@/components/ui/form';
 import { ControlledPasswordInput } from '@/components/ui/form/controlled-password-input';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 
 import { onError } from '@/lib/show-error-toast';
-import { supabase } from '@/lib/supabase/client';
 
 import { paths } from '@/constants/paths';
 import { type LoginInput, loginSchema } from '@/schema/auth';
 
-type LoginFormProps = {
-  /** Set to `not_invited` when the OAuth gate rejected an un-invited account. */
-  errorCode?: string;
-};
-
-export function LoginForm({ errorCode }: LoginFormProps) {
+export function LoginForm() {
   const router = useRouter();
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
-  useEffect(() => {
-    if (errorCode === 'not_invited') {
-      toast.error('That account has no invitation', {
-        description:
-          'Access is invite-only. Ask your admin to invite your email first.',
-      });
-    }
-  }, [errorCode]);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -68,18 +48,6 @@ export function LoginForm({ errorCode }: LoginFormProps) {
     onError,
   });
 
-  const signInWithGoogle = async () => {
-    setIsGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}${paths.auth.callback}` },
-    });
-    if (error) {
-      toast.error('Could not start Google sign-in. Please try again.');
-      setIsGoogleLoading(false);
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -88,24 +56,7 @@ export function LoginForm({ errorCode }: LoginFormProps) {
           Accounts are created by invitation — there&apos;s no public sign-up.
         </CardDescription>
       </CardHeader>
-      <CardContent className='flex flex-col gap-4'>
-        <Button
-          type='button'
-          variant='outline'
-          onClick={signInWithGoogle}
-          isLoading={isGoogleLoading}
-          disabled={isPending}
-          iconLeft={FcGoogle}
-        >
-          Continue with Google
-        </Button>
-
-        <div className='flex items-center gap-3'>
-          <Separator className='flex-1' />
-          <span className='text-xs text-muted-foreground'>or</span>
-          <Separator className='flex-1' />
-        </div>
-
+      <CardContent>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(execute)}
@@ -134,11 +85,7 @@ export function LoginForm({ errorCode }: LoginFormProps) {
               placeholder='••••••••'
               hideInstructions
             />
-            <Button
-              type='submit'
-              isLoading={isPending}
-              disabled={isGoogleLoading}
-            >
+            <Button type='submit' isLoading={isPending}>
               Sign in
             </Button>
             <Link

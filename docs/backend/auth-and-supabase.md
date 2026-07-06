@@ -60,50 +60,50 @@ Use `authActionClient` for authenticated operations; for public server actions u
 
 ## Auth baseline (BIT-7)
 
-### Two entry points, one allowlist
+### What's implemented
 
-Sign-in has two paths — email/password (`signInWithPassword`) and Google OAuth
-(`signInWithOAuth({ provider: 'google' })`) — but a single authorization rule:
-**an `employees` row must already exist for the authenticated email.** There is no
-public sign-up; rows are created by an admin invite (M1.3) or the bootstrap SQL below.
+Email/password only, matching the invite-only model (no public sign-up). Google
+OAuth is **deferred** — see below.
 
-- Actions live in `src/actions/auth.ts`; Zod schemas in `src/schema/auth.ts`.
-- `src/app/auth/callback/route.ts` is the single OAuth/recovery code-exchange point.
-  For Google it runs the **invite gate**: it looks up `employees` by email with the
-  **service-role client** (`src/lib/supabase/admin.ts`) — required because a freshly
-  linked Google `auth.uid()` won't match the invited row under RLS
-  (`employees_select_self` keys on `id = auth.uid()`, the gate matches on `email`).
-  No row ⇒ `signOut()` + redirect to `/auth/login?error=not_invited`. An `invited`
-  row is advanced to `onboarding` via the `accept_onboarding()` RPC.
+- Actions in `src/actions/auth.ts`, Zod schemas in `src/schema/auth.ts`:
+  `signInWithPassword`, `requestPasswordReset`, `updatePassword`, `signOut`.
+- Password reset round-trips through `src/app/auth/callback/route.ts`:
+  `resetPasswordForEmail` sends the link to `/auth/callback?next=/auth/reset-password`;
+  the route exchanges the PKCE code (establishing the recovery session), then forwards
+  to the reset form. Recovery/reset responses are uniform to avoid email enumeration.
 - The session guard lives in `src/lib/supabase/middleware.ts`: no session on a
   protected route → `/auth/login`. Public routes: `/` and everything under `/auth`.
 
+### Google OAuth — deferred
+
+Left out for now (invite-only app; may be added later). The wiring point is
+`src/app/auth/callback/route.ts`: on an OAuth sign-in, exchange the code, then run an
+**invite gate** — look up `employees` by email with the service-role client
+(`src/lib/supabase/admin.ts`, needed because a freshly linked Google `auth.uid()`
+won't match the invited row under RLS) and, if no row exists, `signOut()` + bounce to
+`/auth/login?error=not_invited`. That gate is the whole point of OAuth in an
+invite-only app. Enabling it also needs the Google provider configured in the
+Supabase dashboard (Authentication → Providers → Google) and
+`${NEXT_PUBLIC_APP_URL}/auth/callback` added under Authentication → URL Configuration.
+
 ### `accept_onboarding()` and the column guard
 
-`guard_employee_columns()` (BIT-3) blocks every non-admin from changing
-`account_status`, and a `SECURITY DEFINER` function still trips it because
-`is_admin()` reads the caller's JWT. So `accept_onboarding()` (migration
-`20260706134229`) sets a **transaction-local GUC** (`app.bypass_employee_guard`)
-that the guard honours; plain PostgREST updates can't set it, so the guard stays
-fully closed to direct client writes. The RPC only ever advances the caller's own
-`invited` row (matched on the JWT email) to `onboarding`.
-
-### Google provider setup (Supabase dashboard)
-
-Configured once per environment in **Authentication → Providers → Google**:
-
-1. Create an OAuth client in Google Cloud Console (Web application).
-2. Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
-3. Paste the Client ID / Client Secret into the Supabase Google provider and enable it.
-4. Add the app's own callback to **Authentication → URL Configuration → Redirect URLs**:
-   `${NEXT_PUBLIC_APP_URL}/auth/callback` (and the localhost equivalent for dev).
+Migration `20260706134229` adds `accept_onboarding()` — the invited → onboarding
+self-transition an accepting user needs. `guard_employee_columns()` (BIT-3) blocks
+every non-admin from changing `account_status`, and a `SECURITY DEFINER` function
+still trips it because `is_admin()` reads the caller's JWT. So the RPC sets a
+**transaction-local GUC** (`app.bypass_employee_guard`) that the guard honours; plain
+PostgREST updates can't set it, so the guard stays fully closed to direct client
+writes. The RPC only ever advances the caller's own `invited` row (matched on the JWT
+email). It currently has **no app caller** — it's the transition mechanism for
+invite-acceptance (M1.3) and the deferred OAuth gate above.
 
 ### First-admin bootstrap (chicken-and-egg)
 
 `inviteEmployee` (M1.3) needs an admin to exist, but no admin exists to invite the
 first one. Seed the first admin by hand, **once**, in the Supabase SQL editor after
-the operator exists in `auth.users` (added via Dashboard → Authentication → Add user,
-or by signing in once with the intended admin's Google email):
+the operator exists in `auth.users` (add them via Dashboard → Authentication → Add
+user):
 
 ```sql
 insert into employees (id, email, role, account_status, activated_at)
