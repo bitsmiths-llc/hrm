@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 
 import { env } from '@/env';
 
-import { Database } from '@/types/supabase';
+import type { Database } from '@/types/supabase';
 
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
