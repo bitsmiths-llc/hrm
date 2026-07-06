@@ -4,6 +4,8 @@ export const paths = {
     login: '/auth/login',
     acceptInvitation: '/auth/accept-invitation',
     forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
+    callback: '/auth/callback',
   },
   employee: {
     dashboard: '/dashboard',

@@ -24,6 +24,7 @@ import { adminNav, employeeNav } from '@/constants/hrm-nav';
 import { paths } from '@/constants/paths';
 
 import { RoleSwitcher } from './role-switcher';
+import { SignOutButton } from './sign-out-button';
 
 type AppSidebarProps = {
   /** Nav config resolves client-side — icon components can't cross the
@@ -91,6 +92,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
         <RoleSwitcher
           currentRole={config.roleLabel === 'Admin' ? 'Admin' : 'Employee'}
         />
+        <SignOutButton />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

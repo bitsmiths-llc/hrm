@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { passwordSchema } from '@/schema/common';
+
 export const loginSchema = z.object({
   email: z.string().email('Enter a valid email address'),
   password: z.string().min(1, 'Enter your password'),
@@ -28,3 +30,15 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ['confirmPassword'],
+    message: 'Passwords do not match',
+  });
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

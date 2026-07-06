@@ -2,8 +2,11 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
+import { requestPasswordReset } from '@/actions/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +26,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
+import { onError } from '@/lib/show-error-toast';
+
 import { paths } from '@/constants/paths';
 import { type ForgotPasswordInput, forgotPasswordSchema } from '@/schema/auth';
 
@@ -32,13 +37,16 @@ export function ForgotPasswordForm() {
     defaultValues: { email: '' },
   });
 
-  const onSubmit = async (values: ForgotPasswordInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(
-      `If an account exists for ${values.email}, a reset link is on its way.`,
-    );
-    form.reset();
-  };
+  const { execute, isPending } = useAction(requestPasswordReset, {
+    onSuccess: () => {
+      // Uniform response regardless of whether the email exists.
+      toast.success(
+        'If an account exists for that email, a reset link is on its way.',
+      );
+      form.reset();
+    },
+    onError,
+  });
 
   return (
     <Card>
@@ -51,7 +59,7 @@ export function ForgotPasswordForm() {
       <CardContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(execute)}
             className='flex flex-col gap-4'
           >
             <FormField
@@ -71,7 +79,7 @@ export function ForgotPasswordForm() {
                 </FormItem>
               )}
             />
-            <Button type='submit' isLoading={form.formState.isSubmitting}>
+            <Button type='submit' isLoading={isPending}>
               Send reset link
             </Button>
             <Link

@@ -200,6 +200,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_onboarding: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
