@@ -2,12 +2,9 @@
 
 import { ArrowLeft, UserX } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
-import { toast } from 'sonner';
 
 import { useEmployee } from '@/hooks/queries/employees';
 
-import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { InfoCard } from '@/components/hrm/info-card';
 import { PageHeader } from '@/components/hrm/page-header';
@@ -28,7 +25,6 @@ type EmployeeDetailProps = {
 
 export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
   const { data: employee, isLoading } = useEmployee(employeeId);
-  const [approved, setApproved] = useState(false);
 
   if (isLoading) {
     return (
@@ -56,8 +52,6 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
     );
   }
 
-  const showReview = employee.status === 'pending_review' && !approved;
-
   return (
     <>
       <div>
@@ -71,21 +65,7 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
         title={employee.fullName}
         description={`${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`}
       >
-        <div className='flex items-center gap-3'>
-          <StatusBadge status={approved ? 'active' : employee.status} />
-          {showReview && (
-            <ConfirmDialog
-              trigger={<Button>Approve onboarding</Button>}
-              title={`Activate ${employee.fullName}?`}
-              description='Confirms their submitted documents are verified. They gain full self-service access.'
-              confirmLabel='Approve & activate'
-              onConfirm={() => {
-                setApproved(true);
-                toast.success(`${employee.fullName} is now active`);
-              }}
-            />
-          )}
-        </div>
+        <StatusBadge status={employee.status} />
       </PageHeader>
 
       <InfoCard

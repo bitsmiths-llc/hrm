@@ -8,7 +8,7 @@ export default function ApprovalsPage() {
   return (
     <ComingSoon
       title='Approvals'
-      description='Unified queue for leave, medical, overtime, and onboarding reviews.'
+      description='Unified queue for leave, medical, and overtime requests.'
     />
   );
 }

@@ -72,7 +72,7 @@ export const mockEmployees: Employee[] = [
     baseSalary: 120_000,
     workingHours: 80,
     designation: 'UI/UX Designer',
-    status: 'pending_review',
+    status: 'onboarding',
     invitedAt: '2026-06-20',
     joinedAt: null,
   },

@@ -16,7 +16,6 @@ const meta = {
         'rejected',
         'invited',
         'onboarding',
-        'pending_review',
         'active',
         'open',
         'calculating',
@@ -40,7 +39,6 @@ export const AccountStatuses: Story = {
     <div className='flex flex-wrap gap-2'>
       <StatusBadge status='invited' />
       <StatusBadge status='onboarding' />
-      <StatusBadge status='pending_review' />
       <StatusBadge status='active' />
     </div>
   ),

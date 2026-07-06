@@ -1,4 +1,4 @@
-import { Banknote, CheckSquare, UserCheck, Users } from 'lucide-react';
+import { Banknote, CheckSquare, Users } from 'lucide-react';
 
 import { StatCard } from '@/components/hrm/stat-card';
 
@@ -19,10 +19,6 @@ export function AdminStats() {
     mockMedicalClaims.filter((c) => c.status === 'pending').length +
     mockOvertimeLogs.filter((o) => o.status === 'pending').length;
 
-  const pendingReviews = mockEmployees.filter(
-    (e) => e.status === 'pending_review',
-  ).length;
-
   const activeEmployees = mockEmployees.filter(
     (e) => e.status === 'active',
   ).length;
@@ -31,18 +27,12 @@ export function AdminStats() {
   const lastLocked = mockPayrollCycles.find((c) => c.status === 'locked');
 
   return (
-    <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+    <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
       <StatCard
         label='Pending Approvals'
         value={pendingApprovals}
         icon={CheckSquare}
         hint='Leave, medical, and overtime requests'
-      />
-      <StatCard
-        label='Onboarding Reviews'
-        value={pendingReviews}
-        icon={UserCheck}
-        hint='Submissions awaiting verification'
       />
       <StatCard
         label='Active Employees'

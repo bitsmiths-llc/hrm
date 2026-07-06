@@ -29,7 +29,8 @@ Answers: "What do I need to provide to become active?"
 - 5-step wizard with progress indicator: Personal Info → Bank Info → Social
   Accounts → Identity Documents (CNIC front/back, photo) → Consent & Agreement
 - Each step: required fields per PRD 4.2.3, inline validation, save-and-continue
-- Final state: "Submitted — awaiting admin review"
+- Final state: account is immediately Active (decided 2026-07-06: no admin
+  review/verification step — overrides PRD 4.2.4)
 
 ### Leave `/leave`
 
@@ -92,7 +93,7 @@ Answers: "What does the company know about me, and what can I fix myself?"
 
 Answers: "What needs my action, and what's the state of the org?"
 
-- Pending approvals count (leave + medical + overtime + onboarding reviews)
+- Pending approvals count (leave + medical + overtime)
 - Current payroll cycle status (open / calculating / locked)
 - Active employee count; employees by status
 - Employees nearing 50,000 medical cap
@@ -102,7 +103,7 @@ Answers: "What needs my action, and what's the state of the org?"
 
 Answers: "What's waiting, and can I action it quickly one at a time?"
 
-- Unified queue, filterable by type (Leave / Medical / Overtime / Onboarding)
+- Unified queue, filterable by type (Leave / Medical / Overtime)
 - Row → detail sheet: full request fields, proof files, employee context
   (current balances), approve / reject with optional note
 - No bulk actions (MVP)
@@ -112,11 +113,10 @@ Answers: "What's waiting, and can I action it quickly one at a time?"
 Answers: "Who works here, in what state, and how do I add someone?"
 
 - "Invite employee" action → name + email → sends invitation
-- Directory table: name, email, status (Invited/Onboarding/Pending Review/Active),
+- Directory table: name, email, status (Invited/Onboarding/Active),
   employment type; search + filter
 - Employee detail: full profile, all sections editable by admin, employment &
-  payroll config (type, base salary, working hours), documents review,
-  approve-onboarding action when Pending Review
+  payroll config (type, base salary, working hours)
 
 ### Payroll `/admin/payroll`
 

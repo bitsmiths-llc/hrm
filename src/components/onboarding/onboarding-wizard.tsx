@@ -41,8 +41,8 @@ export function OnboardingWizard() {
     return (
       <EmptyState
         icon={CheckCircle2}
-        title='Onboarding submitted'
-        description='Your details and documents are with the admin for review. You’ll gain full access once your account is activated.'
+        title='Onboarding complete'
+        description='Your account is now active — you have full access to leave, medical, overtime, and payslips.'
       >
         <Link href={paths.employee.dashboard}>
           <Button variant='outline'>Go to dashboard</Button>
@@ -54,7 +54,7 @@ export function OnboardingWizard() {
   const submit = async () => {
     // Frontend-only phase: simulate the submission.
     await new Promise((resolve) => setTimeout(resolve, 800));
-    toast.success('Onboarding submitted for review');
+    toast.success('Onboarding complete — your account is active');
     setSubmitted(true);
   };
 

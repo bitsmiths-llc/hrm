@@ -1,11 +1,9 @@
 // Domain types for Bitsmiths HRM (PRD-aligned). These mirror the intended
 // Supabase schema so the later mock → backend swap only touches the hooks.
 
-export type AccountStatus =
-  | 'invited'
-  | 'onboarding'
-  | 'pending_review'
-  | 'active';
+/** Onboarding completion activates the account directly — there is no
+ *  admin review step. */
+export type AccountStatus = 'invited' | 'onboarding' | 'active';
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 

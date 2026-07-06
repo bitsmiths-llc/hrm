@@ -11,7 +11,7 @@ export default function EmployeesPage() {
     <>
       <PageHeader
         title='Employees'
-        description='Directory, invitations, and onboarding reviews.'
+        description='Directory and invitations.'
       >
         <InviteEmployeeDialog />
       </PageHeader>

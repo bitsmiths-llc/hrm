@@ -16,7 +16,6 @@ import { formatDate } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
 import { leaveTypeLabels } from '@/constants/hrm-labels';
-import { mockEmployees } from '@/constants/mock/employees';
 import {
   mockLeaveRequests,
   mockMedicalClaims,
@@ -26,14 +25,6 @@ import { paths } from '@/constants/paths';
 
 export function AdminPendingQueue() {
   const rows = [
-    ...mockEmployees
-      .filter((e) => e.status === 'pending_review')
-      .map((e) => ({
-        id: e.id,
-        who: e.fullName,
-        what: 'Onboarding review',
-        detail: e.designation,
-      })),
     ...mockLeaveRequests
       .filter((r) => r.status === 'pending')
       .map((r) => ({
@@ -82,7 +73,7 @@ export function AdminPendingQueue() {
           <EmptyState
             icon={Inbox}
             title='Queue is clear'
-            description='No pending requests or reviews right now.'
+            description='No pending requests right now.'
           />
         ) : (
           <ul className='flex flex-col divide-y divide-border'>
