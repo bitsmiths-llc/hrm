@@ -1,8 +1,6 @@
 export enum QueryKeys {
   USER = 'user',
 
-  SAMPLE = 'sample',
-
   // Employee & Onboarding domain
   EMPLOYEES = 'employees', // list
   EMPLOYEE = 'employee', // detail, keyed by id
