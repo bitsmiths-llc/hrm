@@ -11,7 +11,7 @@
     "lint": "next lint --fix",
     "format": "prettier --write .",
     "style": "pnpm lint && pnpm format",
-    "supa:types": "supabase gen types --lang=typescript --project-id '<supabase-project-id>' --schema public > ./src/types/supabase.ts",
+    "supa:types": "supabase gen types --lang=typescript --project-id 'leslengflrizmqkopkya' --schema public > ./src/types/supabase.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -51,6 +51,7 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.56.4",
     "react-icons": "^5.5.0",
+    "server-only": "^0.0.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
@@ -87,5 +88,11 @@
     "typescript": "^5.8.3",
     "vite": "^8.1.3",
     "vitest": "^4.1.10"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.1.4",
+      "@types/react-dom": "19.1.5"
+    }
   }
 }

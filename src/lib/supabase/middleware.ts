@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { env } from '@/env';
 
-import { Database } from '@/types/supabase';
+import type { Database } from '@/types/supabase';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
