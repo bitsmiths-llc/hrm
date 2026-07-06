@@ -1,14 +1,21 @@
 import { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/hrm/coming-soon';
+import { EmployeesTable } from '@/components/employees/employees-table';
+import { InviteEmployeeDialog } from '@/components/employees/invite-employee-dialog';
+import { PageHeader } from '@/components/hrm/page-header';
 
 export const metadata: Metadata = { title: 'Employees' };
 
 export default function EmployeesPage() {
   return (
-    <ComingSoon
-      title='Employees'
-      description='Directory, invitations, and onboarding reviews.'
-    />
+    <>
+      <PageHeader
+        title='Employees'
+        description='Directory, invitations, and onboarding reviews.'
+      >
+        <InviteEmployeeDialog />
+      </PageHeader>
+      <EmployeesTable />
+    </>
   );
 }

@@ -1,14 +1,18 @@
 import { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/hrm/coming-soon';
+import { PageHeader } from '@/components/hrm/page-header';
+import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard';
 
 export const metadata: Metadata = { title: 'Onboarding' };
 
 export default function OnboardingPage() {
   return (
-    <ComingSoon
-      title='Onboarding'
-      description='Complete your profile, documents, and consent to become active.'
-    />
+    <>
+      <PageHeader
+        title='Onboarding'
+        description='Complete the five sections below to activate your account.'
+      />
+      <OnboardingWizard />
+    </>
   );
 }
