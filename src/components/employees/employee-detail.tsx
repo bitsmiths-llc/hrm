@@ -60,6 +60,13 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
 
   return (
     <>
+      <div>
+        <Link href={paths.admin.employees}>
+          <Button variant='ghost' size='sm' iconLeft={ArrowLeft}>
+            Back to employees
+          </Button>
+        </Link>
+      </div>
       <PageHeader
         title={employee.fullName}
         description={`${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`}

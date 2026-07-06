@@ -82,7 +82,8 @@ body {
     /* Accent = active/hover states: subtle green tint on neutral surfaces */
     --accent: 152 45% 13%;
     --accent-foreground: 152 75% 68%;
-    --destructive: 0 62.8% 30.6%;
+    /* Bright enough for error text on near-black (≈4.8:1 vs --background) */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 17%;
     --input: 0 0% 17%;

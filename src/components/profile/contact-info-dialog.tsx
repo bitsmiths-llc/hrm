@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { type ContactInfoInput,contactInfoSchema } from '@/schema/employee';
+import { type ContactInfoInput, contactInfoSchema } from '@/schema/employee';
 
 type ContactInfoDialogProps = {
   defaultValues: ContactInfoInput;

@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { InfoCard } from '@/components/hrm/info-card';
 import { PageHeader } from '@/components/hrm/page-header';
 import { StatusBadge } from '@/components/hrm/status-badge';
+import { BankInfoDialog } from '@/components/profile/bank-info-dialog';
 import { ContactInfoDialog } from '@/components/profile/contact-info-dialog';
 
 import { formatDate } from '@/utils/date-functions';
@@ -56,6 +57,17 @@ export default function ProfilePage() {
 
       <InfoCard
         title='Bank Information'
+        action={
+          <BankInfoDialog
+            defaultValues={{
+              bankName: employee.bank?.bankName ?? '',
+              accountHolderName: employee.bank?.accountHolderName ?? '',
+              accountNumber: employee.bank?.accountNumber ?? '',
+              iban: employee.bank?.iban ?? '',
+              branch: employee.bank?.branch ?? '',
+            }}
+          />
+        }
         fields={[
           { label: 'Bank', value: employee.bank?.bankName },
           { label: 'Account holder', value: employee.bank?.accountHolderName },

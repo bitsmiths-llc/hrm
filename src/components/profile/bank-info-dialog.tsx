@@ -1,0 +1,113 @@
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Pencil } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+
+import { type BankInfoInput, bankInfoSchema } from '@/schema/onboarding';
+
+const fields: {
+  name: keyof BankInfoInput;
+  label: string;
+}[] = [
+  { name: 'bankName', label: 'Bank name' },
+  { name: 'accountHolderName', label: 'Account holder name' },
+  { name: 'accountNumber', label: 'Account number' },
+  { name: 'iban', label: 'IBAN' },
+  { name: 'branch', label: 'Bank branch (optional)' },
+];
+
+type BankInfoDialogProps = {
+  defaultValues: BankInfoInput;
+};
+
+export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
+  const [open, setOpen] = useState(false);
+
+  const form = useForm<BankInfoInput>({
+    resolver: zodResolver(bankInfoSchema),
+    defaultValues,
+  });
+
+  const onSubmit = async (_values: BankInfoInput) => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    toast.success('Bank information updated');
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant='outline' size='sm' iconLeft={Pencil}>
+          Edit
+        </Button>
+      </DialogTrigger>
+      <DialogContent className='sm:max-w-md'>
+        <DialogHeader>
+          <DialogTitle>Edit bank information</DialogTitle>
+          <DialogDescription>
+            Payroll and Payoneer exports use these details — double-check before
+            saving.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className='flex flex-col gap-4'
+          >
+            {fields.map(({ name, label }) => (
+              <FormField
+                key={name}
+                control={form.control}
+                name={name}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{label}</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type='submit' isLoading={form.formState.isSubmitting}>
+                Save changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}

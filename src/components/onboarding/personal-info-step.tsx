@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { ControlledDatePicker } from '@/components/ui/form/controlled-date-picker';
 import { Input } from '@/components/ui/input';
 
 import {
@@ -26,12 +28,6 @@ const fields: {
   type?: string;
 }[] = [
   { name: 'fullName', label: 'Full name', placeholder: 'Ayesha Khan' },
-  {
-    name: 'dateOfBirth',
-    label: 'Date of birth',
-    placeholder: '',
-    type: 'date',
-  },
   {
     name: 'email',
     label: 'Email',
@@ -80,21 +76,29 @@ export function PersonalInfoStep({
         onSubmit={form.handleSubmit(onNext)}
         className='grid gap-4 sm:grid-cols-2'
       >
-        {fields.map(({ name, label, placeholder, type }) => (
-          <FormField
-            key={name}
-            control={form.control}
-            name={name}
-            render={({ field }) => (
-              <FormItem className={name === 'address' ? 'sm:col-span-2' : ''}>
-                <FormLabel>{label}</FormLabel>
-                <FormControl>
-                  <Input type={type} placeholder={placeholder} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+        {fields.map(({ name, label, placeholder, type }, index) => (
+          <React.Fragment key={name}>
+            <FormField
+              control={form.control}
+              name={name}
+              render={({ field }) => (
+                <FormItem className={name === 'address' ? 'sm:col-span-2' : ''}>
+                  <FormLabel>{label}</FormLabel>
+                  <FormControl>
+                    <Input type={type} placeholder={placeholder} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {index === 0 && (
+              <ControlledDatePicker<PersonalInfoInput>
+                name='dateOfBirth'
+                label='Date of birth'
+                disabledDates={{ after: new Date() }}
+              />
             )}
-          />
+          </React.Fragment>
         ))}
         <div className='flex justify-end sm:col-span-2'>
           <Button type='submit'>Continue</Button>
