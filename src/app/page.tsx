@@ -23,12 +23,12 @@ export default function Home() {
       </div>
 
       <div className='flex flex-col gap-3 sm:flex-row'>
-        <Link href={paths.auth.register}>
-          <Button size='lg'>Register</Button>
+        <Link href={paths.employee.dashboard}>
+          <Button size='lg'>Employee app</Button>
         </Link>
-        <Link href={paths.auth.login}>
+        <Link href={paths.admin.dashboard}>
           <Button size='lg' variant='outline'>
-            Sign in
+            Admin app
           </Button>
         </Link>
       </div>

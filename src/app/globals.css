@@ -49,6 +49,15 @@ body {
     --chart-4: 173 58% 39%;
     --chart-5: 43 74% 66%;
     --radius: 0.5rem;
+    /* Sidebar tokens (shadcn sidebar primitive), aligned with the semantic theme */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 26%;
+    --sidebar-primary: 152 96% 41%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 152 60% 95%;
+    --sidebar-accent-foreground: 152 94% 16%;
+    --sidebar-border: 0 0% 89.8%;
+    --sidebar-ring: 152 96% 41%;
   }
   .dark {
     --brand-500: 152 96% 41%;
@@ -80,6 +89,14 @@ body {
     --chart-3: 152 50% 70%;
     --chart-4: 173 58% 45%;
     --chart-5: 43 74% 66%;
+    --sidebar-background: 152 40% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 152 96% 41%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 152 40% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 152 25% 18%;
+    --sidebar-ring: 152 96% 41%;
   }
 }
 
