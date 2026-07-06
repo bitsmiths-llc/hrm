@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Mulish } from 'next/font/google';
 import { Toaster } from 'sonner';
 
 import './globals.css';
@@ -22,6 +22,13 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+// Bitsmiths brand body font (from company web).
+const mulish = Mulish({
+  variable: '--font-mulish',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+});
+
 export const metadata: Metadata = getMetadata();
 
 export default function RootLayout({
@@ -32,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang='en' suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-geist`}
+        className={`${geistSans.variable} ${geistMono.variable} ${mulish.variable} font-primary`}
       >
         <AppProviders>
           <PosthogAnalytics />

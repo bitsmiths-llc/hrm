@@ -7,58 +7,79 @@ body {
 }
 
 @layer base {
+  /*
+   * Bitsmiths brand palette (from company web) — wired into semantic tokens.
+   * brand-500 #04CD77 = 152 96% 41%  (primary green)
+   * brand-800 #02502E = 152 94% 16%
+   * brand-900 #012817 = 153 94% 8%
+   * neutral-42 #424242 = 0 0% 26%     neutral-b3 #B3B3B3 = 0 0% 70%
+   * Change the brand by editing these variables — every semantic token below
+   * resolves through them, so components never need a raw hex.
+   */
   :root {
+    --brand-500: 152 96% 41%;
+    --brand-800: 152 94% 16%;
+    --brand-900: 153 94% 8%;
+
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
+    /* Primary action = brand green. Foreground is white for contrast on it. */
+    --primary: 152 96% 41%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    /* Accent tint = faint brand green */
+    --accent: 152 60% 95%;
+    --accent-foreground: 152 94% 16%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    /* Focus ring = brand green */
+    --ring: 152 96% 41%;
+    --chart-1: 152 96% 41%;
+    --chart-2: 152 94% 16%;
+    --chart-3: 153 94% 8%;
+    --chart-4: 173 58% 39%;
+    --chart-5: 43 74% 66%;
     --radius: 0.5rem;
   }
   .dark {
-    --background: 0 0% 3.9%;
+    --brand-500: 152 96% 41%;
+    --brand-800: 152 94% 16%;
+    --brand-900: 153 94% 8%;
+
+    --background: 153 94% 8%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 152 40% 10%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 152 40% 10%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    /* Primary action stays brand green in dark; white text stays legible on it */
+    --primary: 152 96% 41%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 152 30% 16%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 152 30% 16%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 152 40% 18%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --border: 152 25% 18%;
+    --input: 152 25% 18%;
+    --ring: 152 96% 41%;
+    --chart-1: 152 96% 41%;
+    --chart-2: 152 70% 55%;
+    --chart-3: 152 50% 70%;
+    --chart-4: 173 58% 45%;
+    --chart-5: 43 74% 66%;
   }
 }
 

@@ -50,6 +50,18 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        // Bitsmiths brand palette (from company web). Prefer the semantic tokens
+        // above (bg-primary, ring-ring, etc.) — reach for these raw scales only
+        // for brand-specific surfaces (marketing sections, logos, gradients).
+        brand: {
+          '500': 'hsl(var(--brand-500))', // #04CD77
+          '800': 'hsl(var(--brand-800))', // #02502E
+          '900': 'hsl(var(--brand-900))', // #012817
+        },
+        neutral: {
+          '42': '#424242',
+          b3: '#B3B3B3',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -79,6 +91,8 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
       fontFamily: {
+        // Brand body font (from company web) — default via `font-primary` on <body>.
+        primary: 'var(--font-mulish)',
         geist: 'var(--font-geist-sans)',
         mono: 'var(--font-geist-mono)',
       },

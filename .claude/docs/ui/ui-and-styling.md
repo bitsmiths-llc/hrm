@@ -17,6 +17,31 @@ inline `style={{}}`, plain CSS files, etc.).
 - Do not build a custom modal/dropdown/tooltip/etc. when `Dialog`/`Sheet`/`Popover`/
   `DropdownMenu`/`Tooltip` already exist.
 
+### Brand colors — Bitsmiths green is the default (from company web)
+
+The company brand palette is already wired into this repo's semantic tokens, so you
+get it for free by using the semantic classes below. **Unless a task explicitly asks
+for different colors, brand green is the default and you must not substitute another
+hue.** The palette:
+
+| Token | Hex | HSL var | Used for |
+|---|---|---|---|
+| `brand-500` | `#04CD77` | `--brand-500: 152 96% 41%` | Primary green — `--primary`, `--ring`, `chart-1` |
+| `brand-800` | `#02502E` | `--brand-800: 152 94% 16%` | Deep green — accents, chart-2 |
+| `brand-900` | `#012817` | `--brand-900: 153 94% 8%` | Darkest green — dark-mode background, chart-3 |
+| `neutral-42` | `#424242` | — | Brand neutral (dark text/surfaces) |
+| `neutral-b3` | `#B3B3B3` | — | Brand neutral (muted/borders) |
+
+Because brand green is mapped onto `--primary`/`--ring`/`--accent`/charts, a plain
+`bg-primary` button, `ring-ring` focus outline, and default chart all come out on
+brand automatically. The raw scales are also exposed as `brand-500/800/900` and
+`neutral-42/b3` in `tailwind.config.ts` — use those **only** for brand-specific
+surfaces (marketing sections, gradients, logo lockups); for normal app UI use the
+semantic tokens so dark mode keeps working.
+
+Brand body font: **Mulish** (`--font-mulish`), applied as `font-primary` on `<body>`
+in `src/app/layout.tsx`. It's the default, so you rarely set it explicitly.
+
 ### Tailwind CSS — semantic tokens only
 
 - There is exactly one color config for the whole app, and it already supports dark
@@ -29,7 +54,8 @@ inline `style={{}}`, plain CSS files, etc.).
 - To add or change a color (brand color, a new chart color, etc.), edit the
   `:root`/`.dark` variable pair in `globals.css` and, if it's a new token, add it to
   `theme.extend.colors` in `tailwind.config.ts` — don't invent a one-off hex class in
-  a component.
+  a component. The brand green lives in the `--brand-500/800/900` variables at the top
+  of `:root`; re-point those to rebrand the whole app.
 
   | Use | Token | Not |
   |---|---|---|
@@ -38,7 +64,7 @@ inline `style={{}}`, plain CSS files, etc.).
   | Body text | `text-foreground` | `text-black` |
   | Secondary text/labels | `text-muted-foreground` | `text-gray-500` |
   | Dividers/input borders | `border-border` / `border-input` | `border-gray-200` |
-  | Primary action | `bg-primary` / `text-primary-foreground` | brand hex values |
+  | Primary action (brand green) | `bg-primary` / `text-primary-foreground` | raw `#04CD77` / `bg-green-500` |
   | Destructive action/error | `bg-destructive` / `text-destructive-foreground` | `bg-red-500` |
   | Focus ring | `ring-ring` | custom outline colors |
 
