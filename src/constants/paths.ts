@@ -2,7 +2,8 @@ export const paths = {
   home: '/',
   auth: {
     login: '/auth/login',
-    register: '/auth/register',
+    acceptInvitation: '/auth/accept-invitation',
+    forgotPassword: '/auth/forgot-password',
   },
   employee: {
     dashboard: '/dashboard',

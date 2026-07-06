@@ -52,7 +52,7 @@ export function DataTable<T>({ table }: DataTableProps<T>) {
           <TableRow
             key={row.id}
             data-state={row.getIsSelected() && 'selected'}
-            className='border-zinc-100 text-sm'
+            className='border-border text-sm'
           >
             {row.getVisibleCells().map((cell) => (
               <TableCell

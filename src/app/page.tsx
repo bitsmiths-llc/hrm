@@ -35,6 +35,11 @@ export default function Home() {
             Admin app
           </Button>
         </Link>
+        <Link href={paths.auth.login}>
+          <Button size='lg' variant='ghost'>
+            Sign in
+          </Button>
+        </Link>
       </div>
     </div>
   );
