@@ -52,8 +52,8 @@ export function AppSidebar({ role }: AppSidebarProps) {
           <Image
             src={appConfig.logo}
             alt='Bitsmiths logo'
-            width={28}
-            height={29}
+            width={20}
+            height={21}
             className='shrink-0'
           />
           <span className='text-sm font-semibold group-data-[collapsible=icon]:hidden'>
