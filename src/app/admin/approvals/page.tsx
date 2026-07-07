@@ -1,14 +1,18 @@
 import { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/hrm/coming-soon';
+import { ApprovalsQueue } from '@/components/approvals/approvals-queue';
+import { PageHeader } from '@/components/hrm/page-header';
 
 export const metadata: Metadata = { title: 'Approvals' };
 
 export default function ApprovalsPage() {
   return (
-    <ComingSoon
-      title='Approvals'
-      description='Unified queue for leave, medical, and overtime requests.'
-    />
+    <>
+      <PageHeader
+        title='Approvals'
+        description='Review pending leave, medical, and overtime requests one at a time.'
+      />
+      <ApprovalsQueue />
+    </>
   );
 }
