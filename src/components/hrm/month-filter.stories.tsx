@@ -8,7 +8,6 @@ const meta = {
   component: MonthFilter,
   tags: ['autodocs'],
   args: {
-    months: ['2026-07', '2026-06', '2026-05', '2026-04'],
     value: 'all',
     onChange: () => {},
   },
@@ -31,9 +30,5 @@ export const AllTime: Story = {
 
 export const MonthSelected: Story = {
   render: (args) => <InteractiveFilter {...args} />,
-  args: { value: '2026-06' },
-};
-
-export const NoData: Story = {
-  args: { months: [] },
+  args: { value: `${new Date().getFullYear()}-01` },
 };

@@ -105,10 +105,7 @@ export function OvertimeLogsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'date', desc: true },
   ]);
-  const { month, setMonth, months, filtered } = useMonthFilter(
-    logs,
-    getLogDate,
-  );
+  const { month, setMonth, filtered } = useMonthFilter(logs, getLogDate);
 
   const table = useReactTable({
     data: filtered,
@@ -141,7 +138,7 @@ export function OvertimeLogsTable({
         )}
       >
         {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
-        <MonthFilter months={months} value={month} onChange={setMonth} />
+        <MonthFilter value={month} onChange={setMonth} />
       </div>
       {filtered.length === 0 ? (
         <EmptyState

@@ -120,10 +120,7 @@ export function MedicalClaimsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'expenseDate', desc: true },
   ]);
-  const { month, setMonth, months, filtered } = useMonthFilter(
-    claims,
-    getExpenseDate,
-  );
+  const { month, setMonth, filtered } = useMonthFilter(claims, getExpenseDate);
 
   const table = useReactTable({
     data: filtered,
@@ -156,7 +153,7 @@ export function MedicalClaimsTable({
         )}
       >
         {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
-        <MonthFilter months={months} value={month} onChange={setMonth} />
+        <MonthFilter value={month} onChange={setMonth} />
       </div>
       {filtered.length === 0 ? (
         <EmptyState

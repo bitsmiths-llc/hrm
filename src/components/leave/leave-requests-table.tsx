@@ -113,10 +113,7 @@ export function LeaveRequestsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'startDate', desc: true },
   ]);
-  const { month, setMonth, months, filtered } = useMonthFilter(
-    requests,
-    getStartDate,
-  );
+  const { month, setMonth, filtered } = useMonthFilter(requests, getStartDate);
 
   const table = useReactTable({
     data: filtered,
@@ -149,7 +146,7 @@ export function LeaveRequestsTable({
         )}
       >
         {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
-        <MonthFilter months={months} value={month} onChange={setMonth} />
+        <MonthFilter value={month} onChange={setMonth} />
       </div>
       {filtered.length === 0 ? (
         <EmptyState
