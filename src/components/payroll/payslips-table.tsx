@@ -35,7 +35,7 @@ function usePayslipsColumns() {
       {
         accessorKey: 'totalBase',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Base' />
+          <DataTableColumnHeader column={column} title='Base' align='center' />
         ),
         cell: (props) => (
           <CenteredCell
@@ -47,7 +47,11 @@ function usePayslipsColumns() {
       {
         accessorKey: 'medical',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Medical' />
+          <DataTableColumnHeader
+            column={column}
+            title='Medical'
+            align='center'
+          />
         ),
         cell: (props) => (
           <CenteredCell
@@ -59,7 +63,11 @@ function usePayslipsColumns() {
       {
         accessorKey: 'overtimePay',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Overtime' />
+          <DataTableColumnHeader
+            column={column}
+            title='Overtime'
+            align='center'
+          />
         ),
         cell: (props) => (
           <CenteredCell
@@ -71,7 +79,7 @@ function usePayslipsColumns() {
       {
         accessorKey: 'total',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Total' />
+          <DataTableColumnHeader column={column} title='Total' align='center' />
         ),
         cell: (props) => (
           <CenteredCell

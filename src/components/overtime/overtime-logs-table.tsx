@@ -34,7 +34,7 @@ function useOvertimeLogsColumns() {
       {
         accessorKey: 'date',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Date' />
+          <DataTableColumnHeader column={column} title='Date' align='center' />
         ),
         cell: (props) => (
           <CenteredCell
@@ -47,7 +47,7 @@ function useOvertimeLogsColumns() {
       {
         accessorKey: 'hours',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Hours' />
+          <DataTableColumnHeader column={column} title='Hours' align='center' />
         ),
         cell: (props) => <CenteredCell {...props} />,
       },
@@ -75,7 +75,11 @@ function useOvertimeLogsColumns() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Status' />
+          <DataTableColumnHeader
+            column={column}
+            title='Status'
+            align='center'
+          />
         ),
         cell: ({ row }) => (
           <div className='flex justify-center'>

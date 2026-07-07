@@ -39,7 +39,11 @@ export function useEmployeesTableColumns() {
       {
         accessorKey: 'designation',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Designation' />
+          <DataTableColumnHeader
+            column={column}
+            title='Designation'
+            align='center'
+          />
         ),
         cell: (props) => (
           <CenteredCell
@@ -51,7 +55,7 @@ export function useEmployeesTableColumns() {
       {
         accessorKey: 'employmentType',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Type' />
+          <DataTableColumnHeader column={column} title='Type' align='center' />
         ),
         cell: (props) => (
           <CenteredCell
@@ -65,7 +69,11 @@ export function useEmployeesTableColumns() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Status' />
+          <DataTableColumnHeader
+            column={column}
+            title='Status'
+            align='center'
+          />
         ),
         cell: ({ row }) => (
           <div className='flex justify-center'>
@@ -78,7 +86,11 @@ export function useEmployeesTableColumns() {
       {
         accessorKey: 'invitedAt',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Invited' />
+          <DataTableColumnHeader
+            column={column}
+            title='Invited'
+            align='center'
+          />
         ),
         cell: (props) => (
           <CenteredCell

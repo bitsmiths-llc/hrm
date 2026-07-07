@@ -47,7 +47,7 @@ function useLeaveHistoryColumns() {
       {
         accessorKey: 'startDate',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='From' />
+          <DataTableColumnHeader column={column} title='From' align='center' />
         ),
         cell: (props) => (
           <CenteredCell
@@ -60,7 +60,7 @@ function useLeaveHistoryColumns() {
       {
         accessorKey: 'days',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Days' />
+          <DataTableColumnHeader column={column} title='Days' align='center' />
         ),
         cell: (props) => <CenteredCell {...props} />,
       },
@@ -79,7 +79,11 @@ function useLeaveHistoryColumns() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Status' />
+          <DataTableColumnHeader
+            column={column}
+            title='Status'
+            align='center'
+          />
         ),
         cell: ({ row }) => (
           <div className='flex justify-center'>

@@ -15,26 +15,47 @@ interface DataTableColumnHeaderProps<TData, TValue>
   extends React.HTMLAttributes<HTMLDivElement> {
   column: Column<TData, TValue>;
   title: string;
+  /** Must match the alignment the column's cell renderer uses (e.g.
+   *  CenteredCell) — otherwise the header sits beside its data instead
+   *  of above it. Defaults to 'left'. */
+  align?: 'left' | 'center' | 'right';
 }
+
+const justifyByAlign = {
+  left: 'justify-start',
+  center: 'justify-center',
+  right: 'justify-end',
+} as const;
 
 export function DataTableColumnHeader<TData, TValue>({
   column,
   title,
   className,
+  align = 'left',
 }: DataTableColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort()) {
     return (
-      <div className={cn('text-center text-sm font-light', className)}>
+      <div
+        className={cn(
+          'flex text-sm font-light',
+          justifyByAlign[align],
+          className,
+        )}
+      >
         {title}
       </div>
     );
   }
 
   return (
-    <div className={cn('flex items-center space-x-2', className)}>
+    <div className={cn('flex items-center', justifyByAlign[align], className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost' size='sm' className='ml-3 h-8'>
+          <Button
+            variant='ghost'
+            size='sm'
+            className={cn('h-8', align === 'left' && '-ml-3')}
+          >
             <span>{title}</span>
             {column.getIsSorted() === 'desc' ? (
               <RxCaretDown className='ml-2 h-4 w-4' />

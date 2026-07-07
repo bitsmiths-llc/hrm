@@ -51,7 +51,7 @@ function useMedicalClaimsColumns() {
       {
         accessorKey: 'claimFor',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='For' />
+          <DataTableColumnHeader column={column} title='For' align='center' />
         ),
         cell: (props) => (
           <CenteredCell
@@ -65,7 +65,11 @@ function useMedicalClaimsColumns() {
       {
         accessorKey: 'amount',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Amount' />
+          <DataTableColumnHeader
+            column={column}
+            title='Amount'
+            align='center'
+          />
         ),
         cell: (props) => (
           <CenteredCell
@@ -77,7 +81,7 @@ function useMedicalClaimsColumns() {
       {
         accessorKey: 'expenseDate',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Date' />
+          <DataTableColumnHeader column={column} title='Date' align='center' />
         ),
         cell: (props) => (
           <CenteredCell
@@ -90,7 +94,11 @@ function useMedicalClaimsColumns() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Status' />
+          <DataTableColumnHeader
+            column={column}
+            title='Status'
+            align='center'
+          />
         ),
         cell: ({ row }) => (
           <div className='flex justify-center'>
