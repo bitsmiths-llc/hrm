@@ -11,12 +11,17 @@ import { PageHeader } from '@/components/hrm/page-header';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { formatDate } from '@/utils/date-functions';
 
 import { employmentTypeLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
+import { EmployeeLeaveTab } from './employee-leave-tab';
+import { EmployeeMedicalTab } from './employee-medical-tab';
+import { EmployeeOvertimeTab } from './employee-overtime-tab';
+import { EmployeePayrollTab } from './employee-payroll-tab';
 import { EmploymentConfigForm } from './employment-config-form';
 
 type EmployeeDetailProps = {
@@ -68,44 +73,81 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
         <StatusBadge status={employee.status} />
       </PageHeader>
 
-      <InfoCard
-        title='Personal Information'
-        fields={[
-          { label: 'Email', value: employee.email },
-          { label: 'Phone', value: employee.phone },
-          { label: 'Emergency contact', value: employee.emergencyContact },
-          { label: 'Date of birth', value: formatDate(employee.dateOfBirth) },
-          { label: 'CNIC', value: employee.cnic },
-          { label: 'Address', value: employee.address },
-          { label: 'Invited', value: formatDate(employee.invitedAt) },
-          { label: 'Joined', value: formatDate(employee.joinedAt) },
-        ]}
-      />
+      <Tabs defaultValue='profile'>
+        <TabsList>
+          <TabsTrigger value='profile'>Profile</TabsTrigger>
+          <TabsTrigger value='leave'>Leave</TabsTrigger>
+          <TabsTrigger value='medical'>Medical</TabsTrigger>
+          <TabsTrigger value='overtime'>Overtime</TabsTrigger>
+          <TabsTrigger value='payroll'>Payroll</TabsTrigger>
+        </TabsList>
 
-      <InfoCard
-        title='Bank Information'
-        fields={[
-          { label: 'Bank', value: employee.bank?.bankName },
-          {
-            label: 'Account holder',
-            value: employee.bank?.accountHolderName,
-          },
-          { label: 'Account number', value: employee.bank?.accountNumber },
-          { label: 'IBAN', value: employee.bank?.iban },
-          { label: 'Branch', value: employee.bank?.branch },
-        ]}
-      />
+        <TabsContent value='profile' className='flex flex-col gap-6'>
+          <InfoCard
+            title='Personal Information'
+            fields={[
+              { label: 'Email', value: employee.email },
+              { label: 'Phone', value: employee.phone },
+              {
+                label: 'Emergency contact',
+                value: employee.emergencyContact,
+              },
+              {
+                label: 'Date of birth',
+                value: formatDate(employee.dateOfBirth),
+              },
+              { label: 'CNIC', value: employee.cnic },
+              { label: 'Address', value: employee.address },
+              { label: 'Invited', value: formatDate(employee.invitedAt) },
+              { label: 'Joined', value: formatDate(employee.joinedAt) },
+            ]}
+          />
 
-      <InfoCard
-        title='Social Accounts'
-        fields={[
-          { label: 'GitHub', value: employee.social?.github },
-          { label: 'LinkedIn', value: employee.social?.linkedin },
-          { label: 'Twitter', value: employee.social?.twitter },
-        ]}
-      />
+          <InfoCard
+            title='Bank Information'
+            fields={[
+              { label: 'Bank', value: employee.bank?.bankName },
+              {
+                label: 'Account holder',
+                value: employee.bank?.accountHolderName,
+              },
+              {
+                label: 'Account number',
+                value: employee.bank?.accountNumber,
+              },
+              { label: 'IBAN', value: employee.bank?.iban },
+              { label: 'Branch', value: employee.bank?.branch },
+            ]}
+          />
 
-      <EmploymentConfigForm employee={employee} />
+          <InfoCard
+            title='Social Accounts'
+            fields={[
+              { label: 'GitHub', value: employee.social?.github },
+              { label: 'LinkedIn', value: employee.social?.linkedin },
+              { label: 'Twitter', value: employee.social?.twitter },
+            ]}
+          />
+
+          <EmploymentConfigForm employee={employee} />
+        </TabsContent>
+
+        <TabsContent value='leave'>
+          <EmployeeLeaveTab employeeId={employee.id} />
+        </TabsContent>
+
+        <TabsContent value='medical'>
+          <EmployeeMedicalTab employeeId={employee.id} />
+        </TabsContent>
+
+        <TabsContent value='overtime'>
+          <EmployeeOvertimeTab employeeId={employee.id} />
+        </TabsContent>
+
+        <TabsContent value='payroll'>
+          <EmployeePayrollTab employeeId={employee.id} />
+        </TabsContent>
+      </Tabs>
     </>
   );
 }
