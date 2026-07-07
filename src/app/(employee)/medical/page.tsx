@@ -1,14 +1,35 @@
 import { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/hrm/coming-soon';
+import { PageHeader } from '@/components/hrm/page-header';
+import { MedicalBalanceCards } from '@/components/medical/medical-balance-cards';
+import { MedicalHistoryTable } from '@/components/medical/medical-history-table';
+import { SubmitClaimDialog } from '@/components/medical/submit-claim-dialog';
+
+import { getMedicalIneligibilityReason } from '@/lib/medical-eligibility';
+
+import { mockCurrentEmployee } from '@/constants/mock/employees';
 
 export const metadata: Metadata = { title: 'Medical' };
 
 export default function MedicalPage() {
+  const ineligibilityReason =
+    getMedicalIneligibilityReason(mockCurrentEmployee);
+
   return (
-    <ComingSoon
-      title='Medical Allowance'
-      description='Submit claims against your accrued allowance and track your balance.'
-    />
+    <>
+      <PageHeader
+        title='Medical Allowance'
+        description='Submit claims against your accrued allowance and track your balance.'
+      >
+        <SubmitClaimDialog disabled={!!ineligibilityReason} />
+      </PageHeader>
+      {!!ineligibilityReason && (
+        <div className='rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground'>
+          {ineligibilityReason}
+        </div>
+      )}
+      <MedicalBalanceCards />
+      <MedicalHistoryTable />
+    </>
   );
 }

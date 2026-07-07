@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { mockMedicalBalances } from '@/constants/mock/employees';
+import {
+  mockCurrentEmployee,
+  mockMedicalBalances,
+} from '@/constants/mock/employees';
 import { mockMedicalClaims } from '@/constants/mock/requests';
 import { QueryKeys } from '@/constants/query-keys';
 
@@ -36,3 +39,10 @@ export const useMedicalBalance = (employeeId: string) => {
     },
   });
 };
+
+/** Own claims/balance for the signed-in employee (mocked as emp-1). */
+export const useMyMedicalClaims = () =>
+  useMedicalClaims(mockCurrentEmployee.id);
+
+export const useMyMedicalBalance = () =>
+  useMedicalBalance(mockCurrentEmployee.id);

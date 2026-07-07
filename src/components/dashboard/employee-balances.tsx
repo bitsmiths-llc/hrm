@@ -25,7 +25,8 @@ export function EmployeeBalances() {
       />
       <BalanceCard
         title='Medical Allowance'
-        used={mockMedicalBalance.cap - mockMedicalBalance.accrued}
+        mode='accrued'
+        used={mockMedicalBalance.accrued}
         total={mockMedicalBalance.cap}
         format={(amount) => formatCurrency(amount) || '0'}
         hint={`Accrues ${formatCurrency(mockMedicalBalance.monthlyAccrual)}/month`}

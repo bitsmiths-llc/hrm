@@ -9,7 +9,10 @@ import { ContactInfoDialog } from '@/components/profile/contact-info-dialog';
 import { formatDate } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
-import { employmentTypeLabels } from '@/constants/hrm-labels';
+import {
+  employmentStageLabels,
+  employmentTypeLabels,
+} from '@/constants/hrm-labels';
 import { mockCurrentEmployee } from '@/constants/mock/employees';
 
 export const metadata: Metadata = { title: 'My Profile' };
@@ -83,6 +86,10 @@ export default function ProfilePage() {
           {
             label: 'Employment type',
             value: employmentTypeLabels[employee.employmentType],
+          },
+          {
+            label: 'Employment stage',
+            value: employmentStageLabels[employee.employmentStage],
           },
           { label: 'Designation', value: employee.designation },
           { label: 'Base salary', value: formatCurrency(employee.baseSalary) },

@@ -9,17 +9,26 @@ export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
 export type EmploymentType = 'full_time' | 'part_time';
 
+/** Drives medical-allowance eligibility (Medical Allowance Policy §1) —
+ *  probation and notice-period employees aren't eligible even if
+ *  full-time. */
+export type EmploymentStage = 'probation' | 'confirmed' | 'notice_period';
+
 /** Paid, Sick, and Half Day draw from the shared 22-day pool (half day = 0.5).
  *  Unpaid is separate, uncapped, and the only type that prorates pay. */
 export type LeaveType = 'paid' | 'sick' | 'unpaid' | 'half_day';
 
 export type MedicalClaimFor = 'self' | 'parent' | 'spouse' | 'child';
 
+/** Medical Allowance Policy §3 — eligible expense categories. */
 export type MedicalServiceType =
-  | 'opd'
-  | 'medicine'
-  | 'procedure'
-  | 'hospitalization';
+  | 'consultation'
+  | 'hospitalization'
+  | 'medication'
+  | 'lab_diagnostics'
+  | 'emergency'
+  | 'dental'
+  | 'vision';
 
 export type PayrollCycleStatus = 'open' | 'calculating' | 'locked';
 
@@ -49,6 +58,7 @@ export type Employee = {
   bank: BankInfo | null;
   social: SocialAccounts | null;
   employmentType: EmploymentType;
+  employmentStage: EmploymentStage;
   baseSalary: number; // PKR
   workingHours: number; // standard hours per pay period
   designation: string;

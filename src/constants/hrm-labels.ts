@@ -1,5 +1,6 @@
 import {
   AccountStatus,
+  EmploymentStage,
   EmploymentType,
   LeaveType,
   MedicalClaimFor,
@@ -45,6 +46,12 @@ export const employmentTypeLabels: Record<EmploymentType, string> = {
   part_time: 'Part-time',
 };
 
+export const employmentStageLabels: Record<EmploymentStage, string> = {
+  probation: 'Probation',
+  confirmed: 'Confirmed',
+  notice_period: 'Notice Period',
+};
+
 export const medicalClaimForLabels: Record<MedicalClaimFor, string> = {
   self: 'Self',
   parent: 'Parent',
@@ -53,8 +60,11 @@ export const medicalClaimForLabels: Record<MedicalClaimFor, string> = {
 };
 
 export const medicalServiceTypeLabels: Record<MedicalServiceType, string> = {
-  opd: 'OPD',
-  medicine: 'Prescribed Medicine',
-  procedure: 'Medical Procedure',
-  hospitalization: 'Hospitalization',
+  consultation: 'Doctor Consultation',
+  hospitalization: 'Hospital Admission & Treatment',
+  medication: 'Prescription Medication',
+  lab_diagnostics: 'Lab Tests & Diagnostics',
+  emergency: 'Emergency Care',
+  dental: 'Dental (Medical Necessity)',
+  vision: 'Vision Care',
 };
