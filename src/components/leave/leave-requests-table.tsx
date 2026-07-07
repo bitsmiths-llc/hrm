@@ -11,7 +11,10 @@ import {
 import { Palmtree } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { useMonthFilter } from '@/hooks/use-month-filter';
+
 import { EmptyState } from '@/components/hrm/empty-state';
+import { MonthFilter } from '@/components/hrm/month-filter';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { DataTable } from '@/components/ui/data-table';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
@@ -23,6 +26,8 @@ import { formatDate } from '@/utils/date-functions';
 import { leaveTypeLabels } from '@/constants/hrm-labels';
 
 import { LeaveRequest } from '@/types/hrm';
+
+const getStartDate = (request: LeaveRequest) => request.startDate;
 
 function useLeaveHistoryColumns() {
   return useMemo<ColumnDef<LeaveRequest>[]>(
@@ -103,9 +108,13 @@ export function LeaveRequestsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'startDate', desc: true },
   ]);
+  const { month, setMonth, months, filtered } = useMonthFilter(
+    requests,
+    getStartDate,
+  );
 
   const table = useReactTable({
-    data: requests ?? [],
+    data: filtered,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -127,8 +136,19 @@ export function LeaveRequestsTable({
   }
 
   return (
-    <div className='rounded-lg border border-border'>
-      <DataTable table={table} />
+    <div className='flex flex-col gap-3'>
+      <MonthFilter months={months} value={month} onChange={setMonth} />
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={Palmtree}
+          title='No leave requests this month'
+          description='Try a different month, or switch back to all time.'
+        />
+      ) : (
+        <div className='rounded-lg border border-border'>
+          <DataTable table={table} />
+        </div>
+      )}
     </div>
   );
 }

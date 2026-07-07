@@ -11,7 +11,10 @@ import {
 import { Clock } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { useMonthFilter } from '@/hooks/use-month-filter';
+
 import { EmptyState } from '@/components/hrm/empty-state';
+import { MonthFilter } from '@/components/hrm/month-filter';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { DataTable } from '@/components/ui/data-table';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
@@ -21,6 +24,8 @@ import { TableSkeleton } from '@/components/ui/data-table/table-skeleton';
 import { formatDate } from '@/utils/date-functions';
 
 import { OvertimeLog } from '@/types/hrm';
+
+const getLogDate = (log: OvertimeLog) => log.date;
 
 function useOvertimeLogsColumns() {
   return useMemo<ColumnDef<OvertimeLog>[]>(
@@ -97,9 +102,13 @@ export function OvertimeLogsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'date', desc: true },
   ]);
+  const { month, setMonth, months, filtered } = useMonthFilter(
+    logs,
+    getLogDate,
+  );
 
   const table = useReactTable({
-    data: logs ?? [],
+    data: filtered,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -121,8 +130,19 @@ export function OvertimeLogsTable({
   }
 
   return (
-    <div className='rounded-lg border border-border'>
-      <DataTable table={table} />
+    <div className='flex flex-col gap-3'>
+      <MonthFilter months={months} value={month} onChange={setMonth} />
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={Clock}
+          title='No overtime logged this month'
+          description='Try a different month, or switch back to all time.'
+        />
+      ) : (
+        <div className='rounded-lg border border-border'>
+          <DataTable table={table} />
+        </div>
+      )}
     </div>
   );
 }

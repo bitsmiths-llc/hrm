@@ -11,7 +11,10 @@ import {
 import { HeartPulse } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { useMonthFilter } from '@/hooks/use-month-filter';
+
 import { EmptyState } from '@/components/hrm/empty-state';
+import { MonthFilter } from '@/components/hrm/month-filter';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { DataTable } from '@/components/ui/data-table';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
@@ -27,6 +30,8 @@ import {
 } from '@/constants/hrm-labels';
 
 import { MedicalClaim } from '@/types/hrm';
+
+const getExpenseDate = (claim: MedicalClaim) => claim.expenseDate;
 
 function useMedicalClaimsColumns() {
   return useMemo<ColumnDef<MedicalClaim>[]>(
@@ -112,9 +117,13 @@ export function MedicalClaimsTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'expenseDate', desc: true },
   ]);
+  const { month, setMonth, months, filtered } = useMonthFilter(
+    claims,
+    getExpenseDate,
+  );
 
   const table = useReactTable({
-    data: claims ?? [],
+    data: filtered,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -136,8 +145,19 @@ export function MedicalClaimsTable({
   }
 
   return (
-    <div className='rounded-lg border border-border'>
-      <DataTable table={table} />
+    <div className='flex flex-col gap-3'>
+      <MonthFilter months={months} value={month} onChange={setMonth} />
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={HeartPulse}
+          title='No medical claims this month'
+          description='Try a different month, or switch back to all time.'
+        />
+      ) : (
+        <div className='rounded-lg border border-border'>
+          <DataTable table={table} />
+        </div>
+      )}
     </div>
   );
 }
