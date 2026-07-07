@@ -50,7 +50,7 @@ export function ControlledDatePicker<TFieldValues extends FieldValues>({
           ? new Date(`${field.value}T00:00:00`)
           : undefined;
         return (
-          <FormItem className={cn('flex flex-col', containerClassName)}>
+          <FormItem className={containerClassName}>
             {!!label && <FormLabel>{label}</FormLabel>}
             <Popover>
               <PopoverTrigger asChild>
@@ -60,7 +60,7 @@ export function ControlledDatePicker<TFieldValues extends FieldValues>({
                     variant='outline'
                     iconLeft={CalendarIcon}
                     className={cn(
-                      'justify-start text-left font-normal',
+                      'w-full justify-start text-left font-normal',
                       !field.value && 'text-muted-foreground',
                     )}
                   >

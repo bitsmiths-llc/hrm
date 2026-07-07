@@ -17,7 +17,7 @@ export function EmployeeBalances() {
   return (
     <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
       <BalanceCard
-        title='Leave Pool'
+        title='Leave Pool (Annual)'
         used={mockLeaveBalance.poolUsed}
         total={mockLeaveBalance.poolTotal}
         format={(days) => `${days} days`}

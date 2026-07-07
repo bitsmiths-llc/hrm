@@ -21,6 +21,7 @@ import { CenteredCell } from '@/components/ui/data-table/centered-cell';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 import { TableSkeleton } from '@/components/ui/data-table/table-skeleton';
 
+import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
@@ -106,12 +107,14 @@ type MedicalClaimsTableProps = {
   claims: MedicalClaim[] | undefined;
   isLoading: boolean;
   emptyDescription?: string;
+  title?: string;
 };
 
 export function MedicalClaimsTable({
   claims,
   isLoading,
   emptyDescription = 'Claims and their status will show up here.',
+  title,
 }: MedicalClaimsTableProps) {
   const columns = useMedicalClaimsColumns();
   const [sorting, setSorting] = useState<SortingState>([
@@ -146,7 +149,15 @@ export function MedicalClaimsTable({
 
   return (
     <div className='flex flex-col gap-3'>
-      <MonthFilter months={months} value={month} onChange={setMonth} />
+      <div
+        className={cn(
+          'flex items-center gap-3',
+          title ? 'justify-between' : 'justify-end',
+        )}
+      >
+        {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
+        <MonthFilter months={months} value={month} onChange={setMonth} />
+      </div>
       {filtered.length === 0 ? (
         <EmptyState
           icon={HeartPulse}

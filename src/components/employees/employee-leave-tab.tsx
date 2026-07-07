@@ -26,10 +26,11 @@ export function EmployeeLeaveTab({ employeeId }: EmployeeLeaveTabProps) {
       ) : (
         <div className='grid gap-4 sm:grid-cols-2'>
           <BalanceCard
-            title='Leave Pool (Paid · Sick · Half Day)'
+            title='Leave Pool (Paid · Sick · Half Day) · Annual'
             used={balance.poolUsed}
             total={balance.poolTotal}
             format={(days) => `${days} days`}
+            hint='Resets each year'
           />
           <StatCard
             label='Unpaid Leave Taken'

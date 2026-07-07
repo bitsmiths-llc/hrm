@@ -11,7 +11,7 @@ const meta = {
   tags: ['autodocs'],
   args: {
     title: 'Leave',
-    description: 'Request leave and track your 22-day pool.',
+    description: 'Request leave and track your 22-day annual pool.',
   },
 } satisfies Meta<typeof PageHeader>;
 

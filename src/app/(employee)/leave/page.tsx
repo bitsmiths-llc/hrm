@@ -12,15 +12,12 @@ export default function LeavePage() {
     <>
       <PageHeader
         title='Leave'
-        description='Request leave and track your 22-day pool.'
+        description='Request leave and track your 22-day annual pool.'
       >
         <RequestLeaveDialog />
       </PageHeader>
       <LeaveBalanceCards />
-      <section className='flex flex-col gap-3'>
-        <h2 className='text-xl font-semibold'>Recent Requests</h2>
-        <LeaveHistoryTable />
-      </section>
+      <LeaveHistoryTable />
     </>
   );
 }

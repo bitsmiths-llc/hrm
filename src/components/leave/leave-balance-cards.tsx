@@ -23,11 +23,11 @@ export function LeaveBalanceCards() {
   return (
     <div className='grid gap-4 md:grid-cols-2'>
       <BalanceCard
-        title='Leave Pool (Paid · Sick · Half Day)'
+        title='Leave Pool (Paid · Sick · Half Day) · Annual'
         used={balance.poolUsed}
         total={balance.poolTotal}
         format={(days) => `${days} days`}
-        hint='Half days consume 0.5 from the pool'
+        hint='Half days consume 0.5 from the pool · resets each year'
       />
       <StatCard
         label='Unpaid Leave Taken This Year'

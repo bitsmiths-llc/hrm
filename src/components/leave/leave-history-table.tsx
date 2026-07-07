@@ -12,6 +12,7 @@ export function LeaveHistoryTable() {
       requests={requests}
       isLoading={isLoading}
       emptyDescription='Your requests and their status will show up here.'
+      title='Recent Requests'
     />
   );
 }
