@@ -1,31 +1,18 @@
 'use client';
 
-import { Clock, Hourglass, Wallet } from 'lucide-react';
+import { Clock, Hourglass } from 'lucide-react';
 
 import { useMyOvertimeLogs } from '@/hooks/queries/overtime';
 
 import { StatCard } from '@/components/hrm/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { formatCurrency } from '@/utils/number-functions';
-
-import { hrmConfig } from '@/constants/hrm-config';
-import { mockCurrentEmployee } from '@/constants/mock/employees';
-
-/** PRD 5.3.1: Overtime Rate = Base Salary × Multiplier ÷ Working Hours. */
-function overtimeRate() {
-  const { baseSalary, workingHours } = mockCurrentEmployee;
-  if (!workingHours) return 0;
-  return (baseSalary * hrmConfig.overtimeMultiplier) / workingHours;
-}
-
 export function OvertimeSummaryCards() {
   const { data: logs, isLoading } = useMyOvertimeLogs();
 
   if (isLoading) {
     return (
-      <div className='grid gap-4 md:grid-cols-3'>
-        <Skeleton className='h-32 rounded-xl' />
+      <div className='grid gap-4 md:grid-cols-2'>
         <Skeleton className='h-32 rounded-xl' />
         <Skeleton className='h-32 rounded-xl' />
       </div>
@@ -46,21 +33,13 @@ export function OvertimeSummaryCards() {
     .filter((log) => log.status === 'pending')
     .reduce((sum, log) => sum + log.hours, 0);
 
-  const estimatedPay = approvedHours * overtimeRate();
-
   return (
-    <div className='grid gap-4 md:grid-cols-3'>
+    <div className='grid gap-4 md:grid-cols-2'>
       <StatCard
         label='Approved Hours (this month)'
         value={`${approvedHours}h`}
         icon={Clock}
-        hint='Only approved hours are paid'
-      />
-      <StatCard
-        label='Estimated Overtime Pay'
-        value={formatCurrency(estimatedPay) || 'PKR 0'}
-        icon={Wallet}
-        hint={`At ${hrmConfig.overtimeMultiplier}× your hourly rate`}
+        hint='Pay is calculated by admin during the payroll run'
       />
       <StatCard
         label='Pending Hours'
