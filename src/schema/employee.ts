@@ -1,8 +1,16 @@
 import { z } from 'zod';
 
 export const inviteEmployeeSchema = z.object({
-  fullName: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Enter a valid email address'),
+  // Optional: admins may invite with just an email. The "min 2" rule only bites
+  // when a name is actually typed — a blank field (RHF sends '') is allowed and
+  // normalised to null in the action.
+  fullName: z
+    .string()
+    .trim()
+    .min(2, 'Name must be at least 2 characters')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type InviteEmployeeInput = z.infer<typeof inviteEmployeeSchema>;
