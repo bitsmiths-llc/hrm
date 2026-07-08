@@ -36,6 +36,11 @@ export const inviteEmployee = authActionClient
         data: name ? { full_name: name } : undefined,
       });
     if (inviteError || !invited.user) {
+      // The invite can fail *after* creating the auth user (e.g. the email send
+      // fails). If a user came back, delete it so no orphan is left behind.
+      if (invited?.user?.id) {
+        await supabaseAdmin.auth.admin.deleteUser(invited.user.id);
+      }
       // Don't surface the raw auth error; the most common cause is an email
       // that has already been invited.
       throw new Error('Could not send the invitation. Please try again.');

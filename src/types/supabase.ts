@@ -204,7 +204,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      account_status: "invited" | "onboarding" | "submitted" | "active"
+      account_status: "invited" | "onboarding" | "active"
       employment_type: "full_time" | "part_time"
       user_role: "admin" | "employee"
     }
@@ -334,7 +334,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_status: ["invited", "onboarding", "submitted", "active"],
+      account_status: ["invited", "onboarding", "active"],
       employment_type: ["full_time", "part_time"],
       user_role: ["admin", "employee"],
     },
