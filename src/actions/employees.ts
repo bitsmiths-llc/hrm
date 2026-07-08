@@ -1,5 +1,6 @@
 'use server';
 
+import { sendInviteEmail } from '@/lib/resend/send-invite-email';
 import { authActionClient } from '@/lib/server/safe-action';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
@@ -30,25 +31,35 @@ export const inviteEmployee = authActionClient
     // Collapse a blank/whitespace name to null so the row stores null, not ''.
     const name = fullName?.trim() || null;
 
-    // The default invite email (built-in SMTP) can't be pointed at /auth/confirm
-    // — template editing requires custom SMTP — so it returns via the implicit
-    // hash flow. redirectTo sends that landing to /auth/invite-callback, a client
-    // route that reads the session from the URL hash and forwards to set-password.
-    // (With custom SMTP + a token_hash template, /auth/confirm handles it instead.)
-    const redirectTo = `${appConfig.appUrl}${paths.auth.inviteCallback}`;
+    // generateLink creates the auth.users row without sending Supabase's own
+    // (unbrandable) mailer email. We build our own /auth/confirm link from the
+    // returned hashed_token and deliver it ourselves via Resend.
     const { data: invited, error: inviteError } =
-      await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        redirectTo,
-        data: name ? { full_name: name } : undefined,
+      await supabaseAdmin.auth.admin.generateLink({
+        type: 'invite',
+        email,
+        options: { data: name ? { full_name: name } : undefined },
       });
     if (inviteError || !invited.user) {
-      // The invite can fail *after* creating the auth user (e.g. the email send
-      // fails). If a user came back, delete it so no orphan is left behind.
-      if (invited?.user?.id) {
-        await supabaseAdmin.auth.admin.deleteUser(invited.user.id);
-      }
       // Don't surface the raw auth error; the most common cause is an email
       // that has already been invited.
+      throw new Error('Could not send the invitation. Please try again.');
+    }
+
+    const inviteUrl = new URL(paths.auth.confirm, appConfig.appUrl);
+    inviteUrl.searchParams.set('token_hash', invited.properties.hashed_token);
+    inviteUrl.searchParams.set('type', 'invite');
+    inviteUrl.searchParams.set('next', paths.auth.acceptInvitation);
+
+    try {
+      await sendInviteEmail({
+        to: email,
+        fullName: name,
+        inviteUrl: inviteUrl.toString(),
+      });
+    } catch {
+      // The auth user exists but nobody can ever receive the link — roll back.
+      await supabaseAdmin.auth.admin.deleteUser(invited.user.id);
       throw new Error('Could not send the invitation. Please try again.');
     }
 

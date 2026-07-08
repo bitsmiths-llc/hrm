@@ -14,7 +14,7 @@ export const appConfig = {
   appName: env.NEXT_PUBLIC_APP_NAME,
   emails: {
     support: 'support@example.com',
-    sender: 'noreply@example.com',
+    sender: 'noreply@hrm.bitsmiths.dev',
   },
 } as const;
 

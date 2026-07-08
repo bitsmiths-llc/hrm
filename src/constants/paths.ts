@@ -3,7 +3,7 @@ export const paths = {
   auth: {
     login: '/auth/login',
     acceptInvitation: '/auth/accept-invitation',
-    inviteCallback: '/auth/invite-callback',
+    confirm: '/auth/confirm',
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
     callback: '/auth/callback',
