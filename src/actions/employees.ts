@@ -3,6 +3,8 @@
 import { authActionClient } from '@/lib/server/safe-action';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
+import { appConfig } from '@/config/app';
+import { paths } from '@/constants/paths';
 import { inviteEmployeeSchema } from '@/schema/employee';
 
 /**
@@ -28,11 +30,15 @@ export const inviteEmployee = authActionClient
     // Collapse a blank/whitespace name to null so the row stores null, not ''.
     const name = fullName?.trim() || null;
 
-    // The invite email's link must point at /auth/confirm (see the "Invite
-    // user" email template), which verifies the token server-side and forwards
-    // to the set-password page. The template owns routing, so no redirectTo.
+    // The default invite email (built-in SMTP) can't be pointed at /auth/confirm
+    // — template editing requires custom SMTP — so it returns via the implicit
+    // hash flow. redirectTo sends that landing to /auth/invite-callback, a client
+    // route that reads the session from the URL hash and forwards to set-password.
+    // (With custom SMTP + a token_hash template, /auth/confirm handles it instead.)
+    const redirectTo = `${appConfig.appUrl}${paths.auth.inviteCallback}`;
     const { data: invited, error: inviteError } =
       await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
         data: name ? { full_name: name } : undefined,
       });
     if (inviteError || !invited.user) {
