@@ -9,10 +9,7 @@ export const metadata: Metadata = { title: 'Employees' };
 export default function EmployeesPage() {
   return (
     <>
-      <PageHeader
-        title='Employees'
-        description='Directory and invitations.'
-      >
+      <PageHeader title='Employees' description='Directory and invitations.'>
         <InviteEmployeeDialog />
       </PageHeader>
       <EmployeesTable />

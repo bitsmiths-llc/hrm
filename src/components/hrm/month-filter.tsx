@@ -1,6 +1,12 @@
 'use client';
 
-import { Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  CalendarIcon,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -76,9 +82,12 @@ export function MonthFilter({ value, onChange }: MonthFilterProps) {
       <PopoverTrigger asChild>
         <Button
           variant='outline'
-          className='h-8 w-40 justify-between font-normal'
+          className='h-10 w-40 justify-between font-normal'
         >
-          {label}
+          <span className='flex items-center gap-1.5'>
+            <CalendarIcon className='size-3.5 opacity-50' />
+            {label}
+          </span>
           <ChevronDown className='size-4 opacity-50' />
         </Button>
       </PopoverTrigger>
@@ -94,12 +103,12 @@ export function MonthFilter({ value, onChange }: MonthFilterProps) {
           All time
           {value === 'all' && <Check className='size-4' />}
         </button>
-        <div className='mb-1.5 flex items-center justify-between px-1'>
+        <div className='mb-1.5 flex items-center gap-1'>
           <Button
             type='button'
             variant='ghost'
             size='icon'
-            className='size-6'
+            className='size-7 shrink-0'
             onClick={() => setViewYear((prev) => prev - 1)}
           >
             <ChevronLeft className='size-3.5' />
@@ -108,18 +117,24 @@ export function MonthFilter({ value, onChange }: MonthFilterProps) {
             type='button'
             onClick={() => select(String(viewYear))}
             className={cn(
-              'flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+              'flex flex-1 items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground',
               value === String(viewYear) && 'bg-accent text-accent-foreground',
             )}
           >
             {viewYear}
-            {value === String(viewYear) && <Check className='size-3' />}
+            {value === String(viewYear) ? (
+              <Check className='size-4' />
+            ) : (
+              <span className='text-xs font-normal text-muted-foreground'>
+                Whole year
+              </span>
+            )}
           </button>
           <Button
             type='button'
             variant='ghost'
             size='icon'
-            className='size-6'
+            className='size-7 shrink-0'
             disabled={viewYear >= currentYear}
             onClick={() => setViewYear((prev) => prev + 1)}
           >

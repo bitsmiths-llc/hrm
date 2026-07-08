@@ -3,6 +3,8 @@
 import { useState } from 'react';
 
 import { MonthFilter } from '@/components/hrm/month-filter';
+import { PageHeader } from '@/components/hrm/page-header';
+import { LogOvertimeDialog } from '@/components/overtime/log-overtime-dialog';
 
 import { mockCurrentEmployee } from '@/constants/mock/employees';
 
@@ -14,9 +16,13 @@ export function OvertimePageContent() {
 
   return (
     <>
-      <div className='flex justify-end'>
+      <PageHeader
+        title='Overtime'
+        description='Log extra hours and track their approval status.'
+      >
         <MonthFilter value={month} onChange={setMonth} />
-      </div>
+        <LogOvertimeDialog />
+      </PageHeader>
       <OvertimeSummaryCards employeeId={mockCurrentEmployee.id} month={month} />
       <OvertimeHistoryTable month={month} />
     </>

@@ -1,4 +1,5 @@
 import { Receipt } from 'lucide-react';
+import Link from 'next/link';
 
 import { BalanceCard } from '@/components/hrm/balance-card';
 import { StatCard } from '@/components/hrm/stat-card';
@@ -6,13 +7,17 @@ import { StatCard } from '@/components/hrm/stat-card';
 import { formatCurrency } from '@/utils/number-functions';
 
 import {
+  mockCurrentEmployee,
   mockLeaveBalance,
   mockMedicalBalance,
 } from '@/constants/mock/employees';
 import { mockPayslips } from '@/constants/mock/payroll';
+import { paths } from '@/constants/paths';
 
 export function EmployeeBalances() {
-  const latestPayslip = mockPayslips[0];
+  const latestPayslip = mockPayslips
+    .filter((payslip) => payslip.employeeId === mockCurrentEmployee.id)
+    .sort((a, b) => b.cycleMonth.localeCompare(a.cycleMonth))[0];
 
   return (
     <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
@@ -31,12 +36,19 @@ export function EmployeeBalances() {
         format={(amount) => formatCurrency(amount) || '0'}
         hint={`Accrues ${formatCurrency(mockMedicalBalance.monthlyAccrual)}/month`}
       />
-      <StatCard
-        label='Latest Payslip'
-        value={formatCurrency(latestPayslip.total)}
-        icon={Receipt}
-        hint={`Cycle ${latestPayslip.cycleMonth}`}
-      />
+      {!!latestPayslip && (
+        <Link
+          href={paths.employee.payslips}
+          className='block rounded-xl transition-shadow hover:shadow-md'
+        >
+          <StatCard
+            label='Latest Payslip'
+            value={formatCurrency(latestPayslip.total)}
+            icon={Receipt}
+            hint={`Cycle ${latestPayslip.cycleMonth}`}
+          />
+        </Link>
+      )}
     </div>
   );
 }

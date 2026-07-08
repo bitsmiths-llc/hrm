@@ -3,6 +3,8 @@
 import { useState } from 'react';
 
 import { MonthFilter } from '@/components/hrm/month-filter';
+import { PageHeader } from '@/components/hrm/page-header';
+import { RequestLeaveDialog } from '@/components/leave/request-leave-dialog';
 
 import { mockCurrentEmployee } from '@/constants/mock/employees';
 
@@ -14,9 +16,13 @@ export function LeavePageContent() {
 
   return (
     <>
-      <div className='flex justify-end'>
+      <PageHeader
+        title='Leave'
+        description='Request leave and track your 22-day annual pool.'
+      >
         <MonthFilter value={month} onChange={setMonth} />
-      </div>
+        <RequestLeaveDialog />
+      </PageHeader>
       <LeaveBalanceCards employeeId={mockCurrentEmployee.id} month={month} />
       <LeaveHistoryTable month={month} />
     </>

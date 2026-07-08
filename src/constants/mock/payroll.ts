@@ -6,7 +6,7 @@ export const mockPayrollCycles: PayrollCycle[] = [
     month: '2026-07',
     status: 'open',
     totalPayroll: 0,
-    employeeCount: 3,
+    employeeCount: 2,
     lockedAt: null,
   },
   {
@@ -14,7 +14,7 @@ export const mockPayrollCycles: PayrollCycle[] = [
     month: '2026-06',
     status: 'locked',
     totalPayroll: 712_450,
-    employeeCount: 3,
+    employeeCount: 2,
     lockedAt: '2026-06-30',
   },
   {

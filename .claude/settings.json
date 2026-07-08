@@ -13,8 +13,6 @@
       "Bash(rmdir \"d:/Bitsmiths/hrm/.claude/skills/boilerplate-project-standards\")",
       "Edit(/.claude/skills/coding-standards/**)"
     ],
-    "additionalDirectories": [
-      "d:\\Bitsmiths\\hrm\\.claude\\docs"
-    ]
+    "additionalDirectories": ["d:\\Bitsmiths\\hrm\\.claude\\docs"]
   }
 }

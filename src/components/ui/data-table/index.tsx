@@ -9,11 +9,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+import { cn } from '@/lib/utils';
+
 interface DataTableProps<T> {
   table: TTable<T>;
+  onRowClick?: (row: T) => void;
 }
 
-export function DataTable<T>({ table }: DataTableProps<T>) {
+export function DataTable<T>({ table, onRowClick }: DataTableProps<T>) {
   return (
     <Table>
       <TableHeader>
@@ -52,7 +55,11 @@ export function DataTable<T>({ table }: DataTableProps<T>) {
           <TableRow
             key={row.id}
             data-state={row.getIsSelected() && 'selected'}
-            className='border-border text-sm'
+            className={cn(
+              'border-border text-sm',
+              !!onRowClick && 'cursor-pointer',
+            )}
+            onClick={() => onRowClick?.(row.original)}
           >
             {row.getVisibleCells().map((cell) => (
               <TableCell

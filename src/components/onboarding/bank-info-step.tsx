@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { type BankInfoInput,bankInfoSchema } from '@/schema/onboarding';
+import { type BankInfoInput, bankInfoSchema } from '@/schema/onboarding';
 
 const fields: {
   name: keyof BankInfoInput;
