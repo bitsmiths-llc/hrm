@@ -4,7 +4,11 @@ import { useMyMedicalClaims } from '@/hooks/queries/medical';
 
 import { MedicalClaimsTable } from './medical-claims-table';
 
-export function MedicalHistoryTable() {
+type MedicalHistoryTableProps = {
+  month: string;
+};
+
+export function MedicalHistoryTable({ month }: MedicalHistoryTableProps) {
   const { data: claims, isLoading } = useMyMedicalClaims();
 
   return (
@@ -13,6 +17,7 @@ export function MedicalHistoryTable() {
       isLoading={isLoading}
       emptyDescription='Your claims and their status will show up here.'
       title='Recent Claims'
+      month={month}
     />
   );
 }

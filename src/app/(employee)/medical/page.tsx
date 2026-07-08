@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
 
 import { PageHeader } from '@/components/hrm/page-header';
-import { MedicalBalanceCards } from '@/components/medical/medical-balance-cards';
-import { MedicalHistoryTable } from '@/components/medical/medical-history-table';
+import { MedicalPageContent } from '@/components/medical/medical-page-content';
 import { SubmitClaimDialog } from '@/components/medical/submit-claim-dialog';
 
 import { getMedicalIneligibilityReason } from '@/lib/medical-eligibility';
@@ -28,8 +27,7 @@ export default function MedicalPage() {
           {ineligibilityReason}
         </div>
       )}
-      <MedicalBalanceCards />
-      <MedicalHistoryTable />
+      <MedicalPageContent />
     </>
   );
 }

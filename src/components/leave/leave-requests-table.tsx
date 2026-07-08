@@ -11,24 +11,18 @@ import {
 import { Palmtree } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { useMonthFilter } from '@/hooks/use-month-filter';
-
 import { EmptyState } from '@/components/hrm/empty-state';
-import { MonthFilter } from '@/components/hrm/month-filter';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { DataTable } from '@/components/ui/data-table';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 import { TableSkeleton } from '@/components/ui/data-table/table-skeleton';
 
-import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/date-functions';
 
 import { leaveTypeLabels } from '@/constants/hrm-labels';
 
 import { LeaveRequest } from '@/types/hrm';
-
-const getStartDate = (request: LeaveRequest) => request.startDate;
 
 function useLeaveHistoryColumns() {
   return useMemo<ColumnDef<LeaveRequest>[]>(
@@ -100,9 +94,11 @@ type LeaveRequestsTableProps = {
   requests: LeaveRequest[] | undefined;
   isLoading: boolean;
   emptyDescription?: string;
-  /** Optional heading rendered next to the month filter, e.g. "Recent
-   *  Requests". Omit to show just the filter, right-aligned. */
+  /** Optional heading, e.g. "Recent Requests". */
   title?: string;
+  /** 'all' | 'YYYY' | 'YYYY-MM' — the period selected by the page-level
+   *  month filter. */
+  month: string;
 };
 
 /** Presentational leave table — used by both the employee's own /leave
@@ -112,12 +108,18 @@ export function LeaveRequestsTable({
   isLoading,
   emptyDescription = 'Requests and their status will show up here.',
   title,
+  month,
 }: LeaveRequestsTableProps) {
   const columns = useLeaveHistoryColumns();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'startDate', desc: true },
   ]);
-  const { month, setMonth, filtered } = useMonthFilter(requests, getStartDate);
+  const filtered = useMemo(() => {
+    if (month === 'all') return requests ?? [];
+    return (requests ?? []).filter((request) =>
+      request.startDate.startsWith(month),
+    );
+  }, [requests, month]);
 
   const table = useReactTable({
     data: filtered,
@@ -143,20 +145,12 @@ export function LeaveRequestsTable({
 
   return (
     <div className='flex flex-col gap-3'>
-      <div
-        className={cn(
-          'flex items-center gap-3',
-          title ? 'justify-between' : 'justify-end',
-        )}
-      >
-        {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
-        <MonthFilter value={month} onChange={setMonth} />
-      </div>
+      {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
       {filtered.length === 0 ? (
         <EmptyState
           icon={Palmtree}
-          title='No leave requests this month'
-          description='Try a different month, or switch back to all time.'
+          title='No leave requests in this period'
+          description='Try a different month or year, or switch back to all time.'
         />
       ) : (
         <div className='rounded-lg border border-border'>

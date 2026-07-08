@@ -1,23 +1,23 @@
 'use client';
 
-import { useEmployee } from '@/hooks/queries/employees';
-import { useMedicalBalance, useMedicalClaims } from '@/hooks/queries/medical';
+import { useState } from 'react';
 
-import { BalanceCard } from '@/components/hrm/balance-card';
+import { useEmployee } from '@/hooks/queries/employees';
+import { useMedicalClaims } from '@/hooks/queries/medical';
+
+import { MonthFilter } from '@/components/hrm/month-filter';
+import { MedicalBalanceCards } from '@/components/medical/medical-balance-cards';
 import { MedicalClaimsTable } from '@/components/medical/medical-claims-table';
-import { Skeleton } from '@/components/ui/skeleton';
 
 import { isMedicalEligible } from '@/lib/medical-eligibility';
-import { formatCurrency } from '@/utils/number-functions';
 
 type EmployeeMedicalTabProps = {
   employeeId: string;
 };
 
 export function EmployeeMedicalTab({ employeeId }: EmployeeMedicalTabProps) {
+  const [month, setMonth] = useState('all');
   const { data: employee } = useEmployee(employeeId);
-  const { data: balance, isLoading: balanceLoading } =
-    useMedicalBalance(employeeId);
   const { data: claims, isLoading: claimsLoading } =
     useMedicalClaims(employeeId);
 
@@ -29,24 +29,15 @@ export function EmployeeMedicalTab({ employeeId }: EmployeeMedicalTabProps) {
           Employment & Payroll Configuration under the Profile tab.
         </div>
       )}
-      {balanceLoading || !balance ? (
-        <Skeleton className='h-40 w-full max-w-md rounded-xl' />
-      ) : (
-        <div className='max-w-md'>
-          <BalanceCard
-            title='Medical Allowance'
-            mode='accrued'
-            used={balance.accrued}
-            total={balance.cap}
-            format={(amount) => formatCurrency(amount) || '0'}
-            hint={`Accrues ${formatCurrency(balance.monthlyAccrual)}/month`}
-          />
-        </div>
-      )}
+      <div className='flex justify-end'>
+        <MonthFilter value={month} onChange={setMonth} />
+      </div>
+      <MedicalBalanceCards employeeId={employeeId} month={month} />
       <MedicalClaimsTable
         claims={claims}
         isLoading={claimsLoading}
         emptyDescription="This employee hasn't filed a medical claim yet."
+        month={month}
       />
     </div>
   );

@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
 
 import { PageHeader } from '@/components/hrm/page-header';
-import { LeaveBalanceCards } from '@/components/leave/leave-balance-cards';
-import { LeaveHistoryTable } from '@/components/leave/leave-history-table';
+import { LeavePageContent } from '@/components/leave/leave-page-content';
 import { RequestLeaveDialog } from '@/components/leave/request-leave-dialog';
 
 export const metadata: Metadata = { title: 'Leave' };
@@ -16,8 +15,7 @@ export default function LeavePage() {
       >
         <RequestLeaveDialog />
       </PageHeader>
-      <LeaveBalanceCards />
-      <LeaveHistoryTable />
+      <LeavePageContent />
     </>
   );
 }

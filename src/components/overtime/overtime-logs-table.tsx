@@ -11,22 +11,16 @@ import {
 import { Clock } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { useMonthFilter } from '@/hooks/use-month-filter';
-
 import { EmptyState } from '@/components/hrm/empty-state';
-import { MonthFilter } from '@/components/hrm/month-filter';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { DataTable } from '@/components/ui/data-table';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 import { TableSkeleton } from '@/components/ui/data-table/table-skeleton';
 
-import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/date-functions';
 
 import { OvertimeLog } from '@/types/hrm';
-
-const getLogDate = (log: OvertimeLog) => log.date;
 
 function useOvertimeLogsColumns() {
   return useMemo<ColumnDef<OvertimeLog>[]>(
@@ -97,6 +91,9 @@ type OvertimeLogsTableProps = {
   isLoading: boolean;
   emptyDescription?: string;
   title?: string;
+  /** 'all' | 'YYYY' | 'YYYY-MM' — the period selected by the page-level
+   *  month filter. */
+  month: string;
 };
 
 export function OvertimeLogsTable({
@@ -104,12 +101,16 @@ export function OvertimeLogsTable({
   isLoading,
   emptyDescription = 'Logged hours and their status will show up here.',
   title,
+  month,
 }: OvertimeLogsTableProps) {
   const columns = useOvertimeLogsColumns();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'date', desc: true },
   ]);
-  const { month, setMonth, filtered } = useMonthFilter(logs, getLogDate);
+  const filtered = useMemo(() => {
+    if (month === 'all') return logs ?? [];
+    return (logs ?? []).filter((log) => log.date.startsWith(month));
+  }, [logs, month]);
 
   const table = useReactTable({
     data: filtered,
@@ -135,20 +136,12 @@ export function OvertimeLogsTable({
 
   return (
     <div className='flex flex-col gap-3'>
-      <div
-        className={cn(
-          'flex items-center gap-3',
-          title ? 'justify-between' : 'justify-end',
-        )}
-      >
-        {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
-        <MonthFilter value={month} onChange={setMonth} />
-      </div>
+      {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
       {filtered.length === 0 ? (
         <EmptyState
           icon={Clock}
-          title='No overtime logged this month'
-          description='Try a different month, or switch back to all time.'
+          title='No overtime logged in this period'
+          description='Try a different month or year, or switch back to all time.'
         />
       ) : (
         <div className='rounded-lg border border-border'>

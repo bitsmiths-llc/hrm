@@ -1,36 +1,32 @@
 'use client';
 
-import { Clock } from 'lucide-react';
+import { useState } from 'react';
 
 import { useOvertimeLogs } from '@/hooks/queries/overtime';
 
-import { StatCard } from '@/components/hrm/stat-card';
+import { MonthFilter } from '@/components/hrm/month-filter';
 import { OvertimeLogsTable } from '@/components/overtime/overtime-logs-table';
+import { OvertimeSummaryCards } from '@/components/overtime/overtime-summary-cards';
 
 type EmployeeOvertimeTabProps = {
   employeeId: string;
 };
 
 export function EmployeeOvertimeTab({ employeeId }: EmployeeOvertimeTabProps) {
+  const [month, setMonth] = useState('all');
   const { data: logs, isLoading } = useOvertimeLogs(employeeId);
-
-  const approvedHours = (logs ?? [])
-    .filter((log) => log.status === 'approved')
-    .reduce((sum, log) => sum + log.hours, 0);
 
   return (
     <div className='flex flex-col gap-4'>
-      <div className='max-w-xs'>
-        <StatCard
-          label='Approved Hours (all time)'
-          value={`${approvedHours}h`}
-          icon={Clock}
-        />
+      <div className='flex justify-end'>
+        <MonthFilter value={month} onChange={setMonth} />
       </div>
+      <OvertimeSummaryCards employeeId={employeeId} month={month} />
       <OvertimeLogsTable
         logs={logs}
         isLoading={isLoading}
         emptyDescription="This employee hasn't logged overtime yet."
+        month={month}
       />
     </div>
   );

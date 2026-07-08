@@ -28,7 +28,7 @@ const MONTH_LABELS = [
 ];
 
 type MonthFilterProps = {
-  /** 'all' or 'YYYY-MM'. */
+  /** 'all', 'YYYY' (whole year), or 'YYYY-MM'. */
   value: string;
   onChange: (value: string) => void;
 };
@@ -37,7 +37,8 @@ type MonthFilterProps = {
  *  a fixed 3x4 grid (future months disabled) plus an "All time" option, so
  *  the popover stays a constant size instead of growing into a long
  *  scrolling list. Year chevrons let you page back through history — years
- *  beyond the real current year are blocked, past years are unrestricted. */
+ *  beyond the real current year are blocked, past years are unrestricted.
+ *  Clicking the year label itself filters to that whole year. */
 export function MonthFilter({ value, onChange }: MonthFilterProps) {
   const [open, setOpen] = useState(false);
 
@@ -52,10 +53,12 @@ export function MonthFilter({ value, onChange }: MonthFilterProps) {
   const label =
     value === 'all'
       ? 'All time'
-      : new Date(`${value}-01T00:00:00`).toLocaleDateString('en-US', {
-          month: 'long',
-          year: 'numeric',
-        });
+      : value.length === 4
+        ? value
+        : new Date(`${value}-01T00:00:00`).toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric',
+          });
 
   const select = (next: string) => {
     onChange(next);
@@ -101,9 +104,17 @@ export function MonthFilter({ value, onChange }: MonthFilterProps) {
           >
             <ChevronLeft className='size-3.5' />
           </Button>
-          <p className='text-xs font-medium text-muted-foreground'>
+          <button
+            type='button'
+            onClick={() => select(String(viewYear))}
+            className={cn(
+              'flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+              value === String(viewYear) && 'bg-accent text-accent-foreground',
+            )}
+          >
             {viewYear}
-          </p>
+            {value === String(viewYear) && <Check className='size-3' />}
+          </button>
           <Button
             type='button'
             variant='ghost'

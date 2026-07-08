@@ -11,17 +11,13 @@ import {
 import { HeartPulse } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { useMonthFilter } from '@/hooks/use-month-filter';
-
 import { EmptyState } from '@/components/hrm/empty-state';
-import { MonthFilter } from '@/components/hrm/month-filter';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { DataTable } from '@/components/ui/data-table';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 import { TableSkeleton } from '@/components/ui/data-table/table-skeleton';
 
-import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
@@ -31,8 +27,6 @@ import {
 } from '@/constants/hrm-labels';
 
 import { MedicalClaim } from '@/types/hrm';
-
-const getExpenseDate = (claim: MedicalClaim) => claim.expenseDate;
 
 function useMedicalClaimsColumns() {
   return useMemo<ColumnDef<MedicalClaim>[]>(
@@ -116,6 +110,9 @@ type MedicalClaimsTableProps = {
   isLoading: boolean;
   emptyDescription?: string;
   title?: string;
+  /** 'all' | 'YYYY' | 'YYYY-MM' — the period selected by the page-level
+   *  month filter. */
+  month: string;
 };
 
 export function MedicalClaimsTable({
@@ -123,12 +120,18 @@ export function MedicalClaimsTable({
   isLoading,
   emptyDescription = 'Claims and their status will show up here.',
   title,
+  month,
 }: MedicalClaimsTableProps) {
   const columns = useMedicalClaimsColumns();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'expenseDate', desc: true },
   ]);
-  const { month, setMonth, filtered } = useMonthFilter(claims, getExpenseDate);
+  const filtered = useMemo(() => {
+    if (month === 'all') return claims ?? [];
+    return (claims ?? []).filter((claim) =>
+      claim.expenseDate.startsWith(month),
+    );
+  }, [claims, month]);
 
   const table = useReactTable({
     data: filtered,
@@ -154,20 +157,12 @@ export function MedicalClaimsTable({
 
   return (
     <div className='flex flex-col gap-3'>
-      <div
-        className={cn(
-          'flex items-center gap-3',
-          title ? 'justify-between' : 'justify-end',
-        )}
-      >
-        {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
-        <MonthFilter value={month} onChange={setMonth} />
-      </div>
+      {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
       {filtered.length === 0 ? (
         <EmptyState
           icon={HeartPulse}
-          title='No medical claims this month'
-          description='Try a different month, or switch back to all time.'
+          title='No medical claims in this period'
+          description='Try a different month or year, or switch back to all time.'
         />
       ) : (
         <div className='rounded-lg border border-border'>

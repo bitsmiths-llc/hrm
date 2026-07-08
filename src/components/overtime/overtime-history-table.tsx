@@ -4,7 +4,11 @@ import { useMyOvertimeLogs } from '@/hooks/queries/overtime';
 
 import { OvertimeLogsTable } from './overtime-logs-table';
 
-export function OvertimeHistoryTable() {
+type OvertimeHistoryTableProps = {
+  month: string;
+};
+
+export function OvertimeHistoryTable({ month }: OvertimeHistoryTableProps) {
   const { data: logs, isLoading } = useMyOvertimeLogs();
 
   return (
@@ -13,6 +17,7 @@ export function OvertimeHistoryTable() {
       isLoading={isLoading}
       emptyDescription='Your logged hours and their status will show up here.'
       title='Recent Logs'
+      month={month}
     />
   );
 }
