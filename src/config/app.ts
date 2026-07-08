@@ -13,8 +13,8 @@ export const appConfig = {
   appUrl: env.NEXT_PUBLIC_APP_URL,
   appName: env.NEXT_PUBLIC_APP_NAME,
   emails: {
-    support: 'support@example.com',
-    sender: 'noreply@hrm.bitsmiths.dev',
+    support: 'support@bitsmith.studio',
+    sender: 'onboarding@bitsmith.studio',
   },
 } as const;
 

@@ -7,6 +7,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import { appConfig } from '@/config/app';
 import { paths } from '@/constants/paths';
 import { inviteEmployeeSchema } from '@/schema/employee';
+import Logger from '@/utils/logger';
 
 /**
  * Admin-only. Bring a person into the system by email invite — there is no
@@ -41,6 +42,8 @@ export const inviteEmployee = authActionClient
         options: { data: name ? { full_name: name } : undefined },
       });
     if (inviteError || !invited.user) {
+      // TODO(debug): remove once the Resend cutover is confirmed working.
+      Logger.error('[inviteEmployee] generateLink failed:', inviteError);
       // Don't surface the raw auth error; the most common cause is an email
       // that has already been invited.
       throw new Error('Could not send the invitation. Please try again.');
@@ -57,7 +60,9 @@ export const inviteEmployee = authActionClient
         fullName: name,
         inviteUrl: inviteUrl.toString(),
       });
-    } catch {
+    } catch (error) {
+      // TODO(debug): remove once the Resend cutover is confirmed working.
+      Logger.error('[inviteEmployee] sendInviteEmail failed:', error);
       // The auth user exists but nobody can ever receive the link — roll back.
       await supabaseAdmin.auth.admin.deleteUser(invited.user.id);
       throw new Error('Could not send the invitation. Please try again.');
