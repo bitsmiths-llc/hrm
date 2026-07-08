@@ -95,7 +95,7 @@ export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
           Submit claim
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent className='sm:max-w-xl'>
         <DialogHeader>
           <DialogTitle>Submit a medical claim</DialogTitle>
           <DialogDescription>

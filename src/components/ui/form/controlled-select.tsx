@@ -60,7 +60,18 @@ export function ControlledSelect<TFieldValues extends FieldValues>({
                   className,
                 )}
               >
-                <p className='text-sm'>
+                <p
+                  className='truncate text-sm'
+                  title={
+                    field.value
+                      ? Array.isArray(options) && typeof options[0] !== 'string'
+                        ? (options as { label: string; value: string }[]).find(
+                            (o) => o.value === field.value,
+                          )?.label
+                        : field.value
+                      : undefined
+                  }
+                >
                   {field.value ? (
                     Array.isArray(options) && typeof options[0] !== 'string' ? (
                       (options as { label: string; value: string }[]).find(
