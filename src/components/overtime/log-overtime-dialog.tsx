@@ -1,0 +1,149 @@
+'use client';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { ControlledDatePicker } from '@/components/ui/form/controlled-date-picker';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
+import { type OvertimeLogInput, overtimeLogSchema } from '@/schema/overtime';
+
+export function LogOvertimeDialog() {
+  const [open, setOpen] = useState(false);
+
+  const form = useForm<OvertimeLogInput>({
+    resolver: zodResolver(overtimeLogSchema),
+    defaultValues: {
+      date: '',
+      hours: 1,
+      project: '',
+      task: '',
+    },
+  });
+
+  const onSubmit = async (values: OvertimeLogInput) => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    toast.success(
+      `${values.hours}h logged for ${values.project} — awaiting approval`,
+    );
+    form.reset();
+    setOpen(false);
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) form.reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button iconLeft={Plus}>Log overtime</Button>
+      </DialogTrigger>
+      <DialogContent className='sm:max-w-md'>
+        <DialogHeader>
+          <DialogTitle>Log overtime</DialogTitle>
+          <DialogDescription>
+            Only approved hours are paid out, at the configured overtime rate
+            for the pay period they fall in.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className='flex flex-col gap-4'
+          >
+            <div className='grid grid-cols-2 gap-4'>
+              <ControlledDatePicker<OvertimeLogInput>
+                name='date'
+                label='Date'
+                disabledDates={{ after: new Date() }}
+              />
+              <FormField
+                control={form.control}
+                name='hours'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hours</FormLabel>
+                    <FormControl>
+                      <Input type='number' step={0.5} min={0.5} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name='project'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Project</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='e.g. Client Website Redesign'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='task'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Task</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      rows={3}
+                      placeholder='What did you work on?'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type='submit' isLoading={form.formState.isSubmitting}>
+                Submit log
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}

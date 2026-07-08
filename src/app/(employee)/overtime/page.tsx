@@ -1,14 +1,23 @@
 import { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/hrm/coming-soon';
+import { PageHeader } from '@/components/hrm/page-header';
+import { LogOvertimeDialog } from '@/components/overtime/log-overtime-dialog';
+import { OvertimeHistoryTable } from '@/components/overtime/overtime-history-table';
+import { OvertimeSummaryCards } from '@/components/overtime/overtime-summary-cards';
 
 export const metadata: Metadata = { title: 'Overtime' };
 
 export default function OvertimePage() {
   return (
-    <ComingSoon
-      title='Overtime'
-      description='Log extra hours and track their approval status.'
-    />
+    <>
+      <PageHeader
+        title='Overtime'
+        description='Log extra hours and track their approval status.'
+      >
+        <LogOvertimeDialog />
+      </PageHeader>
+      <OvertimeSummaryCards />
+      <OvertimeHistoryTable />
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { mockCurrentEmployee } from '@/constants/mock/employees';
 import { mockOvertimeLogs } from '@/constants/mock/requests';
 import { QueryKeys } from '@/constants/query-keys';
 
@@ -17,3 +18,6 @@ export const useOvertimeLogs = (employeeId: string) => {
     },
   });
 };
+
+/** Own logs for the signed-in employee (mocked as emp-1). */
+export const useMyOvertimeLogs = () => useOvertimeLogs(mockCurrentEmployee.id);
