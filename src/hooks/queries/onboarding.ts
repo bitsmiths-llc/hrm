@@ -62,7 +62,7 @@ const fetchOnboarding = authQuery<undefined, OnboardingData>(
 /** Section 1–3 saved values for the onboarding wizard (self, via RLS). */
 export const useOnboardingData = () =>
   useQuery({
-    queryKey: [QueryKeys.MY_PROFILE],
+    queryKey: [QueryKeys.ONBOARDING],
     queryFn: () => fetchOnboarding(),
   });
 

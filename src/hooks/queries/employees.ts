@@ -91,3 +91,30 @@ export const useEmployee = (id: string) => {
     queryFn: () => fetchEmployee({ id }),
   });
 };
+
+// Identity fields for the signed-in user — drives the greeting and the sidebar
+// identity card. Kept minimal (no detail-table joins) since callers only need
+// who the user is and which role's app they're in.
+export type CurrentEmployee = Pick<
+  Tables<'employees'>,
+  'id' | 'full_name' | 'email' | 'role' | 'account_status'
+>;
+
+const fetchCurrentEmployee = authQuery<undefined, CurrentEmployee | null>(
+  async ({ supabase, user }) => {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('id, full_name, email, role, account_status')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data;
+  },
+);
+
+/** The signed-in employee's own identity row (self, via RLS). */
+export const useCurrentEmployee = () =>
+  useQuery({
+    queryKey: [QueryKeys.MY_PROFILE],
+    queryFn: () => fetchCurrentEmployee(),
+  });

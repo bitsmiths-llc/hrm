@@ -17,12 +17,17 @@ export const signInWithPassword = safeActionClient
   .schema(loginSchema)
   .action(async ({ parsedInput: { email, password } }) => {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     // Uniform message — never reveal whether it was the email or the password.
     if (error) throw new Error('Invalid email or password');
+    // Role decides which app the caller lands in (mirrored into app_metadata
+    // from employees.role). The middleware enforces the same split on every
+    // subsequent request.
+    const isAdmin = data.user?.app_metadata?.role === 'admin';
+    return { role: isAdmin ? ('admin' as const) : ('employee' as const) };
   });
 
 /** Sends a recovery email. Always resolves ok so the response never reveals

@@ -12,6 +12,34 @@ function isPublicRoute(pathname: string) {
   return pathname === paths.home || pathname.startsWith('/auth');
 }
 
+/** Employee-app routes live in the (employee) route group, which adds no URL
+ *  prefix, so they're enumerated from the paths config. */
+const employeeRoutes = Object.values(paths.employee);
+
+function isEmployeeRoute(pathname: string) {
+  return employeeRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
+/** Every admin-app route is namespaced under /admin. */
+function isAdminRoute(pathname: string) {
+  return pathname === paths.admin.dashboard || pathname.startsWith('/admin/');
+}
+
+/** Redirect that carries over any auth cookies refreshed on this request. */
+function redirectWithCookies(
+  request: NextRequest,
+  from: NextResponse,
+  pathname: string,
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  const response = NextResponse.redirect(url);
+  from.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+  return response;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -46,17 +74,42 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Session guard: no session on a protected route → send to login. The
-  // status/role funnel (M1.5) layers on top of this.
-  if (!user && !isPublicRoute(request.nextUrl.pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = paths.auth.login;
-    const redirectResponse = NextResponse.redirect(url);
-    // Carry over any auth cookies the client refreshed above.
-    supabaseResponse.cookies
-      .getAll()
-      .forEach((cookie) => redirectResponse.cookies.set(cookie));
-    return redirectResponse;
+  const { pathname } = request.nextUrl;
+
+  // Session guard: no session on a protected route → send to login.
+  if (!user && !isPublicRoute(pathname)) {
+    return redirectWithCookies(request, supabaseResponse, paths.auth.login);
+  }
+
+  // Role funnel: each role stays inside its own app. The role comes from the
+  // JWT app_metadata (mirrored from employees.role). Anything not explicitly
+  // 'admin' is treated as an employee, so admin access fails closed.
+  if (user) {
+    const isAdmin = user.app_metadata?.role === 'admin';
+    const roleHome = isAdmin
+      ? paths.admin.dashboard
+      : paths.employee.dashboard;
+
+    // Signed-in users skip the public landing and go straight to their app.
+    if (pathname === paths.home) {
+      return redirectWithCookies(request, supabaseResponse, roleHome);
+    }
+    // Employees can never enter the admin app.
+    if (!isAdmin && isAdminRoute(pathname)) {
+      return redirectWithCookies(
+        request,
+        supabaseResponse,
+        paths.employee.dashboard,
+      );
+    }
+    // Admins are bounced out of the employee app back to theirs.
+    if (isAdmin && isEmployeeRoute(pathname)) {
+      return redirectWithCookies(
+        request,
+        supabaseResponse,
+        paths.admin.dashboard,
+      );
+    }
   }
 
   return supabaseResponse;

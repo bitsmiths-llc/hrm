@@ -41,8 +41,12 @@ export function LoginForm() {
   });
 
   const { execute, isPending } = useAction(signInWithPassword, {
-    onSuccess: () => {
-      router.push(paths.employee.dashboard);
+    onSuccess: ({ data }) => {
+      router.push(
+        data?.role === 'admin'
+          ? paths.admin.dashboard
+          : paths.employee.dashboard,
+      );
       router.refresh();
     },
     onError,

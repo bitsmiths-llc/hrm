@@ -19,7 +19,7 @@ import { QueryKeys } from '@/constants/query-keys';
 function useInvalidateProfile() {
   const queryClient = useQueryClient();
   return () =>
-    queryClient.invalidateQueries({ queryKey: [QueryKeys.MY_PROFILE] });
+    queryClient.invalidateQueries({ queryKey: [QueryKeys.ONBOARDING] });
 }
 
 /** Section 1 · Personal autosave. */
