@@ -1,31 +1,93 @@
 import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 
-import { mockEmployees } from '@/constants/mock/employees';
+import { authQuery } from '@/lib/client/auth-query';
+
 import { QueryKeys } from '@/constants/query-keys';
 
 import { Employee } from '@/types/hrm';
+import { type Tables } from '@/types/supabase';
 
-/** Frontend-only phase: hooks resolve mock fixtures behind the normal React
- *  Query interface, so swapping in Supabase later only touches the queryFn. */
-const mockDelay = (ms = 500) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+// The directory rows are `employees` joined to their one-to-one detail tables
+// (each returns a single row or null for a not-yet-onboarded invitee).
+type EmployeeRow = Tables<'employees'> & {
+  employment_details: Tables<'employment_details'> | null;
+  bank_details: Tables<'bank_details'> | null;
+  socials: Tables<'socials'> | null;
+};
+
+/** Map a joined employees row onto the `Employee` domain type, filling the
+ *  gaps left by a not-yet-onboarded invitee (no detail rows yet) with sensible
+ *  defaults. */
+function toEmployee(row: EmployeeRow): Employee {
+  const { employment_details: work, bank_details: bank, socials: social } = row;
+  return {
+    id: row.id,
+    fullName: row.full_name ?? '',
+    email: row.email,
+    phone: row.phone ?? '',
+    emergencyContact: row.emergency_contact ?? '',
+    address: row.address ?? '',
+    cnic: row.cnic ?? '',
+    dateOfBirth: row.date_of_birth ?? '',
+    bank: bank
+      ? {
+          bankName: bank.bank_name ?? '',
+          accountHolderName: bank.account_holder ?? '',
+          accountNumber: bank.account_number ?? '',
+          iban: bank.iban ?? '',
+          branch: bank.bank_branch ?? undefined,
+        }
+      : null,
+    social: social
+      ? {
+          github: social.github_url ?? '',
+          linkedin: social.linkedin_url ?? '',
+          twitter: social.twitter_url ?? undefined,
+        }
+      : null,
+    employmentType: work?.employment_type ?? 'full_time',
+    baseSalary: work?.base_salary ?? 0,
+    workingHours: work?.working_hours ?? 0,
+    designation: work?.designation ?? '',
+    status: row.account_status,
+    invitedAt: row.invited_at ?? '',
+    joinedAt: row.activated_at,
+  };
+}
+
+const fetchEmployees = authQuery(async ({ supabase }) => {
+  const { data, error } = await supabase
+    .from('employees')
+    .select('*, employment_details(*), bank_details(*), socials(*)')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data.map(toEmployee);
+});
+
+const fetchEmployee = authQuery(
+  async ({ supabase, params }) => {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('*, employment_details(*), bank_details(*), socials(*)')
+      .eq('id', params.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? toEmployee(data) : null;
+  },
+  { paramsSchema: z.object({ id: z.string() }) },
+);
 
 export const useEmployees = () => {
   return useQuery({
     queryKey: [QueryKeys.EMPLOYEES],
-    queryFn: async (): Promise<Employee[]> => {
-      await mockDelay();
-      return mockEmployees;
-    },
+    queryFn: () => fetchEmployees(),
   });
 };
 
 export const useEmployee = (id: string) => {
   return useQuery({
     queryKey: [QueryKeys.EMPLOYEES, id],
-    queryFn: async (): Promise<Employee | null> => {
-      await mockDelay(400);
-      return mockEmployees.find((employee) => employee.id === id) ?? null;
-    },
+    queryFn: () => fetchEmployee({ id }),
   });
 };
