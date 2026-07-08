@@ -55,6 +55,38 @@ export type Database = {
           },
         ]
       }
+      employee_documents: {
+        Row: {
+          doc_type: string
+          employee_id: string
+          id: string
+          storage_path: string
+          uploaded_at: string
+        }
+        Insert: {
+          doc_type: string
+          employee_id: string
+          id?: string
+          storage_path: string
+          uploaded_at?: string
+        }
+        Update: {
+          doc_type?: string
+          employee_id?: string
+          id?: string
+          storage_path?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           accepted_at: string | null
@@ -202,6 +234,7 @@ export type Database = {
     Functions: {
       accept_onboarding: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
+      submit_onboarding: { Args: never; Returns: undefined }
     }
     Enums: {
       account_status: "invited" | "onboarding" | "active"

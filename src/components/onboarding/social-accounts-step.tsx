@@ -42,8 +42,8 @@ const fields: {
 ];
 
 type SocialAccountsStepProps = {
-  defaultValues?: SocialAccountsInput;
-  onNext: (values: SocialAccountsInput) => void;
+  defaultValues: SocialAccountsInput;
+  onNext: (values: SocialAccountsInput) => void | Promise<void>;
   onBack: () => void;
 };
 
@@ -54,7 +54,7 @@ export function SocialAccountsStep({
 }: SocialAccountsStepProps) {
   const form = useForm<SocialAccountsInput>({
     resolver: zodResolver(socialAccountsSchema),
-    defaultValues: defaultValues ?? { github: '', linkedin: '', twitter: '' },
+    defaultValues,
   });
 
   return (
@@ -83,7 +83,9 @@ export function SocialAccountsStep({
           <Button type='button' variant='outline' onClick={onBack}>
             Back
           </Button>
-          <Button type='submit'>Continue</Button>
+          <Button type='submit' isLoading={form.formState.isSubmitting}>
+            Continue
+          </Button>
         </div>
       </form>
     </Form>

@@ -27,6 +27,8 @@ export function ConsentStep({ onSubmit, onBack }: ConsentStepProps) {
     defaultValues: { consent: undefined as unknown as true },
   });
 
+  const consented = form.watch('consent') === true;
+
   return (
     <Form {...form}>
       <form
@@ -65,7 +67,11 @@ export function ConsentStep({ onSubmit, onBack }: ConsentStepProps) {
           <Button type='button' variant='outline' onClick={onBack}>
             Back
           </Button>
-          <Button type='submit' isLoading={form.formState.isSubmitting}>
+          <Button
+            type='submit'
+            disabled={!consented}
+            isLoading={form.formState.isSubmitting}
+          >
             Complete onboarding
           </Button>
         </div>

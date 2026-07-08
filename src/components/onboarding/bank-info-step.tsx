@@ -41,8 +41,8 @@ const fields: {
 ];
 
 type BankInfoStepProps = {
-  defaultValues?: BankInfoInput;
-  onNext: (values: BankInfoInput) => void;
+  defaultValues: BankInfoInput;
+  onNext: (values: BankInfoInput) => void | Promise<void>;
   onBack: () => void;
 };
 
@@ -53,13 +53,7 @@ export function BankInfoStep({
 }: BankInfoStepProps) {
   const form = useForm<BankInfoInput>({
     resolver: zodResolver(bankInfoSchema),
-    defaultValues: defaultValues ?? {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      iban: '',
-      branch: '',
-    },
+    defaultValues,
   });
 
   return (
@@ -88,7 +82,9 @@ export function BankInfoStep({
           <Button type='button' variant='outline' onClick={onBack}>
             Back
           </Button>
-          <Button type='submit'>Continue</Button>
+          <Button type='submit' isLoading={form.formState.isSubmitting}>
+            Continue
+          </Button>
         </div>
       </form>
     </Form>
