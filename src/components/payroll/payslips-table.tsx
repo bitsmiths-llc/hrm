@@ -10,15 +10,21 @@ import {
 import { Receipt } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { useMonthFilter } from '@/hooks/use-month-filter';
+
 import { EmptyState } from '@/components/hrm/empty-state';
+import { MonthFilter } from '@/components/hrm/month-filter';
 import { DataTable } from '@/components/ui/data-table';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 import { TableSkeleton } from '@/components/ui/data-table/table-skeleton';
 
+import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/number-functions';
 
 import { Payslip } from '@/types/hrm';
+
+const getCycleDate = (payslip: Payslip) => payslip.cycleMonth;
 
 function usePayslipsColumns() {
   return useMemo<ColumnDef<Payslip>[]>(
@@ -100,16 +106,22 @@ function usePayslipsColumns() {
 type PayslipsTableProps = {
   payslips: Payslip[] | undefined;
   isLoading: boolean;
+  title?: string;
 };
 
-export function PayslipsTable({ payslips, isLoading }: PayslipsTableProps) {
+export function PayslipsTable({
+  payslips,
+  isLoading,
+  title,
+}: PayslipsTableProps) {
   const columns = usePayslipsColumns();
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'cycleMonth', desc: true },
   ]);
+  const { month, setMonth, filtered } = useMonthFilter(payslips, getCycleDate);
 
   const table = useReactTable({
-    data: payslips ?? [],
+    data: filtered,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -130,8 +142,27 @@ export function PayslipsTable({ payslips, isLoading }: PayslipsTableProps) {
   }
 
   return (
-    <div className='rounded-lg border border-border'>
-      <DataTable table={table} />
+    <div className='flex flex-col gap-3'>
+      <div
+        className={cn(
+          'flex items-center gap-3',
+          title ? 'justify-between' : 'justify-end',
+        )}
+      >
+        {!!title && <h2 className='text-xl font-semibold'>{title}</h2>}
+        <MonthFilter value={month} onChange={setMonth} />
+      </div>
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={Receipt}
+          title='No payslips this month'
+          description='Try a different month, or switch back to all time.'
+        />
+      ) : (
+        <div className='rounded-lg border border-border'>
+          <DataTable table={table} />
+        </div>
+      )}
     </div>
   );
 }

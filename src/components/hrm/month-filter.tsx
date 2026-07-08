@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -34,15 +34,20 @@ type MonthFilterProps = {
 };
 
 /** Month dropdown for filtering a request/claim/log history table. Renders
- *  a fixed 3x4 grid for the current year (future months disabled) plus an
- *  "All time" option, so the popover stays a constant size year-round
- *  instead of growing into a long scrolling list by December. */
+ *  a fixed 3x4 grid (future months disabled) plus an "All time" option, so
+ *  the popover stays a constant size instead of growing into a long
+ *  scrolling list. Year chevrons let you page back through history — years
+ *  beyond the real current year are blocked, past years are unrestricted. */
 export function MonthFilter({ value, onChange }: MonthFilterProps) {
   const [open, setOpen] = useState(false);
 
   const now = new Date();
-  const year = now.getFullYear();
+  const currentYear = now.getFullYear();
   const currentMonthIndex = now.getMonth();
+
+  const selectedYear =
+    value !== 'all' ? Number(value.slice(0, 4)) : currentYear;
+  const [viewYear, setViewYear] = useState(selectedYear);
 
   const label =
     value === 'all'
@@ -58,7 +63,13 @@ export function MonthFilter({ value, onChange }: MonthFilterProps) {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setViewYear(selectedYear);
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           variant='outline'
@@ -80,11 +91,35 @@ export function MonthFilter({ value, onChange }: MonthFilterProps) {
           All time
           {value === 'all' && <Check className='size-4' />}
         </button>
-        <p className='mb-1.5 px-2 text-xs text-muted-foreground'>{year}</p>
+        <div className='mb-1.5 flex items-center justify-between px-1'>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='size-6'
+            onClick={() => setViewYear((prev) => prev - 1)}
+          >
+            <ChevronLeft className='size-3.5' />
+          </Button>
+          <p className='text-xs font-medium text-muted-foreground'>
+            {viewYear}
+          </p>
+          <Button
+            type='button'
+            variant='ghost'
+            size='icon'
+            className='size-6'
+            disabled={viewYear >= currentYear}
+            onClick={() => setViewYear((prev) => prev + 1)}
+          >
+            <ChevronRight className='size-3.5' />
+          </Button>
+        </div>
         <div className='grid grid-cols-3 gap-1'>
           {MONTH_LABELS.map((monthLabel, index) => {
-            const monthValue = `${year}-${String(index + 1).padStart(2, '0')}`;
-            const disabled = index > currentMonthIndex;
+            const monthValue = `${viewYear}-${String(index + 1).padStart(2, '0')}`;
+            const disabled =
+              viewYear === currentYear && index > currentMonthIndex;
             const selected = value === monthValue;
             return (
               <Button
