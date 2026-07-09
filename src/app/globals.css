@@ -180,3 +180,11 @@ body {
   --ck-color-panel-background: hsl(var(--popover));
   --ck-color-panel-border: hsl(var(--border));
 }
+
+/* The custom properties above don't reach the editable content itself —
+ * CKEditor's bundled ckeditor5-content.css sets its own (light-theme) text
+ * color there, so it has to be overridden directly. */
+.dark .rich-text-editor .ck-content,
+.dark .rich-text-editor .ck-content * {
+  color: hsl(var(--foreground)) !important;
+}
