@@ -49,7 +49,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
   return (
     <Sidebar collapsible='icon' variant='inset'>
       <SidebarHeader className='px-3 py-3 group-data-[collapsible=icon]:px-2'>
-        <Link href='/' className='flex items-center gap-2'>
+        <Link href={paths.home} className='flex items-center gap-2'>
           <Image
             src={appConfig.logo}
             alt='Bitsmiths logo'

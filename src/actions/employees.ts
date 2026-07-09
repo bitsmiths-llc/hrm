@@ -1,17 +1,16 @@
 'use server';
 
-import { z } from 'zod';
-
 import { sendInviteEmail } from '@/lib/resend/send-invite-email';
 import { authActionClient } from '@/lib/server/safe-action';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import Logger from '@/utils/logger';
 
 import { appConfig } from '@/config/app';
 import { paths } from '@/constants/paths';
 import { requiredString } from '@/schema/common';
 import {
   contactInfoSchema,
+  employeeIdField,
+  employeeIdSchema,
   employmentConfigSchema,
   inviteEmployeeSchema,
 } from '@/schema/employee';
@@ -23,10 +22,6 @@ import { bankInfoSchema, socialAccountsSchema } from '@/schema/onboarding';
 const requireAdmin = (role?: string) => {
   if (role !== 'admin') throw new Error('Forbidden');
 };
-
-/** UUID identifying the target employee for an admin write. */
-const employeeIdField = z.string().uuid();
-const employeeIdSchema = z.object({ employeeId: employeeIdField });
 
 /**
  * Admin-only. Bring a person into the system by email invite — there is no
@@ -57,8 +52,6 @@ export const inviteEmployee = authActionClient
         options: { data: name ? { full_name: name } : undefined },
       });
     if (inviteError || !invited.user) {
-      // TODO(debug): remove once the Resend cutover is confirmed working.
-      Logger.error('[inviteEmployee] generateLink failed:', inviteError);
       // Don't surface the raw auth error; the most common cause is an email
       // that has already been invited.
       throw new Error('Could not send the invitation. Please try again.');
@@ -75,9 +68,7 @@ export const inviteEmployee = authActionClient
         fullName: name,
         inviteUrl: inviteUrl.toString(),
       });
-    } catch (error) {
-      // TODO(debug): remove once the Resend cutover is confirmed working.
-      Logger.error('[inviteEmployee] sendInviteEmail failed:', error);
+    } catch {
       // The auth user exists but nobody can ever receive the link — roll back.
       await supabaseAdmin.auth.admin.deleteUser(invited.user.id);
       throw new Error('Could not send the invitation. Please try again.');

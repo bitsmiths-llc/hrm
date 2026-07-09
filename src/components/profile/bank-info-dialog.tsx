@@ -28,18 +28,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
+import { bankInfoFields } from '@/constants/profile';
 import { type BankInfoInput, bankInfoSchema } from '@/schema/onboarding';
-
-const fields: {
-  name: keyof BankInfoInput;
-  label: string;
-}[] = [
-  { name: 'bankName', label: 'Bank name' },
-  { name: 'accountHolderName', label: 'Account holder name' },
-  { name: 'accountNumber', label: 'Account number' },
-  { name: 'iban', label: 'IBAN' },
-  { name: 'branch', label: 'Bank branch (optional)' },
-];
 
 type BankInfoDialogProps = {
   defaultValues: BankInfoInput;
@@ -78,7 +68,7 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
             onSubmit={form.handleSubmit((values) => execute(values))}
             className='flex flex-col gap-4'
           >
-            {fields.map(({ name, label }) => (
+            {bankInfoFields.map(({ name, label }) => (
               <FormField
                 key={name}
                 control={form.control}

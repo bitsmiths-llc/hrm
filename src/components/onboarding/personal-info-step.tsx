@@ -19,30 +19,11 @@ import { Label } from '@/components/ui/label';
 
 import { cn } from '@/lib/utils';
 
+import { personalInfoFields } from '@/constants/onboarding';
 import {
   type PersonalInfoInput,
   personalInfoSchema,
 } from '@/schema/onboarding';
-
-const fields: {
-  name: keyof PersonalInfoInput;
-  label: string;
-  placeholder: string;
-}[] = [
-  { name: 'fullName', label: 'Full name', placeholder: 'Ayesha Khan' },
-  { name: 'phone', label: 'Phone number', placeholder: '+92 300 1234567' },
-  {
-    name: 'emergencyContact',
-    label: 'Emergency contact number',
-    placeholder: '+92 301 7654321',
-  },
-  {
-    name: 'address',
-    label: 'Residential address',
-    placeholder: 'House, street, area, city',
-  },
-  { name: 'cnic', label: 'CNIC number', placeholder: '12345-1234567-1' },
-];
 
 type PersonalInfoStepProps = {
   /** Set at invite time and not editable here — shown read-only for reference. */
@@ -71,7 +52,7 @@ export function PersonalInfoStep({
           <Label htmlFor='onboarding-email'>Email</Label>
           <Input id='onboarding-email' value={email} disabled readOnly />
         </div>
-        {fields.map(({ name, label, placeholder }, index) => (
+        {personalInfoFields.map(({ name, label, placeholder }, index) => (
           <React.Fragment key={name}>
             <FormField
               control={form.control}

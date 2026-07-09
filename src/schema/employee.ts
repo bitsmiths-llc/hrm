@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 import { requiredString } from '@/schema/common';
 
+/** UUID identifying the target employee for an admin write. */
+export const employeeIdField = z.string().uuid();
+export const employeeIdSchema = z.object({ employeeId: employeeIdField });
+
 export const inviteEmployeeSchema = z.object({
   email: z.string().email('Enter a valid email address'),
   // Optional: admins may invite with just an email. The "min 2" rule only bites
