@@ -158,11 +158,49 @@ export type HrmSettings = {
   medicalBalanceCap: number;
 };
 
+export type PolicyCategory = 'leave' | 'medical' | 'overtime' | 'general';
+
+export type PolicyVersion = {
+  version: number;
+  /** Rich-text content authored in CKEditor, stored as HTML — not a PDF —
+   *  so an update can carry a real changelog instead of just a new file. */
+  contentHtml: string;
+  /** Required on every version after the first; shown to employees so they
+   *  know what to re-review instead of re-reading the whole document. */
+  changeSummary: string | null;
+  publishedAt: string;
+};
+
 export type Policy = {
   id: string;
   title: string;
+  category: PolicyCategory;
+  /** Oldest first; the last entry is the current version. */
+  versions: PolicyVersion[];
+};
+
+/** One employee's acknowledgment of a policy — separate from `Policy`
+ *  itself since each employee can be at a different acknowledged version. */
+export type PolicyAcknowledgment = {
+  policyId: string;
+  employeeId: string;
+  acknowledgedVersion: number;
+  acknowledgedAt: string;
+};
+
+export type ContractVersion = {
   version: number;
-  summary: string;
-  updatedAt: string;
-  acknowledged: boolean; // for the current viewer (employee side)
+  fileName: string;
+  uploadedAt: string;
+  /** e.g. "Annual renewal", "Promoted to Senior Engineer". */
+  note: string | null;
+};
+
+/** One contract per employee (PRD 6.2 — assumed manual PDF upload, not
+ *  system-generated). Admin sees the full version history; the employee
+ *  only ever sees their current version. */
+export type EmployeeContract = {
+  employeeId: string;
+  /** Oldest first; the last entry is the current version. */
+  versions: ContractVersion[];
 };

@@ -18,6 +18,7 @@ import { formatDate } from '@/utils/date-functions';
 import { employmentTypeLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
+import { EmployeeContractTab } from './employee-contract-tab';
 import { EmployeeLeaveTab } from './employee-leave-tab';
 import { EmployeeMedicalTab } from './employee-medical-tab';
 import { EmployeeOvertimeTab } from './employee-overtime-tab';
@@ -80,6 +81,7 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
           <TabsTrigger value='medical'>Medical</TabsTrigger>
           <TabsTrigger value='overtime'>Overtime</TabsTrigger>
           <TabsTrigger value='payroll'>Payroll</TabsTrigger>
+          <TabsTrigger value='contract'>Contract</TabsTrigger>
         </TabsList>
 
         <TabsContent value='profile' className='flex flex-col gap-6'>
@@ -146,6 +148,10 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
 
         <TabsContent value='payroll'>
           <EmployeePayrollTab employeeId={employee.id} />
+        </TabsContent>
+
+        <TabsContent value='contract'>
+          <EmployeeContractTab employeeId={employee.id} />
         </TabsContent>
       </Tabs>
     </>

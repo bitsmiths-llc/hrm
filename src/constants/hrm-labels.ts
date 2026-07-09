@@ -6,6 +6,7 @@ import {
   MedicalClaimFor,
   MedicalServiceType,
   PayrollCycleStatus,
+  PolicyCategory,
   RequestStatus,
 } from '@/types/hrm';
 
@@ -67,4 +68,11 @@ export const medicalServiceTypeLabels: Record<MedicalServiceType, string> = {
   emergency: 'Emergency Care',
   dental: 'Dental (Medical Necessity)',
   vision: 'Vision Care',
+};
+
+export const policyCategoryLabels: Record<PolicyCategory, string> = {
+  leave: 'Leave',
+  medical: 'Medical',
+  overtime: 'Overtime',
+  general: 'General',
 };
