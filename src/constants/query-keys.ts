@@ -4,7 +4,8 @@ export enum QueryKeys {
   // Employee & Onboarding domain
   EMPLOYEES = 'employees', // list
   EMPLOYEE = 'employee', // detail, keyed by id
-  MY_PROFILE = 'my-profile', // self-service (M1.5)
+  CURRENT_EMPLOYEE = 'current-employee', // signed-in user's identity (sidebar/greeting)
+  MY_PROFILE = 'my-profile', // caller's full self-service profile (BIT-11)
   ONBOARDING = 'onboarding', // caller's own onboarding wizard data (M1.4)
   ONBOARDING_QUEUE = 'onboarding-queue', // submitted rows, admin review (BIT-10)
   EMPLOYEE_DOCUMENTS = 'employee-documents',

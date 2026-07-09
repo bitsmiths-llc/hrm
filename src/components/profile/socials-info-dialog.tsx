@@ -6,13 +6,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useUpdateMyProfile } from '@/hooks/actions/use-update-my-profile';
+import { useUpdateMySocials } from '@/hooks/actions/use-update-my-profile';
 
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -28,24 +27,26 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { type ContactInfoInput, contactInfoSchema } from '@/schema/employee';
+import {
+  type SocialAccountsInput,
+  socialAccountsSchema,
+} from '@/schema/onboarding';
 
-type ContactInfoDialogProps = {
-  defaultValues: ContactInfoInput;
+type SocialsInfoDialogProps = {
+  defaultValues: SocialAccountsInput;
 };
 
-/** Employees may self-edit contact fields only (PRD 3.1) — everything else
- *  is admin-managed. */
-export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
+/** Employees self-edit their own social accounts (PRD 3.1). */
+export function SocialsInfoDialog({ defaultValues }: SocialsInfoDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const form = useForm<ContactInfoInput>({
-    resolver: zodResolver(contactInfoSchema),
+  const form = useForm<SocialAccountsInput>({
+    resolver: zodResolver(socialAccountsSchema),
     defaultValues,
   });
 
-  const { execute, isPending } = useUpdateMyProfile(() => {
-    toast.success('Contact information updated');
+  const { execute, isPending } = useUpdateMySocials(() => {
+    toast.success('Social accounts updated');
     setOpen(false);
   });
 
@@ -58,10 +59,7 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
       </DialogTrigger>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle>Edit contact information</DialogTitle>
-          <DialogDescription>
-            Other profile fields are managed by your admin.
-          </DialogDescription>
+          <DialogTitle>Edit social accounts</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form
@@ -70,12 +68,12 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
           >
             <FormField
               control={form.control}
-              name='phone'
+              name='github'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone number</FormLabel>
+                  <FormLabel>GitHub URL</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder='https://github.com/…' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -83,12 +81,12 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
             />
             <FormField
               control={form.control}
-              name='emergencyContact'
+              name='linkedin'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Emergency contact number</FormLabel>
+                  <FormLabel>LinkedIn URL</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder='https://linkedin.com/in/…' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -96,12 +94,16 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
             />
             <FormField
               control={form.control}
-              name='address'
+              name='twitter'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Residential address</FormLabel>
+                  <FormLabel>Twitter URL (optional)</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      placeholder='https://twitter.com/…'
+                      {...field}
+                      value={field.value ?? ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

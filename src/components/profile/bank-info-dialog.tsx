@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useUpdateMyBank } from '@/hooks/actions/use-update-my-profile';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -51,11 +53,10 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
     defaultValues,
   });
 
-  const onSubmit = async (_values: BankInfoInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+  const { execute, isPending } = useUpdateMyBank(() => {
     toast.success('Bank information updated');
     setOpen(false);
-  };
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -74,7 +75,7 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit((values) => execute(values))}
             className='flex flex-col gap-4'
           >
             {fields.map(({ name, label }) => (
@@ -101,7 +102,7 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Save changes
               </Button>
             </DialogFooter>

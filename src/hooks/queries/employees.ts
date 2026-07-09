@@ -10,7 +10,7 @@ import { type Tables } from '@/types/supabase';
 
 // The directory rows are `employees` joined to their one-to-one detail tables
 // (each returns a single row or null for a not-yet-onboarded invitee).
-type EmployeeRow = Tables<'employees'> & {
+export type EmployeeRow = Tables<'employees'> & {
   employment_details: Tables<'employment_details'> | null;
   bank_details: Tables<'bank_details'> | null;
   socials: Tables<'socials'> | null;
@@ -18,8 +18,8 @@ type EmployeeRow = Tables<'employees'> & {
 
 /** Map a joined employees row onto the `Employee` domain type, filling the
  *  gaps left by a not-yet-onboarded invitee (no detail rows yet) with sensible
- *  defaults. */
-function toEmployee(row: EmployeeRow): Employee {
+ *  defaults. Shared by the admin directory and the self-service profile. */
+export function toEmployee(row: EmployeeRow): Employee {
   const { employment_details: work, bank_details: bank, socials: social } = row;
   return {
     id: row.id,
@@ -135,9 +135,10 @@ const fetchCurrentEmployee = authQuery<undefined, CurrentEmployee | null>(
   },
 );
 
-/** The signed-in employee's own identity row (self, via RLS). */
+/** The signed-in employee's own identity row (self, via RLS). Kept on its own
+ *  key so it doesn't collide with the full profile read (`useMyProfile`). */
 export const useCurrentEmployee = () =>
   useQuery({
-    queryKey: [QueryKeys.MY_PROFILE],
+    queryKey: [QueryKeys.CURRENT_EMPLOYEE],
     queryFn: () => fetchCurrentEmployee(),
   });
