@@ -26,6 +26,8 @@ import {
   medicalServiceTypeLabels,
 } from '@/constants/hrm-labels';
 
+import { ProofFilesButton } from './proof-files-button';
+
 import { MedicalClaim } from '@/types/hrm';
 
 function useMedicalClaimsColumns() {
@@ -86,6 +88,18 @@ function useMedicalClaimsColumns() {
         ),
       },
       {
+        id: 'proofFiles',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title='Proof' align='center' />
+        ),
+        cell: ({ row }) => (
+          <div className='flex justify-center'>
+            <ProofFilesButton files={row.original.proofFiles} />
+          </div>
+        ),
+        enableSorting: false,
+      },
+      {
         accessorKey: 'status',
         header: ({ column }) => (
           <DataTableColumnHeader
@@ -143,7 +157,7 @@ export function MedicalClaimsTable({
     state: { sorting },
   });
 
-  if (isLoading) return <TableSkeleton rows={3} columns={5} />;
+  if (isLoading) return <TableSkeleton rows={3} columns={6} />;
 
   if (!claims?.length) {
     return (

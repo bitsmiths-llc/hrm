@@ -25,6 +25,8 @@ export type ApprovalItem = {
   createdAt: string;
   status: RequestStatus;
   fields: { label: string; value: string }[];
+  /** Only present for medical claims. */
+  proofFiles?: string[];
 };
 
 export const approvalKindLabels: Record<ApprovalKind, string> = {
@@ -72,9 +74,9 @@ export function medicalToItem(claim: MedicalClaim): ApprovalItem {
       { label: 'Amount', value: formatCurrency(claim.amount) },
       { label: 'Expense date', value: formatDate(claim.expenseDate) },
       { label: 'Description', value: claim.description },
-      { label: 'Proof files', value: claim.proofFiles.join(', ') || '—' },
       { label: 'Submitted', value: formatDate(claim.createdAt) },
     ],
+    proofFiles: claim.proofFiles,
   };
 }
 

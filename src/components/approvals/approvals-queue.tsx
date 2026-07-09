@@ -14,6 +14,7 @@ import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { DetailSheet } from '@/components/hrm/detail-sheet';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { StatusBadge } from '@/components/hrm/status-badge';
+import { ProofFilesList } from '@/components/medical/proof-files-list';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -158,7 +159,16 @@ export function ApprovalsQueue() {
               </Button>
             </div>
           }
-        />
+        >
+          {selected.kind === 'medical' && (
+            <div className='flex flex-col gap-2'>
+              <p className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+                Proof files
+              </p>
+              <ProofFilesList files={selected.proofFiles ?? []} />
+            </div>
+          )}
+        </DetailSheet>
       )}
     </div>
   );
