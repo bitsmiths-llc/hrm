@@ -2,6 +2,7 @@
   "name": "abbassays-nextjs-supabase-boilerplate",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.20.0",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -11,7 +12,7 @@
     "lint": "next lint --fix",
     "format": "prettier --write .",
     "style": "pnpm lint && pnpm format",
-    "supa:types": "supabase gen types --lang=typescript --project-id '<supabase-project-id>' --schema public > ./src/types/supabase.ts",
+    "supa:types": "supabase gen types --lang=typescript --project-id 'leslengflrizmqkopkya' --schema public > ./src/types/supabase.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -53,6 +54,7 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.56.4",
     "react-icons": "^5.5.0",
+    "server-only": "^0.0.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
