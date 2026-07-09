@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useUpdateMyProfile } from '@/hooks/actions/use-update-my-profile';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -42,11 +44,10 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
     defaultValues,
   });
 
-  const onSubmit = async (_values: ContactInfoInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+  const { execute, isPending } = useUpdateMyProfile(() => {
     toast.success('Contact information updated');
     setOpen(false);
-  };
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -64,7 +65,7 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit((values) => execute(values))}
             className='flex flex-col gap-4'
           >
             <FormField
@@ -114,7 +115,7 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Save changes
               </Button>
             </DialogFooter>

@@ -3,8 +3,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+
+import { signInWithPassword } from '@/actions/auth';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +27,8 @@ import {
 import { ControlledPasswordInput } from '@/components/ui/form/controlled-password-input';
 import { Input } from '@/components/ui/input';
 
+import { onError } from '@/lib/show-error-toast';
+
 import { paths } from '@/constants/paths';
 import { type LoginInput, loginSchema } from '@/schema/auth';
 
@@ -36,12 +40,17 @@ export function LoginForm() {
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (values: LoginInput) => {
-    // Frontend-only phase: simulate sign-in, then land on the dashboard.
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(`Signed in as ${values.email}`);
-    router.push(paths.employee.dashboard);
-  };
+  const { execute, isPending } = useAction(signInWithPassword, {
+    onSuccess: ({ data }) => {
+      router.push(
+        data?.role === 'admin'
+          ? paths.admin.dashboard
+          : paths.employee.dashboard,
+      );
+      router.refresh();
+    },
+    onError,
+  });
 
   return (
     <Card>
@@ -54,7 +63,7 @@ export function LoginForm() {
       <CardContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(execute)}
             className='flex flex-col gap-4'
           >
             <FormField
@@ -80,7 +89,7 @@ export function LoginForm() {
               placeholder='••••••••'
               hideInstructions
             />
-            <Button type='submit' isLoading={form.formState.isSubmitting}>
+            <Button type='submit' isLoading={isPending}>
               Sign in
             </Button>
             <Link

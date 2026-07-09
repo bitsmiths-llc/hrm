@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
+// Email is intentionally NOT part of this schema: it's the invite identity, set
+// at invite time and never changed during onboarding (the form shows it
+// read-only). savePersonal writes only the columns below.
 export const personalInfoSchema = z.object({
   fullName: z.string().min(2, 'Enter your full name'),
   dateOfBirth: z.string().min(1, 'Enter your date of birth'),
-  email: z.string().email('Enter a valid email address'),
   phone: z.string().min(7, 'Enter a valid phone number'),
   emergencyContact: z.string().min(7, 'Enter a valid phone number'),
   address: z.string().min(5, 'Enter your residential address'),
@@ -36,16 +38,14 @@ export const socialAccountsSchema = z.object({
 
 export type SocialAccountsInput = z.infer<typeof socialAccountsSchema>;
 
-const singleFile = (message: string) =>
-  z.array(z.instanceof(File)).length(1, message);
+// Identity documents upload immediately (one storage object + one
+// employee_documents row per type) rather than as part of a form submit, so
+// there's no file-array form schema — only the doc_type discriminator, which
+// keys both the storage path (`<uid>/<doc_type>`) and the row's unique
+// constraint.
+export const docTypes = ['cnic_front', 'cnic_back', 'photo'] as const;
 
-export const identityDocumentsSchema = z.object({
-  cnicFront: singleFile('Upload the front of your CNIC'),
-  cnicBack: singleFile('Upload the back of your CNIC'),
-  photo: singleFile('Upload a recent photo with your face clearly visible'),
-});
-
-export type IdentityDocumentsInput = z.infer<typeof identityDocumentsSchema>;
+export type DocType = (typeof docTypes)[number];
 
 export const consentSchema = z.object({
   consent: z.literal(true, {

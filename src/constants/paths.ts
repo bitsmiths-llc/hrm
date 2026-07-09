@@ -3,11 +3,15 @@ export const paths = {
   auth: {
     login: '/auth/login',
     acceptInvitation: '/auth/accept-invitation',
+    confirm: '/auth/confirm',
     forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
+    callback: '/auth/callback',
   },
   employee: {
     dashboard: '/dashboard',
     onboarding: '/onboarding',
+    pending: '/pending',
     leave: '/leave',
     medical: '/medical',
     overtime: '/overtime',
@@ -17,6 +21,7 @@ export const paths = {
   },
   admin: {
     dashboard: '/admin',
+    onboarding: '/admin/onboarding',
     approvals: '/admin/approvals',
     employees: '/admin/employees',
     payroll: '/admin/payroll',

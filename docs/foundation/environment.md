@@ -19,6 +19,7 @@ Current schema highlights:
 - Server
 
   - `SUPABASE_SERVICE_ROLE_KEY: z.string()`
+  - `RESEND_API_KEY: z.string()`
 
 - Client
   - `NEXT_PUBLIC_SUPABASE_URL: z.string().url()`
@@ -34,6 +35,7 @@ Place your values in `.env.local` (never commit secrets). Example:
 SUPABASE_SERVICE_ROLE_KEY="<service-role-key>"
 NEXT_PUBLIC_SUPABASE_URL="https://<project-id>.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="<anon-key>"
+RESEND_API_KEY="<resend-api-key>"
 # Optional PostHog
 NEXT_PUBLIC_POSTHOG_KEY="<posthog-public-key>"
 NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
@@ -48,6 +50,10 @@ NEXT_PUBLIC_APP_NAME="Example App"
 
   - `SUPABASE_SERVICE_ROLE_KEY` (server): used for privileged server tasks (never expose to client).
   - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (client): browser SDK connectivity.
+
+- Resend
+
+  - `RESEND_API_KEY` (server): sends transactional email (e.g. employee invites) via `src/lib/resend/*`, instead of Supabase's built-in mailer.
 
 - PostHog
 

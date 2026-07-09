@@ -21,7 +21,10 @@ export function useEmployeesTableColumns() {
   return useMemo<ColumnDef<Employee>[]>(
     () => [
       {
-        accessorKey: 'fullName',
+        id: 'fullName',
+        // Accessor spans name + email so the global search box (which only
+        // indexes column values) matches on either.
+        accessorFn: (row) => `${row.fullName} ${row.email}`,
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title='Name' />
         ),
@@ -53,6 +56,20 @@ export function useEmployeesTableColumns() {
         ),
       },
       {
+        accessorKey: 'department',
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title='Department' />
+        ),
+        cell: (props) => (
+          <CenteredCell
+            {...props}
+            formatter={(value) => (value as string) || '—'}
+          />
+        ),
+        filterFn: (row, id, value: string[]) =>
+          value.includes(row.getValue(id)),
+      },
+      {
         accessorKey: 'employmentType',
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title='Type' align='center' />
@@ -65,6 +82,8 @@ export function useEmployeesTableColumns() {
             }
           />
         ),
+        filterFn: (row, id, value: string[]) =>
+          value.includes(row.getValue(id)),
       },
       {
         accessorKey: 'status',
