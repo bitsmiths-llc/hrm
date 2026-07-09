@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -35,6 +36,10 @@ type PublishPolicyVersionDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (changeSummary: string) => void;
+  /** Auto-detected from a section-by-section diff of the content — see
+   *  `summarizePolicyChanges`. Pre-fills the field so admin reviews and
+   *  adjusts instead of writing it from a blank box. */
+  suggestedSummary: string;
 };
 
 /** Requires a changelog note before publishing an update — this is what
@@ -44,11 +49,18 @@ export function PublishPolicyVersionDialog({
   open,
   onOpenChange,
   onConfirm,
+  suggestedSummary,
 }: PublishPolicyVersionDialogProps) {
   const form = useForm<ChangeSummaryInput>({
     resolver: zodResolver(changeSummarySchema),
-    defaultValues: { changeSummary: '' },
+    defaultValues: { changeSummary: suggestedSummary },
   });
+
+  // The dialog stays mounted between opens, so re-seed the field with a
+  // fresh diff each time it opens rather than only on first mount.
+  useEffect(() => {
+    if (open) form.reset({ changeSummary: suggestedSummary });
+  }, [open, suggestedSummary, form]);
 
   const onSubmit = (values: ChangeSummaryInput) => {
     onConfirm(values.changeSummary);
@@ -68,8 +80,10 @@ export function PublishPolicyVersionDialog({
         <DialogHeader>
           <DialogTitle>Publish this update?</DialogTitle>
           <DialogDescription>
-            Employees who already acknowledged an earlier version will be
-            prompted to re-acknowledge, with this note shown to them.
+            We've drafted a summary of what changed from your edits — review and
+            adjust it before publishing. Employees who already acknowledged an
+            earlier version will be prompted to re-acknowledge, with this note
+            shown to them.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -84,13 +98,11 @@ export function PublishPolicyVersionDialog({
                 <FormItem>
                   <FormLabel>What changed?</FormLabel>
                   <FormControl>
-                    <Textarea
-                      rows={3}
-                      placeholder='e.g. Increased the annual leave pool from 20 to 22 days.'
-                      {...field}
-                    />
+                    <Textarea rows={3} {...field} />
                   </FormControl>
-                  <FormDescription>Shown to employees.</FormDescription>
+                  <FormDescription>
+                    Auto-detected from your edits — shown to employees as-is.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

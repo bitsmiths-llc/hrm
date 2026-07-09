@@ -19,6 +19,8 @@ import { RichTextEditor } from '@/components/hrm/rich-text-editor';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
+import { summarizePolicyChanges } from '@/lib/policy-diff';
+
 import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 import { QueryKeys } from '@/constants/query-keys';
@@ -59,6 +61,9 @@ export function PolicyEditorPageContent({
   const latest = currentVersion(policy);
   const content = draftHtml ?? latest.contentHtml;
   const isDirty = draftHtml !== null && draftHtml !== latest.contentHtml;
+  const suggestedSummary = isDirty
+    ? summarizePolicyChanges(latest.contentHtml, content)
+    : '';
 
   const handlePublish = (changeSummary: string) => {
     const publishedAt = new Date().toISOString().slice(0, 10);
@@ -126,6 +131,7 @@ export function PolicyEditorPageContent({
         open={publishOpen}
         onOpenChange={setPublishOpen}
         onConfirm={handlePublish}
+        suggestedSummary={suggestedSummary}
       />
     </>
   );
