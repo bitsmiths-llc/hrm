@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { requiredString } from '@/schema/common';
+
 export const inviteEmployeeSchema = z.object({
   email: z.string().email('Enter a valid email address'),
   // Optional: admins may invite with just an email. The "min 2" rule only bites
@@ -27,6 +29,7 @@ export const employmentConfigSchema = z.object({
     .positive('Working hours must be greater than 0')
     .max(400, 'Working hours look too high for one pay period'),
   designation: z.string().min(2, 'Enter a designation'),
+  department: z.string().optional().or(z.literal('')),
 });
 
 export type EmploymentConfigInput = z.infer<typeof employmentConfigSchema>;
@@ -38,3 +41,10 @@ export const contactInfoSchema = z.object({
 });
 
 export type ContactInfoInput = z.infer<typeof contactInfoSchema>;
+
+/** Admin's note when returning a submission to onboarding (BIT-10). */
+export const returnOnboardingSchema = z.object({
+  reviewNote: requiredString('A review note'),
+});
+
+export type ReturnOnboardingInput = z.infer<typeof returnOnboardingSchema>;

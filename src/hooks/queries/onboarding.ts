@@ -19,6 +19,9 @@ type OnboardingData = {
   personal: PersonalInfoInput;
   bank: BankInfoInput;
   social: SocialAccountsInput;
+  /** Set when an admin returned a prior submission — the wizard surfaces it so
+   *  the employee knows what to fix before resubmitting (BIT-10). */
+  reviewNote: string | null;
 };
 
 const fetchOnboarding = authQuery<undefined, OnboardingData>(
@@ -55,6 +58,7 @@ const fetchOnboarding = authQuery<undefined, OnboardingData>(
         linkedin: social?.linkedin_url ?? '',
         twitter: social?.twitter_url ?? '',
       },
+      reviewNote: data?.review_note ?? null,
     };
   },
 );

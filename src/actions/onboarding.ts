@@ -102,9 +102,9 @@ export const saveSocials = authActionClient
 
 /**
  * Section 5 · Submit. Requires explicit consent, then runs the caller-only
- * `submit_onboarding()` RPC which atomically moves onboarding → active and
- * stamps consent_at / activated_at (see BIT-9 migration for why it's the only
- * path to `active`, and why the ticket's `submitted` state no longer exists).
+ * `submit_onboarding()` RPC which atomically moves onboarding → submitted and
+ * stamps consent_at. Activation is the admin's to grant from the review queue
+ * (approveEmployee stamps activated_at); see the BIT-10 migration.
  */
 export const submitOnboarding = authActionClient
   .schema(consentSchema)

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paths } from '@/constants/paths';
 import { env } from '@/env';
 
+import type { AccountStatus } from '@/types/hrm';
 import type { Database } from '@/types/supabase';
 
 /** Reachable without a session: the public landing and every auth screen
@@ -25,6 +26,17 @@ function isEmployeeRoute(pathname: string) {
 /** Every admin-app route is namespaced under /admin. */
 function isAdminRoute(pathname: string) {
   return pathname === paths.admin.dashboard || pathname.startsWith('/admin/');
+}
+
+/** The single page a not-yet-active employee is confined to, by status —
+ *  onboarding until they submit, then the pending-review holding page. Active
+ *  (and any unrecognised status) returns null: the full employee app is open. */
+function employeeGateFor(status: AccountStatus | undefined): string | null {
+  if (status === 'invited' || status === 'onboarding') {
+    return paths.employee.onboarding;
+  }
+  if (status === 'submitted') return paths.employee.pending;
+  return null;
 }
 
 /** Redirect that carries over any auth cookies refreshed on this request. */
@@ -81,28 +93,39 @@ export async function updateSession(request: NextRequest) {
     return redirectWithCookies(request, supabaseResponse, paths.auth.login);
   }
 
-  // Role funnel: each role stays inside its own app. The role comes from the
-  // JWT app_metadata (mirrored from employees.role). Anything not explicitly
-  // 'admin' is treated as an employee, so admin access fails closed.
+  // Funnel: route each user by role + account_status. Both come from the JWT
+  // app_metadata (mirrored from employees by mirror_role_to_jwt), so the funnel
+  // needs no DB read. Anything not explicitly 'admin' is treated as an employee,
+  // so admin access fails closed.
   if (user) {
     const isAdmin = user.app_metadata?.role === 'admin';
+    const status = user.app_metadata?.account_status as
+      | AccountStatus
+      | undefined;
+    // Admins are never gated by status; only employees funnel through
+    // onboarding/pending before the full app opens.
+    const gate = isAdmin ? null : employeeGateFor(status);
     const roleHome = isAdmin
       ? paths.admin.dashboard
-      : paths.employee.dashboard;
+      : (gate ?? paths.employee.dashboard);
 
-    // Signed-in users skip the public landing and go straight to their app.
+    // Signed-in users skip the public landing and go straight to where they
+    // belong right now (an admin's dashboard, or an employee's gate/app).
     if (pathname === paths.home) {
       return redirectWithCookies(request, supabaseResponse, roleHome);
     }
-    // Employees can never enter the admin app.
-    if (!isAdmin && isAdminRoute(pathname)) {
-      return redirectWithCookies(
-        request,
-        supabaseResponse,
-        paths.employee.dashboard,
-      );
+
+    // Status funnel: a not-yet-active employee is confined to their gate page.
+    // Skipped on public routes so the /auth invite-acceptance flow (which runs
+    // with a session already established) is never interrupted.
+    if (gate && !isPublicRoute(pathname) && pathname !== gate) {
+      return redirectWithCookies(request, supabaseResponse, gate);
     }
-    // Admins are bounced out of the employee app back to theirs.
+
+    // Role funnel: each role stays inside its own app.
+    if (!isAdmin && isAdminRoute(pathname)) {
+      return redirectWithCookies(request, supabaseResponse, roleHome);
+    }
     if (isAdmin && isEmployeeRoute(pathname)) {
       return redirectWithCookies(
         request,

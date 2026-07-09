@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, UserX } from 'lucide-react';
+import { ArrowLeft, RotateCcw, UserX } from 'lucide-react';
 import Link from 'next/link';
 
 import { useEmployee } from '@/hooks/queries/employees';
@@ -17,6 +17,9 @@ import { formatDate } from '@/utils/date-functions';
 import { employmentTypeLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
+import { AdminBankDialog } from './admin-bank-dialog';
+import { AdminContactDialog } from './admin-contact-dialog';
+import { AdminSocialsDialog } from './admin-socials-dialog';
 import { EmploymentConfigForm } from './employment-config-form';
 
 type EmployeeDetailProps = {
@@ -62,14 +65,41 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
         </Link>
       </div>
       <PageHeader
-        title={employee.fullName}
+        title={employee.fullName || employee.email}
         description={`${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`}
       >
         <StatusBadge status={employee.status} />
       </PageHeader>
 
+      {!!employee.reviewNote && (
+        <div className='flex gap-3 rounded-lg border border-border bg-muted/50 p-4'>
+          <RotateCcw
+            className='mt-0.5 size-5 shrink-0 text-muted-foreground'
+            aria-hidden
+          />
+          <div className='flex flex-col gap-1'>
+            <p className='text-sm font-medium'>
+              Last returned to onboarding with this note
+            </p>
+            <p className='text-sm text-muted-foreground'>
+              {employee.reviewNote}
+            </p>
+          </div>
+        </div>
+      )}
+
       <InfoCard
         title='Personal Information'
+        action={
+          <AdminContactDialog
+            employeeId={employee.id}
+            defaultValues={{
+              phone: employee.phone,
+              emergencyContact: employee.emergencyContact,
+              address: employee.address,
+            }}
+          />
+        }
         fields={[
           { label: 'Email', value: employee.email },
           { label: 'Phone', value: employee.phone },
@@ -84,6 +114,18 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
 
       <InfoCard
         title='Bank Information'
+        action={
+          <AdminBankDialog
+            employeeId={employee.id}
+            defaultValues={{
+              bankName: employee.bank?.bankName ?? '',
+              accountHolderName: employee.bank?.accountHolderName ?? '',
+              accountNumber: employee.bank?.accountNumber ?? '',
+              iban: employee.bank?.iban ?? '',
+              branch: employee.bank?.branch ?? '',
+            }}
+          />
+        }
         fields={[
           { label: 'Bank', value: employee.bank?.bankName },
           {
@@ -98,6 +140,16 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
 
       <InfoCard
         title='Social Accounts'
+        action={
+          <AdminSocialsDialog
+            employeeId={employee.id}
+            defaultValues={{
+              github: employee.social?.github ?? '',
+              linkedin: employee.social?.linkedin ?? '',
+              twitter: employee.social?.twitter ?? '',
+            }}
+          />
+        }
         fields={[
           { label: 'GitHub', value: employee.social?.github },
           { label: 'LinkedIn', value: employee.social?.linkedin },

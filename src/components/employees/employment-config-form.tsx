@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useUpdateEmploymentDetails } from '@/hooks/actions/use-update-employee';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -42,15 +44,16 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
       baseSalary: employee.baseSalary || 0,
       workingHours: employee.workingHours || 0,
       designation: employee.designation,
+      department: employee.department,
     },
   });
 
-  const onSubmit = async (values: EmploymentConfigInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(
-      `Employment config saved for ${employee.fullName} (${employmentTypeLabels[values.employmentType]})`,
-    );
-  };
+  const { execute, isPending } = useUpdateEmploymentDetails(employee.id, () =>
+    toast.success('Employment configuration saved'),
+  );
+
+  const onSubmit = (values: EmploymentConfigInput) =>
+    execute({ ...values, employeeId: employee.id });
 
   return (
     <Card>
@@ -86,6 +89,23 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
             />
             <FormField
               control={form.control}
+              name='department'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Department</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='Engineering'
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name='baseSalary'
               render={({ field }) => (
                 <FormItem>
@@ -111,7 +131,7 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
               )}
             />
             <div className='sm:col-span-2'>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Save configuration
               </Button>
             </div>

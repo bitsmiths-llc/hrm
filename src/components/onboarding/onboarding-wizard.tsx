@@ -1,7 +1,6 @@
 'use client';
 
-import { CheckCircle2 } from 'lucide-react';
-import Link from 'next/link';
+import { RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -14,11 +13,11 @@ import {
 import { useOnboardingData } from '@/hooks/queries/onboarding';
 import { useUser } from '@/hooks/queries/user';
 
-import { EmptyState } from '@/components/hrm/empty-state';
 import { StepIndicator } from '@/components/hrm/step-indicator';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 import { onboardingSteps } from '@/constants/onboarding';
 import { paths } from '@/constants/paths';
@@ -44,7 +43,6 @@ const succeeded = (result?: {
 export function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
 
   const { data: user } = useUser();
   const { data: onboarding, isLoading } = useOnboardingData();
@@ -53,20 +51,6 @@ export function OnboardingWizard() {
   const saveBank = useSaveBank();
   const saveSocials = useSaveSocials();
   const submit = useSubmitOnboarding();
-
-  if (submitted) {
-    return (
-      <EmptyState
-        icon={CheckCircle2}
-        title='Onboarding complete'
-        description='Your account is now active — you have full access to leave, medical, overtime, and payslips.'
-      >
-        <Link href={paths.employee.dashboard}>
-          <Button variant='outline'>Go to dashboard</Button>
-        </Link>
-      </EmptyState>
-    );
-  }
 
   // Gate the wizard on loaded values so each step mounts with its restored
   // defaults already in place.
@@ -90,15 +74,34 @@ export function OnboardingWizard() {
   };
   const handleSubmit = async () => {
     if (succeeded(await submit.executeAsync({ consent: true }))) {
-      setSubmitted(true);
-      router.refresh();
+      // submit_onboarding() moved the row to `submitted` and the mirror trigger
+      // refreshed app_metadata.account_status. Pull a new access token so the
+      // middleware funnel sees `submitted` and routes to the pending page.
+      await createSupabaseBrowserClient().auth.refreshSession();
+      router.replace(paths.employee.pending);
     }
   };
 
   return (
     <div className='flex flex-col gap-6'>
+      {!!onboarding.reviewNote && (
+        <div className='flex gap-3 rounded-lg border border-border bg-muted/50 p-4'>
+          <RotateCcw
+            className='mt-0.5 size-5 shrink-0 text-muted-foreground'
+            aria-hidden
+          />
+          <div className='flex flex-col gap-1'>
+            <p className='text-sm font-medium'>
+              Your submission was returned for changes
+            </p>
+            <p className='text-sm text-muted-foreground'>
+              {onboarding.reviewNote}
+            </p>
+          </div>
+        </div>
+      )}
       <StepIndicator steps={[...onboardingSteps]} currentStep={step} />
-      <Card className='max-w-3xl'>
+      <Card>
         <CardContent className='p-6'>
           {step === 0 && (
             <PersonalInfoStep

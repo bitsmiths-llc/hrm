@@ -103,6 +103,7 @@ export type Database = {
           id: string
           invited_at: string | null
           phone: string | null
+          review_note: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -121,6 +122,7 @@ export type Database = {
           id: string
           invited_at?: string | null
           phone?: string | null
+          review_note?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -139,6 +141,7 @@ export type Database = {
           id?: string
           invited_at?: string | null
           phone?: string | null
+          review_note?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -237,7 +240,7 @@ export type Database = {
       submit_onboarding: { Args: never; Returns: undefined }
     }
     Enums: {
-      account_status: "invited" | "onboarding" | "active"
+      account_status: "invited" | "onboarding" | "submitted" | "active"
       employment_type: "full_time" | "part_time"
       user_role: "admin" | "employee"
     }
@@ -367,7 +370,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_status: ["invited", "onboarding", "active"],
+      account_status: ["invited", "onboarding", "submitted", "active"],
       employment_type: ["full_time", "part_time"],
       user_role: ["admin", "employee"],
     },

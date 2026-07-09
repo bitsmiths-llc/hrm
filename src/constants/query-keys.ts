@@ -6,7 +6,7 @@ export enum QueryKeys {
   EMPLOYEE = 'employee', // detail, keyed by id
   MY_PROFILE = 'my-profile', // self-service (M1.5)
   ONBOARDING = 'onboarding', // caller's own onboarding wizard data (M1.4)
-  ONBOARDING_QUEUE = 'onboarding-queue', // submitted rows (M1.4)
+  ONBOARDING_QUEUE = 'onboarding-queue', // submitted rows, admin review (BIT-10)
   EMPLOYEE_DOCUMENTS = 'employee-documents',
 
   LEAVE_REQUESTS = 'leave-requests',
