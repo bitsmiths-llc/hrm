@@ -13,13 +13,12 @@ import {
   usePolicy,
 } from '@/hooks/queries/policies';
 
+import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { PageHeader } from '@/components/hrm/page-header';
 import { RichTextEditor } from '@/components/hrm/rich-text-editor';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-
-import { summarizePolicyChanges } from '@/lib/policy-diff';
 
 import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
@@ -27,7 +26,6 @@ import { QueryKeys } from '@/constants/query-keys';
 
 import { PolicyComplianceList } from './policy-compliance-list';
 import { PolicyVersionHistory } from './policy-version-history';
-import { PublishPolicyVersionDialog } from './publish-policy-version-dialog';
 
 import { Policy, PolicyVersion } from '@/types/hrm';
 
@@ -44,10 +42,6 @@ export function PolicyEditorPageContent({
   const { data: acknowledgments } = useAllPolicyAcknowledgments();
 
   const [draftHtml, setDraftHtml] = useState<string | null>(null);
-  const [publishOpen, setPublishOpen] = useState(false);
-  const [revertedFromVersion, setRevertedFromVersion] = useState<number | null>(
-    null,
-  );
   // CKEditor's `data` prop only seeds the *initial* content — it doesn't
   // reactively re-sync on prop changes — so a revert has to force a fresh
   // mount to actually show the reverted content in the editor.
@@ -68,27 +62,16 @@ export function PolicyEditorPageContent({
   const latest = currentVersion(policy);
   const content = draftHtml ?? latest.contentHtml;
   const isDirty = draftHtml !== null && draftHtml !== latest.contentHtml;
-  const suggestedSummary = !isDirty
-    ? ''
-    : revertedFromVersion !== null
-      ? `Reverted to version ${revertedFromVersion}.`
-      : summarizePolicyChanges(latest.contentHtml, content);
-
-  const handleContentChange = (html: string) => {
-    setDraftHtml(html);
-    setRevertedFromVersion(null);
-  };
 
   const handleRevert = (version: PolicyVersion) => {
     setDraftHtml(version.contentHtml);
-    setRevertedFromVersion(version.version);
     setEditorKey((key) => key + 1);
     toast.info(
       `Version ${version.version} loaded into the editor — publish to make it current.`,
     );
   };
 
-  const handlePublish = (changeSummary: string) => {
+  const handlePublish = () => {
     const publishedAt = new Date().toISOString().slice(0, 10);
     queryClient.setQueryData<Policy[]>([QueryKeys.POLICIES], (old) =>
       old?.map((p) =>
@@ -100,7 +83,6 @@ export function PolicyEditorPageContent({
                 {
                   version: latest.version + 1,
                   contentHtml: content,
-                  changeSummary,
                   publishedAt,
                 },
               ],
@@ -109,7 +91,6 @@ export function PolicyEditorPageContent({
       ),
     );
     setDraftHtml(null);
-    setRevertedFromVersion(null);
     toast.success(`${policy.title} updated to version ${latest.version + 1}`);
   };
 
@@ -127,16 +108,16 @@ export function PolicyEditorPageContent({
         title={policy.title}
         description={`${policyCategoryLabels[policy.category]} · Version ${latest.version}`}
       >
-        <Button disabled={!isDirty} onClick={() => setPublishOpen(true)}>
-          Publish update
-        </Button>
+        <ConfirmDialog
+          trigger={<Button disabled={!isDirty}>Publish update</Button>}
+          title='Publish this update?'
+          description='Employees who already acknowledged an earlier version will see the changed lines highlighted and be prompted to re-acknowledge.'
+          confirmLabel='Publish new version'
+          onConfirm={handlePublish}
+        />
       </PageHeader>
 
-      <RichTextEditor
-        key={editorKey}
-        value={content}
-        onChange={handleContentChange}
-      />
+      <RichTextEditor key={editorKey} value={content} onChange={setDraftHtml} />
 
       <div className='grid gap-6 md:grid-cols-2'>
         <div className='flex flex-col gap-3'>
@@ -158,13 +139,6 @@ export function PolicyEditorPageContent({
           />
         </div>
       </div>
-
-      <PublishPolicyVersionDialog
-        open={publishOpen}
-        onOpenChange={setPublishOpen}
-        onConfirm={handlePublish}
-        suggestedSummary={suggestedSummary}
-      />
     </>
   );
 }

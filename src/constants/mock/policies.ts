@@ -19,7 +19,6 @@ export const mockPolicies: Policy[] = [
             <li>The pool resets at the start of each calendar year.</li>
           </ul>
         `,
-        changeSummary: null,
         publishedAt: '2026-01-01',
       },
       {
@@ -35,8 +34,6 @@ export const mockPolicies: Policy[] = [
             <li>The pool resets at the start of each calendar year.</li>
           </ul>
         `,
-        changeSummary:
-          'Increased the annual leave pool from 20 to 22 days, effective immediately.',
         publishedAt: '2026-06-01',
       },
     ],
@@ -60,7 +57,6 @@ export const mockPolicies: Policy[] = [
           </ul>
           <p>Employees on probation or in their notice period aren't eligible for medical allowance.</p>
         `,
-        changeSummary: null,
         publishedAt: '2026-01-15',
       },
     ],
@@ -83,7 +79,6 @@ export const mockPolicies: Policy[] = [
             <li>Only approved hours are paid — every log requires explicit admin approval.</li>
           </ul>
         `,
-        changeSummary: null,
         publishedAt: '2026-03-10',
       },
     ],
@@ -105,7 +100,6 @@ export const mockPolicies: Policy[] = [
           <h3>Conflicts of interest</h3>
           <p>Employees should disclose any outside work or financial interest that could reasonably conflict with their responsibilities at Bitsmiths.</p>
         `,
-        changeSummary: null,
         publishedAt: '2026-06-25',
       },
     ],

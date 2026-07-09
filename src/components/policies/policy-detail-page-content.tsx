@@ -126,11 +126,6 @@ export function PolicyDetailPageContent({
                     ? `This policy was updated on ${format(latest.publishedAt, 'MMM d, yyyy')}. Changes are highlighted below — read and acknowledge.`
                     : 'Please review and acknowledge this policy'}
                 </p>
-                {!!ack && !!latest.changeSummary && (
-                  <p className='text-sm text-muted-foreground'>
-                    What changed: {latest.changeSummary}
-                  </p>
-                )}
               </div>
             </div>
             <Button onClick={handleAcknowledge} className='shrink-0'>

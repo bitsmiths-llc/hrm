@@ -163,11 +163,9 @@ export type PolicyCategory = 'leave' | 'medical' | 'overtime' | 'general';
 export type PolicyVersion = {
   version: number;
   /** Rich-text content authored in CKEditor, stored as HTML — not a PDF —
-   *  so an update can carry a real changelog instead of just a new file. */
+   *  so a diff against the previous version can highlight exactly what
+   *  changed for employees, instead of just swapping in a new file. */
   contentHtml: string;
-  /** Required on every version after the first; shown to employees so they
-   *  know what to re-review instead of re-reading the whole document. */
-  changeSummary: string | null;
   publishedAt: string;
 };
 

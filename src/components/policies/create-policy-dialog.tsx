@@ -68,7 +68,6 @@ export function CreatePolicyDialog({
         {
           version: 1,
           contentHtml: values.contentHtml,
-          changeSummary: null,
           publishedAt: new Date().toISOString().slice(0, 10),
         },
       ],
