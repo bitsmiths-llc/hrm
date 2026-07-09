@@ -149,6 +149,13 @@ export type HrmSettings = {
    *  payroll run. Admin-configured only — never shown to employees
    *  (PRD 5.3.1). */
   overtimeMultiplier: number;
+  /** Size of the shared annual leave pool (Paid + Sick + Half Day), in
+   *  days. Resets each year. */
+  leavePoolDays: number;
+  /** Monthly medical allowance accrual, in PKR. */
+  medicalMonthlyAccrual: number;
+  /** Absolute cap on accrued medical allowance, in PKR. */
+  medicalBalanceCap: number;
 };
 
 export type Policy = {

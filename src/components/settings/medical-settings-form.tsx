@@ -23,37 +23,43 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { QueryKeys } from '@/constants/query-keys';
 import {
-  type OvertimeSettingsInput,
-  overtimeSettingsSchema,
+  type MedicalSettingsInput,
+  medicalSettingsSchema,
 } from '@/schema/settings';
 
 import { HrmSettings } from '@/types/hrm';
 
-export function OvertimeSettingsForm() {
+export function MedicalSettingsForm() {
   const queryClient = useQueryClient();
   const { data: settings, isLoading } = useHrmSettings();
 
-  const form = useForm<OvertimeSettingsInput>({
-    resolver: zodResolver(overtimeSettingsSchema),
-    defaultValues: { overtimeMultiplier: settings?.overtimeMultiplier ?? 0 },
-    values: settings && { overtimeMultiplier: settings.overtimeMultiplier },
+  const form = useForm<MedicalSettingsInput>({
+    resolver: zodResolver(medicalSettingsSchema),
+    defaultValues: {
+      medicalMonthlyAccrual: settings?.medicalMonthlyAccrual ?? 0,
+      medicalBalanceCap: settings?.medicalBalanceCap ?? 0,
+    },
+    values: settings && {
+      medicalMonthlyAccrual: settings.medicalMonthlyAccrual,
+      medicalBalanceCap: settings.medicalBalanceCap,
+    },
   });
 
-  const onSubmit = (values: OvertimeSettingsInput) => {
+  const onSubmit = (values: MedicalSettingsInput) => {
     queryClient.setQueryData<HrmSettings>([QueryKeys.HRM_SETTINGS], (old) =>
       old ? { ...old, ...values } : old,
     );
-    toast.success(`Overtime multiplier set to ${values.overtimeMultiplier}x`);
+    toast.success('Medical allowance settings saved');
   };
 
   if (isLoading || !settings) {
-    return <Skeleton className='h-56 w-full max-w-md rounded-xl' />;
+    return <Skeleton className='h-72 w-full max-w-md rounded-xl' />;
   }
 
   return (
     <Card className='max-w-md'>
       <CardHeader className='pb-4'>
-        <CardTitle className='text-lg font-medium'>Payroll</CardTitle>
+        <CardTitle className='text-lg font-medium'>Medical Allowance</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -63,16 +69,31 @@ export function OvertimeSettingsForm() {
           >
             <FormField
               control={form.control}
-              name='overtimeMultiplier'
+              name='medicalMonthlyAccrual'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Overtime multiplier</FormLabel>
+                  <FormLabel>Monthly accrual (PKR)</FormLabel>
                   <FormControl>
-                    <Input type='number' step={0.1} min={0} {...field} />
+                    <Input type='number' step={500} min={0} {...field} />
                   </FormControl>
                   <FormDescription>
-                    Applied to the hourly rate when a payroll cycle is
-                    calculated. Never shown to employees.
+                    Adds to each eligible employee's balance every month.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='medicalBalanceCap'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Balance cap (PKR)</FormLabel>
+                  <FormControl>
+                    <Input type='number' step={500} min={0} {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Accrual stops adding once a balance reaches this cap.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -4,12 +4,11 @@ import { CalendarOff } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { useLeaveRequests } from '@/hooks/queries/leave';
+import { useHrmSettings } from '@/hooks/queries/settings';
 
 import { BalanceCard } from '@/components/hrm/balance-card';
 import { StatCard } from '@/components/hrm/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const POOL_TOTAL = 22;
 
 type LeaveBalanceCardsProps = {
   employeeId: string;
@@ -23,7 +22,10 @@ export function LeaveBalanceCards({
   employeeId,
   month,
 }: LeaveBalanceCardsProps) {
-  const { data: requests, isLoading } = useLeaveRequests(employeeId);
+  const { data: requests, isLoading: requestsLoading } =
+    useLeaveRequests(employeeId);
+  const { data: settings, isLoading: settingsLoading } = useHrmSettings();
+  const isLoading = requestsLoading || settingsLoading;
 
   const year =
     month === 'all' ? new Date().getFullYear() : Number(month.slice(0, 4));
@@ -44,7 +46,7 @@ export function LeaveBalanceCards({
     };
   }, [requests, year]);
 
-  if (isLoading) {
+  if (isLoading || !settings) {
     return (
       <div className='grid gap-4 md:grid-cols-2'>
         <Skeleton className='h-40 rounded-xl' />
@@ -58,7 +60,7 @@ export function LeaveBalanceCards({
       <BalanceCard
         title={`Leave Pool (Paid · Sick · Half Day) · ${year}`}
         used={poolUsed}
-        total={POOL_TOTAL}
+        total={settings.leavePoolDays}
         format={(days) => `${days} days`}
         hint='Half days consume 0.5 from the pool · resets each year'
       />

@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
+import { useHrmSettings } from '@/hooks/queries/settings';
+
 import {
   mockCurrentEmployee,
   mockMedicalBalances,
@@ -24,20 +26,31 @@ export const useMedicalClaims = (employeeId: string) => {
   });
 };
 
+/** Cap and monthly accrual come from admin-configured settings, not the
+ *  per-employee mock record — only `accrued` (the running balance) is
+ *  genuinely per-employee. */
 export const useMedicalBalance = (employeeId: string) => {
-  return useQuery({
+  const settings = useHrmSettings();
+  const query = useQuery({
     queryKey: [QueryKeys.MEDICAL_BALANCE, employeeId],
-    queryFn: async (): Promise<MedicalBalance> => {
+    queryFn: async (): Promise<Pick<MedicalBalance, 'accrued'>> => {
       await mockDelay(300);
-      return (
-        mockMedicalBalances[employeeId] ?? {
-          accrued: 0,
-          cap: 50_000,
-          monthlyAccrual: 5_000,
-        }
-      );
+      return { accrued: mockMedicalBalances[employeeId]?.accrued ?? 0 };
     },
   });
+
+  return {
+    ...query,
+    data:
+      query.data && settings.data
+        ? {
+            accrued: query.data.accrued,
+            cap: settings.data.medicalBalanceCap,
+            monthlyAccrual: settings.data.medicalMonthlyAccrual,
+          }
+        : undefined,
+    isLoading: query.isLoading || settings.isLoading,
+  };
 };
 
 /** Own claims/balance for the signed-in employee (mocked as emp-1). */

@@ -23,27 +23,27 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { QueryKeys } from '@/constants/query-keys';
 import {
-  type OvertimeSettingsInput,
-  overtimeSettingsSchema,
+  type LeaveSettingsInput,
+  leaveSettingsSchema,
 } from '@/schema/settings';
 
 import { HrmSettings } from '@/types/hrm';
 
-export function OvertimeSettingsForm() {
+export function LeaveSettingsForm() {
   const queryClient = useQueryClient();
   const { data: settings, isLoading } = useHrmSettings();
 
-  const form = useForm<OvertimeSettingsInput>({
-    resolver: zodResolver(overtimeSettingsSchema),
-    defaultValues: { overtimeMultiplier: settings?.overtimeMultiplier ?? 0 },
-    values: settings && { overtimeMultiplier: settings.overtimeMultiplier },
+  const form = useForm<LeaveSettingsInput>({
+    resolver: zodResolver(leaveSettingsSchema),
+    defaultValues: { leavePoolDays: settings?.leavePoolDays ?? 0 },
+    values: settings && { leavePoolDays: settings.leavePoolDays },
   });
 
-  const onSubmit = (values: OvertimeSettingsInput) => {
+  const onSubmit = (values: LeaveSettingsInput) => {
     queryClient.setQueryData<HrmSettings>([QueryKeys.HRM_SETTINGS], (old) =>
       old ? { ...old, ...values } : old,
     );
-    toast.success(`Overtime multiplier set to ${values.overtimeMultiplier}x`);
+    toast.success(`Leave pool set to ${values.leavePoolDays} days`);
   };
 
   if (isLoading || !settings) {
@@ -53,7 +53,7 @@ export function OvertimeSettingsForm() {
   return (
     <Card className='max-w-md'>
       <CardHeader className='pb-4'>
-        <CardTitle className='text-lg font-medium'>Payroll</CardTitle>
+        <CardTitle className='text-lg font-medium'>Leave</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -63,16 +63,16 @@ export function OvertimeSettingsForm() {
           >
             <FormField
               control={form.control}
-              name='overtimeMultiplier'
+              name='leavePoolDays'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Overtime multiplier</FormLabel>
+                  <FormLabel>Annual leave pool (days)</FormLabel>
                   <FormControl>
-                    <Input type='number' step={0.1} min={0} {...field} />
+                    <Input type='number' step={1} min={0} {...field} />
                   </FormControl>
                   <FormDescription>
-                    Applied to the hourly rate when a payroll cycle is
-                    calculated. Never shown to employees.
+                    Shared across Paid, Sick, and Half Day leave. Resets each
+                    year.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

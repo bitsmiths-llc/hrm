@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { useHrmSettings } from '@/hooks/queries/settings';
+
 import { MonthFilter } from '@/components/hrm/month-filter';
 import { PageHeader } from '@/components/hrm/page-header';
 import { RequestLeaveDialog } from '@/components/leave/request-leave-dialog';
@@ -13,12 +15,13 @@ import { LeaveHistoryTable } from './leave-history-table';
 
 export function LeavePageContent() {
   const [month, setMonth] = useState('all');
+  const { data: settings } = useHrmSettings();
 
   return (
     <>
       <PageHeader
         title='Leave'
-        description='Request leave and track your 22-day annual pool.'
+        description={`Request leave and track your ${settings?.leavePoolDays ?? '…'}-day annual pool.`}
       >
         <MonthFilter value={month} onChange={setMonth} />
         <RequestLeaveDialog />
