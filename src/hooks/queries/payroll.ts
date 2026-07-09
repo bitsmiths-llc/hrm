@@ -140,6 +140,7 @@ export const useCurrentCycleRows = () => {
           totalBase,
           medical,
           overtimeHours,
+          overtimeMultiplier: settings.data.overtimeMultiplier,
           overtimePay,
           total: calcPayslipTotal(totalBase, medical, overtimePay),
         };

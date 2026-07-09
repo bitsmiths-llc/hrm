@@ -128,6 +128,9 @@ export type Payslip = {
   totalBase: number;
   medical: number;
   overtimeHours: number;
+  /** Defaults to the global setting, but admin can override it per employee
+   *  while the cycle is open — frozen here once the cycle is locked. */
+  overtimeMultiplier: number;
   overtimePay: number;
   total: number;
 };

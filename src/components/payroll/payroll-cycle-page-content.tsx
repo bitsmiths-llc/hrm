@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { useEmployees } from '@/hooks/queries/employees';
 import {
   useAllPayslips,
   useCurrentCycleRows,
@@ -21,7 +22,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { formatCurrency } from '@/utils/number-functions';
-import { calcPayslipTotal, calcTotalBase } from '@/utils/payroll-functions';
+import {
+  calcOvertimePay,
+  calcPayslipTotal,
+  calcTotalBase,
+} from '@/utils/payroll-functions';
 
 import { mockPayslips } from '@/constants/mock/payroll';
 import { paths } from '@/constants/paths';
@@ -43,7 +48,11 @@ export function PayrollCyclePageContent({
   const { rows: liveRows, isLoading: liveLoading } = useCurrentCycleRows();
   const { data: cycles, isLoading: cyclesLoading } = usePayrollCycles();
   const { data: allPayslips, isLoading: payslipsLoading } = useAllPayslips();
+  const { data: employees } = useEmployees();
   const [overrides, setOverrides] = useState<Record<string, number>>({});
+  const [multiplierOverrides, setMultiplierOverrides] = useState<
+    Record<string, number>
+  >({});
 
   const cycle = (cycles ?? []).find((c) => c.month === month);
   const locked = cycle?.status === 'locked';
@@ -58,11 +67,26 @@ export function PayrollCyclePageContent({
       daysWorked,
       row.daysInMonth,
     );
+
+    const overtimeMultiplier =
+      multiplierOverrides[row.employeeId] ?? row.overtimeMultiplier;
+    const employee = employees?.find((e) => e.id === row.employeeId);
+    const overtimePay = employee
+      ? calcOvertimePay(
+          row.baseSalary,
+          employee.workingHours,
+          row.overtimeHours,
+          overtimeMultiplier,
+        )
+      : row.overtimePay;
+
     return {
       ...row,
       daysWorked,
       totalBase,
-      total: calcPayslipTotal(totalBase, row.medical, row.overtimePay),
+      overtimeMultiplier,
+      overtimePay,
+      total: calcPayslipTotal(totalBase, row.medical, overtimePay),
     };
   });
 
@@ -151,6 +175,15 @@ export function PayrollCyclePageContent({
                     setOverrides((prev) => ({
                       ...prev,
                       [employeeId]: daysWorked,
+                    }))
+            }
+            onOvertimeMultiplierChange={
+              locked
+                ? undefined
+                : (employeeId, overtimeMultiplier) =>
+                    setMultiplierOverrides((prev) => ({
+                      ...prev,
+                      [employeeId]: overtimeMultiplier,
                     }))
             }
           />
