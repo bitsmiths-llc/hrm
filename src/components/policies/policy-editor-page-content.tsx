@@ -29,7 +29,7 @@ import { PolicyComplianceList } from './policy-compliance-list';
 import { PolicyVersionHistory } from './policy-version-history';
 import { PublishPolicyVersionDialog } from './publish-policy-version-dialog';
 
-import { Policy } from '@/types/hrm';
+import { Policy, PolicyVersion } from '@/types/hrm';
 
 type PolicyEditorPageContentProps = {
   policyId: string;
@@ -45,6 +45,13 @@ export function PolicyEditorPageContent({
 
   const [draftHtml, setDraftHtml] = useState<string | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [revertedFromVersion, setRevertedFromVersion] = useState<number | null>(
+    null,
+  );
+  // CKEditor's `data` prop only seeds the *initial* content — it doesn't
+  // reactively re-sync on prop changes — so a revert has to force a fresh
+  // mount to actually show the reverted content in the editor.
+  const [editorKey, setEditorKey] = useState(0);
 
   if (isLoading) return <Skeleton className='h-96 rounded-xl' />;
 
@@ -61,9 +68,25 @@ export function PolicyEditorPageContent({
   const latest = currentVersion(policy);
   const content = draftHtml ?? latest.contentHtml;
   const isDirty = draftHtml !== null && draftHtml !== latest.contentHtml;
-  const suggestedSummary = isDirty
-    ? summarizePolicyChanges(latest.contentHtml, content)
-    : '';
+  const suggestedSummary = !isDirty
+    ? ''
+    : revertedFromVersion !== null
+      ? `Reverted to version ${revertedFromVersion}.`
+      : summarizePolicyChanges(latest.contentHtml, content);
+
+  const handleContentChange = (html: string) => {
+    setDraftHtml(html);
+    setRevertedFromVersion(null);
+  };
+
+  const handleRevert = (version: PolicyVersion) => {
+    setDraftHtml(version.contentHtml);
+    setRevertedFromVersion(version.version);
+    setEditorKey((key) => key + 1);
+    toast.info(
+      `Version ${version.version} loaded into the editor — publish to make it current.`,
+    );
+  };
 
   const handlePublish = (changeSummary: string) => {
     const publishedAt = new Date().toISOString().slice(0, 10);
@@ -86,6 +109,7 @@ export function PolicyEditorPageContent({
       ),
     );
     setDraftHtml(null);
+    setRevertedFromVersion(null);
     toast.success(`${policy.title} updated to version ${latest.version + 1}`);
   };
 
@@ -108,12 +132,20 @@ export function PolicyEditorPageContent({
         </Button>
       </PageHeader>
 
-      <RichTextEditor value={content} onChange={setDraftHtml} />
+      <RichTextEditor
+        key={editorKey}
+        value={content}
+        onChange={handleContentChange}
+      />
 
       <div className='grid gap-6 md:grid-cols-2'>
         <div className='flex flex-col gap-3'>
           <h2 className='text-lg font-semibold'>Version history</h2>
-          <PolicyVersionHistory versions={policy.versions} />
+          <PolicyVersionHistory
+            versions={policy.versions}
+            currentVersionNumber={latest.version}
+            onRevert={handleRevert}
+          />
         </div>
         <div className='flex flex-col gap-3'>
           <h2 className='text-lg font-semibold'>Acknowledgment status</h2>

@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+import { highlightChangedBlocks } from '@/lib/policy-diff';
+
 import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { mockCurrentEmployee } from '@/constants/mock/employees';
 import { paths } from '@/constants/paths';
@@ -55,6 +57,20 @@ export function PolicyDetailPageContent({
   const latest = currentVersion(policy);
   const ack = acknowledgments?.find((a) => a.policyId === policy.id);
   const upToDate = !!ack && ack.acknowledgedVersion >= latest.version;
+
+  // Diffed against whatever version the employee last acknowledged (not
+  // necessarily the immediately-previous one, if they skipped an update),
+  // so the highlighting always reflects everything new to them.
+  const previousAckedVersion = ack
+    ? policy.versions.find((v) => v.version === ack.acknowledgedVersion)
+    : undefined;
+  const displayHtml =
+    !upToDate && previousAckedVersion
+      ? highlightChangedBlocks(
+          previousAckedVersion.contentHtml,
+          latest.contentHtml,
+        )
+      : latest.contentHtml;
 
   const handleAcknowledge = () => {
     queryClient.setQueryData<PolicyAcknowledgment[]>(
@@ -107,7 +123,7 @@ export function PolicyDetailPageContent({
               <div className='flex flex-col gap-0.5'>
                 <p className='text-sm font-medium'>
                   {ack
-                    ? `This policy was updated on ${format(latest.publishedAt, 'MMM d, yyyy')}`
+                    ? `This policy was updated on ${format(latest.publishedAt, 'MMM d, yyyy')}. Changes are highlighted below — read and acknowledge.`
                     : 'Please review and acknowledge this policy'}
                 </p>
                 {!!ack && !!latest.changeSummary && (
@@ -126,7 +142,7 @@ export function PolicyDetailPageContent({
 
       <Card>
         <CardContent className='p-6'>
-          <PolicyContent html={latest.contentHtml} />
+          <PolicyContent html={displayHtml} />
         </CardContent>
       </Card>
 
