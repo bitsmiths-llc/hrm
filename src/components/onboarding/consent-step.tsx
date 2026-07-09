@@ -24,6 +24,7 @@ type ConsentStepProps = {
 export function ConsentStep({ onSubmit, onBack }: ConsentStepProps) {
   const form = useForm<ConsentInput>({
     resolver: zodResolver(consentSchema),
+    // reason: zod infers consent as literal `true`; the unchecked initial state is undefined, not false
     defaultValues: { consent: undefined as unknown as true },
   });
 
