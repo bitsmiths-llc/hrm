@@ -1,14 +1,18 @@
 import { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/hrm/coming-soon';
+import { PageHeader } from '@/components/hrm/page-header';
+import { OvertimeSettingsForm } from '@/components/settings/overtime-settings-form';
 
 export const metadata: Metadata = { title: 'Settings' };
 
 export default function SettingsPage() {
   return (
-    <ComingSoon
-      title='Settings'
-      description='Overtime multiplier, medical accrual, leave pool, email template, and module toggles.'
-    />
+    <>
+      <PageHeader
+        title='Settings'
+        description='Module-wide configuration for payroll runs.'
+      />
+      <OvertimeSettingsForm />
+    </>
   );
 }

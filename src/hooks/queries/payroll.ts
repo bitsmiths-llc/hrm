@@ -2,10 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import {
+  useAllLeaveRequests,
   useAllMedicalClaims,
   useAllOvertimeLogs,
 } from '@/hooks/queries/approvals';
 import { useEmployees } from '@/hooks/queries/employees';
+import { useHrmSettings } from '@/hooks/queries/settings';
 
 import {
   calcOvertimePay,
@@ -66,23 +68,37 @@ const daysInMonth = (month: string) => {
 };
 
 /** Live-calculated per-employee rows for the currently open payroll cycle —
- *  composed from the same employee/claim/log hooks the rest of the app uses,
- *  rather than a separate mock fetch, so it reflects whatever those already
- *  return. Medical and overtime only count approved records dated within the
- *  cycle month. */
+ *  composed from the same employee/claim/log/leave hooks the rest of the app
+ *  uses, rather than a separate mock fetch, so it reflects whatever those
+ *  already return. Medical and overtime only count approved records dated
+ *  within the cycle month; approved unpaid leave in the cycle month reduces
+ *  days worked (the only leave type that prorates pay — see `LeaveType`). */
 export const useCurrentCycleRows = () => {
   const cycle = mockPayrollCycles.find((c) => c.status === 'open');
   const employees = useEmployees();
+  const leaveRequests = useAllLeaveRequests();
   const medicalClaims = useAllMedicalClaims();
   const overtimeLogs = useAllOvertimeLogs();
+  const settings = useHrmSettings();
 
   const rows = useMemo<Payslip[]>(() => {
-    if (!cycle) return [];
+    if (!cycle || !settings.data) return [];
     const cycleDays = daysInMonth(cycle.month);
 
     return (employees.data ?? [])
       .filter((employee) => employee.status === 'active')
       .map((employee) => {
+        const unpaidDays = (leaveRequests.data ?? [])
+          .filter(
+            (request) =>
+              request.employeeId === employee.id &&
+              request.type === 'unpaid' &&
+              request.status === 'approved' &&
+              request.startDate.startsWith(cycle.month),
+          )
+          .reduce((sum, request) => sum + request.days, 0);
+        const daysWorked = Math.max(0, cycleDays - unpaidDays);
+
         const medical = (medicalClaims.data ?? [])
           .filter(
             (claim) =>
@@ -105,10 +121,11 @@ export const useCurrentCycleRows = () => {
           employee.baseSalary,
           employee.workingHours,
           overtimeHours,
+          settings.data.overtimeMultiplier,
         );
         const totalBase = calcTotalBase(
           employee.baseSalary,
-          cycleDays,
+          daysWorked,
           cycleDays,
         );
 
@@ -118,7 +135,7 @@ export const useCurrentCycleRows = () => {
           employeeName: employee.fullName,
           cycleMonth: cycle.month,
           baseSalary: employee.baseSalary,
-          daysWorked: cycleDays,
+          daysWorked,
           daysInMonth: cycleDays,
           totalBase,
           medical,
@@ -127,12 +144,23 @@ export const useCurrentCycleRows = () => {
           total: calcPayslipTotal(totalBase, medical, overtimePay),
         };
       });
-  }, [cycle, employees.data, medicalClaims.data, overtimeLogs.data]);
+  }, [
+    cycle,
+    employees.data,
+    leaveRequests.data,
+    medicalClaims.data,
+    overtimeLogs.data,
+    settings.data,
+  ]);
 
   return {
     cycle,
     rows,
     isLoading:
-      employees.isLoading || medicalClaims.isLoading || overtimeLogs.isLoading,
+      employees.isLoading ||
+      leaveRequests.isLoading ||
+      medicalClaims.isLoading ||
+      overtimeLogs.isLoading ||
+      settings.isLoading,
   };
 };

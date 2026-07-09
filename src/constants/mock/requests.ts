@@ -78,6 +78,17 @@ export const mockLeaveRequests: LeaveRequest[] = [
     status: 'approved',
     createdAt: '2025-08-10',
   },
+  {
+    id: 'lv-8',
+    employeeId: 'emp-2',
+    employeeName: 'Hamza Raza',
+    type: 'unpaid',
+    reason: 'Extra days off beyond the pool for a family visit.',
+    startDate: '2026-07-20',
+    days: 3,
+    status: 'approved',
+    createdAt: '2026-07-15',
+  },
 ];
 
 export const mockMedicalClaims: MedicalClaim[] = [
@@ -216,5 +227,16 @@ export const mockOvertimeLogs: OvertimeLog[] = [
     task: 'Weekend migration to new payment provider',
     status: 'approved',
     createdAt: '2025-03-16',
+  },
+  {
+    id: 'ot-6',
+    employeeId: 'emp-1',
+    employeeName: 'Ayesha Khan',
+    date: '2026-07-05',
+    hours: 4,
+    project: 'HRM Frontend',
+    task: 'Payroll module launch support',
+    status: 'approved',
+    createdAt: '2026-07-06',
   },
 ];

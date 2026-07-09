@@ -1,5 +1,3 @@
-const OVERTIME_MULTIPLIER = 1.5;
-
 export const calcTotalBase = (
   baseSalary: number,
   daysWorked: number,
@@ -10,8 +8,9 @@ export const calcOvertimePay = (
   baseSalary: number,
   workingHours: number,
   overtimeHours: number,
+  overtimeMultiplier: number,
 ) =>
-  Math.round((baseSalary / workingHours) * OVERTIME_MULTIPLIER * overtimeHours);
+  Math.round((baseSalary / workingHours) * overtimeMultiplier * overtimeHours);
 
 export const calcPayslipTotal = (
   totalBase: number,

@@ -12,4 +12,5 @@ export enum QueryKeys {
   PAYSLIPS = 'payslips',
   PAYROLL_CYCLES = 'payroll-cycles',
   POLICIES = 'policies',
+  HRM_SETTINGS = 'hrm-settings',
 }

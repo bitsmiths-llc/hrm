@@ -141,6 +141,13 @@ export type PayrollCycle = {
   lockedAt: string | null;
 };
 
+export type HrmSettings = {
+  /** Applied to the hourly rate when calculating overtime pay during a
+   *  payroll run. Admin-configured only — never shown to employees
+   *  (PRD 5.3.1). */
+  overtimeMultiplier: number;
+};
+
 export type Policy = {
   id: string;
   title: string;
