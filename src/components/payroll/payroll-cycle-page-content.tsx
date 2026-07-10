@@ -18,6 +18,7 @@ import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { PageHeader } from '@/components/hrm/page-header';
 import { StatusBadge } from '@/components/hrm/status-badge';
+import { BulkAdjustmentPopover } from '@/components/payroll/bulk-adjustment-popover';
 import { BulkOtRatePopover } from '@/components/payroll/bulk-ot-rate-popover';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -151,6 +152,22 @@ export function PayrollCyclePageContent({
     );
   };
 
+  const handleBulkAddCustomField = (field: {
+    label: string;
+    amount: number;
+  }) => {
+    setCustomFieldOverrides((prev) => {
+      const next = { ...prev };
+      selectedIds.forEach((employeeId) => {
+        next[employeeId] = [...(next[employeeId] ?? []), field];
+      });
+      return next;
+    });
+    toast.success(
+      `Added "${field.label}" to ${selectedIds.size} ${selectedIds.size === 1 ? 'employee' : 'employees'}`,
+    );
+  };
+
   const handleLock = () => {
     if (!cycle) return;
     queryClient.setQueryData<PayrollCycle[]>(
@@ -221,10 +238,16 @@ export function PayrollCyclePageContent({
                     Send Invoice
                   </Button>
                   {!locked && (
-                    <BulkOtRatePopover
-                      selectedCount={selectedIds.size}
-                      onApply={handleBulkOtRate}
-                    />
+                    <>
+                      <BulkOtRatePopover
+                        selectedCount={selectedIds.size}
+                        onApply={handleBulkOtRate}
+                      />
+                      <BulkAdjustmentPopover
+                        selectedCount={selectedIds.size}
+                        onApply={handleBulkAddCustomField}
+                      />
+                    </>
                   )}
                 </>
               )}
