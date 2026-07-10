@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-import { requiredString } from '@/schema/common';
+import {
+  contactFields,
+  EMERGENCY_CONTACT_DISTINCT_MESSAGE,
+  phonesAreDistinct,
+  requiredString,
+} from '@/schema/common';
 
 /** UUID identifying the target employee for an admin write. */
 export const employeeIdField = z.string().uuid();
@@ -38,13 +43,29 @@ export const employmentConfigSchema = z.object({
 
 export type EmploymentConfigInput = z.infer<typeof employmentConfigSchema>;
 
-export const contactInfoSchema = z.object({
-  phone: z.string().min(7, 'Enter a valid phone number'),
-  emergencyContact: z.string().min(7, 'Enter a valid phone number'),
-  address: z.string().min(5, 'Enter your residential address'),
-});
+// Base object kept separate so admin actions can `.extend` it with employeeId
+// (the refined schema below is a ZodEffects and has no `.extend`).
+const contactInfoObject = z.object({ ...contactFields });
+
+const distinctPhonesOptions = {
+  message: EMERGENCY_CONTACT_DISTINCT_MESSAGE,
+  path: ['emergencyContact'],
+};
+
+export const contactInfoSchema = contactInfoObject.refine(
+  phonesAreDistinct,
+  distinctPhonesOptions,
+);
 
 export type ContactInfoInput = z.infer<typeof contactInfoSchema>;
+
+/** Admin edit of an employee's contact fields — the contact object plus the
+ *  target employeeId, re-refined for the distinct-phones rule. */
+export const contactInfoWithIdSchema = contactInfoObject
+  .extend({ employeeId: employeeIdField })
+  .refine(phonesAreDistinct, distinctPhonesOptions);
+
+export type ContactInfoWithIdInput = z.infer<typeof contactInfoWithIdSchema>;
 
 /** Identity fields on the employees row. Same three columns onboarding's
  *  `savePersonal` writes (name / DOB / CNIC), minus the contact fields that

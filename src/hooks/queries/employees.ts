@@ -28,6 +28,8 @@ export function toEmployee(row: EmployeeRow): Employee {
     phone: row.phone ?? '',
     emergencyContact: row.emergency_contact ?? '',
     address: row.address ?? '',
+    city: row.city ?? '',
+    postalCode: row.postal_code ?? '',
     cnic: row.cnic ?? '',
     dateOfBirth: row.date_of_birth ?? '',
     bank: bank
@@ -86,13 +88,13 @@ const fetchEmployee = authQuery(
 
 // The onboarding review queue: employees who submitted and are awaiting an
 // admin decision. Same join/shape as the directory, filtered to `submitted`
-// and oldest-first so the longest-waiting submission surfaces at the top.
+// and latest-first so the most recent submission surfaces at the top.
 const fetchOnboardingQueue = authQuery(async ({ supabase }) => {
   const { data, error } = await supabase
     .from('employees')
     .select('*, employment_details(*), bank_details(*), socials(*)')
     .eq('account_status', 'submitted')
-    .order('consent_at', { ascending: true });
+    .order('consent_at', { ascending: false });
   if (error) throw new Error(error.message);
   return data.map(toEmployee);
 });

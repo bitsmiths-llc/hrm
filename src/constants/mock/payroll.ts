@@ -31,7 +31,7 @@ export const mockPayslips: Payslip[] = [
   {
     id: 'ps-1',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     cycleMonth: '2026-06',
     baseSalary: 250_000,
     daysWorked: 30,
@@ -59,7 +59,7 @@ export const mockPayslips: Payslip[] = [
   {
     id: 'ps-3',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     cycleMonth: '2026-05',
     baseSalary: 250_000,
     daysWorked: 31,

@@ -9,6 +9,7 @@ export enum QueryKeys {
   ONBOARDING = 'onboarding', // caller's own onboarding wizard data (M1.4)
   ONBOARDING_QUEUE = 'onboarding-queue', // submitted rows, admin review (BIT-10)
   EMPLOYEE_DOCUMENTS = 'employee-documents',
+  IDENTITY_DOC_FILES = 'identity-doc-files', // signed URLs + mime for previews
 
   LEAVE_REQUESTS = 'leave-requests',
   LEAVE_BALANCE = 'leave-balance',

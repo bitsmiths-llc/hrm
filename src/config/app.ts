@@ -16,7 +16,7 @@ export const appConfig = {
     support: 'support@bitsmiths.studio',
     // People-facing invites read better from a human-sounding, monitored
     // address than from `noreply@`. Replies are routed to `support` above.
-    sender: 'Bitsmiths HRM <people@bitsmiths.studio>',
+    sender: 'Bitsmiths HR <hr@bitsmiths.studio>',
   },
 } as const;
 

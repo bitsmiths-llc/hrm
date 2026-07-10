@@ -16,6 +16,45 @@ export const phoneNumberSchema = z
   .min(7, 'Phone number must be at least 7 digits')
   .transform((val) => val.replace(/[^0-9]/g, ''));
 
+/**
+ * Digits-only string constrained to an inclusive length range. Pairs with the
+ * `digits` mask on `MaskedInput`, which strips non-digits at the keystroke — so
+ * this is the submit-time backstop for phone, emergency contact, account
+ * number, postal code, and similar numeric identifiers.
+ */
+export const digitsOnly = (
+  label: string,
+  { min, max }: { min: number; max: number },
+): z.ZodString =>
+  z
+    .string()
+    .min(1, `${label} is required`)
+    .regex(/^\d+$/, `${label} must contain digits only`)
+    .min(min, `${label} must be at least ${min} digits`)
+    .max(max, `${label} must be at most ${max} digits`);
+
+/**
+ * Residential contact fields shared by the onboarding personal-info step and
+ * the profile contact editors. Address is split into street / city / postal
+ * code so each is captured and stored on its own column.
+ */
+export const contactFields = {
+  phone: digitsOnly('Phone number', { min: 10, max: 15 }),
+  emergencyContact: digitsOnly('Emergency contact number', { min: 10, max: 15 }),
+  address: z.string().min(5, 'Enter your street address'),
+  city: z.string().min(2, 'Enter your city'),
+  postalCode: digitsOnly('Postal code', { min: 4, max: 6 }),
+};
+
+export const EMERGENCY_CONTACT_DISTINCT_MESSAGE =
+  'Emergency contact must be different from your phone number';
+
+/** Guards against a self-referential emergency contact (same as phone). */
+export const phonesAreDistinct = (value: {
+  phone: string;
+  emergencyContact: string;
+}): boolean => value.phone !== value.emergencyContact;
+
 export function optional<T>(
   schema: z.ZodType<T>,
 ): z.ZodType<T | undefined | null> {

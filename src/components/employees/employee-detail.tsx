@@ -20,6 +20,7 @@ import { paths } from '@/constants/paths';
 import { AdminBankDialog } from './admin-bank-dialog';
 import { AdminContactDialog } from './admin-contact-dialog';
 import { AdminSocialsDialog } from './admin-socials-dialog';
+import { EmployeeDocuments } from './employee-documents';
 import { EmploymentConfigForm } from './employment-config-form';
 
 type EmployeeDetailProps = {
@@ -97,6 +98,8 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
               phone: employee.phone,
               emergencyContact: employee.emergencyContact,
               address: employee.address,
+              city: employee.city,
+              postalCode: employee.postalCode,
             }}
           />
         }
@@ -107,6 +110,8 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
           { label: 'Date of birth', value: formatDate(employee.dateOfBirth) },
           { label: 'CNIC', value: employee.cnic },
           { label: 'Address', value: employee.address },
+          { label: 'City', value: employee.city },
+          { label: 'Postal code', value: employee.postalCode },
           { label: 'Invited', value: formatDate(employee.invitedAt) },
           { label: 'Joined', value: formatDate(employee.joinedAt) },
         ]}
@@ -156,6 +161,8 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
           { label: 'Twitter', value: employee.social?.twitter },
         ]}
       />
+
+      <EmployeeDocuments employeeId={employee.id} />
 
       <EmploymentConfigForm employee={employee} />
     </>

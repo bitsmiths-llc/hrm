@@ -3,11 +3,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useUpdateMyPersonalInfo } from '@/hooks/actions/use-update-my-profile';
 
+import { ControlledTextField } from '@/components/hrm/form-fields';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,17 +19,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { ControlledDatePicker } from '@/components/ui/form/controlled-date-picker';
-import { Input } from '@/components/ui/input';
 
+import { personalDetailsFields } from '@/constants/profile';
 import {
   type PersonalDetailsInput,
   personalDetailsSchema,
@@ -69,37 +64,18 @@ export function PersonalInfoDialog({ defaultValues }: PersonalInfoDialogProps) {
             onSubmit={form.handleSubmit((values) => execute(values))}
             className='flex flex-col gap-4'
           >
-            <FormField
-              control={form.control}
-              name='fullName'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full name</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Ayesha Khan' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <ControlledDatePicker<PersonalDetailsInput>
-              name='dateOfBirth'
-              label='Date of birth'
-              disabledDates={{ after: new Date() }}
-            />
-            <FormField
-              control={form.control}
-              name='cnic'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>CNIC number</FormLabel>
-                  <FormControl>
-                    <Input placeholder='12345-1234567-1' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {personalDetailsFields.map((config, index) => (
+              <React.Fragment key={config.name}>
+                <ControlledTextField control={form.control} config={config} />
+                {index === 0 && (
+                  <ControlledDatePicker<PersonalDetailsInput>
+                    name='dateOfBirth'
+                    label='Date of birth'
+                    disabledDates={{ after: new Date() }}
+                  />
+                )}
+              </React.Fragment>
+            ))}
             <DialogFooter>
               <Button
                 type='button'

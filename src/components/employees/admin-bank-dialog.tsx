@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import { useUpdateEmployeeBank } from '@/hooks/actions/use-update-employee';
 
+import { ControlledTextField } from '@/components/hrm/form-fields';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,16 +18,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
 
+import { bankInfoFields } from '@/constants/onboarding';
 import { type BankInfoInput, bankInfoSchema } from '@/schema/onboarding';
 
 type AdminBankDialogProps = {
@@ -69,71 +63,13 @@ export function AdminBankDialog({
             )}
             className='flex flex-col gap-4'
           >
-            <FormField
-              control={form.control}
-              name='bankName'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bank name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='accountHolderName'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account holder</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='accountNumber'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account number</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='iban'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>IBAN</FormLabel>
-                  <FormControl>
-                    <Input placeholder='PK36ABCD0000001123456702' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='branch'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Branch (optional)</FormLabel>
-                  <FormControl>
-                    <Input {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {bankInfoFields.map((config) => (
+              <ControlledTextField
+                key={config.name}
+                control={form.control}
+                config={config}
+              />
+            ))}
             <DialogFooter>
               <Button
                 type='button'

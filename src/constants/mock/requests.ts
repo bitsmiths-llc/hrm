@@ -4,7 +4,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
   {
     id: 'lv-1',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     type: 'sick',
     reason: 'Flu and fever, doctor advised two days of rest.',
     startDate: '2026-07-08',
@@ -15,7 +15,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
   {
     id: 'lv-2',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     type: 'paid',
     reason: 'Family wedding in Lahore.',
     startDate: '2026-06-15',
@@ -48,7 +48,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
   {
     id: 'lv-5',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     type: 'paid',
     reason: 'Eid holidays extension.',
     startDate: '2026-04-02',
@@ -62,7 +62,7 @@ export const mockMedicalClaims: MedicalClaim[] = [
   {
     id: 'md-1',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     claimFor: 'self',
     serviceType: 'opd',
     description: 'Consultation with ENT specialist.',
@@ -75,7 +75,7 @@ export const mockMedicalClaims: MedicalClaim[] = [
   {
     id: 'md-2',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     claimFor: 'parent',
     serviceType: 'medicine',
     description: 'Monthly blood pressure medication for father.',
@@ -104,7 +104,7 @@ export const mockOvertimeLogs: OvertimeLog[] = [
   {
     id: 'ot-1',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     date: '2026-07-03',
     hours: 3,
     project: 'HRM Frontend',
@@ -126,7 +126,7 @@ export const mockOvertimeLogs: OvertimeLog[] = [
   {
     id: 'ot-3',
     employeeId: 'emp-1',
-    employeeName: 'Ayesha Khan',
+    employeeName: 'John Doe',
     date: '2026-06-10',
     hours: 2,
     project: 'Design System',

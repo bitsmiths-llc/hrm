@@ -1,14 +1,19 @@
 'use server';
 
 import { sendInviteEmail } from '@/lib/resend/send-invite-email';
+import {
+  sendOnboardingApprovedEmail,
+  sendOnboardingReturnedEmail,
+} from '@/lib/resend/send-onboarding-emails';
 import { authActionClient } from '@/lib/server/safe-action';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import Logger from '@/utils/logger';
 
 import { appConfig } from '@/config/app';
 import { paths } from '@/constants/paths';
 import { requiredString } from '@/schema/common';
 import {
-  contactInfoSchema,
+  contactInfoWithIdSchema,
   employeeIdField,
   employeeIdSchema,
   employmentConfigSchema,
@@ -71,8 +76,9 @@ export const inviteEmployee = authActionClient
     }
 
     // generateLink creates the auth.users row without sending Supabase's own
-    // (unbrandable) mailer email. We build our own /auth/confirm link from the
-    // returned hashed_token and deliver it ourselves via Resend.
+    // (unbrandable) mailer email. We build our own /auth/accept-invitation link
+    // from the returned hashed_token and deliver it ourselves via Resend; the
+    // accept page exchanges the token for a session on arrival.
     const { data: invited, error: inviteError } =
       await supabaseAdmin.auth.admin.generateLink({
         type: 'invite',
@@ -85,10 +91,9 @@ export const inviteEmployee = authActionClient
       throw new Error('Could not send the invitation. Please try again.');
     }
 
-    const inviteUrl = new URL(paths.auth.confirm, appConfig.appUrl);
+    const inviteUrl = new URL(paths.auth.acceptInvitation, appConfig.appUrl);
     inviteUrl.searchParams.set('token_hash', invited.properties.hashed_token);
     inviteUrl.searchParams.set('type', 'invite');
-    inviteUrl.searchParams.set('next', paths.auth.acceptInvitation);
 
     try {
       await sendInviteEmail({
@@ -135,7 +140,7 @@ export const inviteEmployee = authActionClient
  *
  * The original invite used a one-time `invite` link, which Supabase won't re-mint
  * for an already-existing auth user. A fresh `magiclink` reaches the same
- * /auth/confirm → /auth/accept-invitation flow (the confirm route accepts it) and
+ * /auth/accept-invitation flow (the accept page verifies either token type) and
  * lets them set a password — the accept page still gates on `invited` status.
  */
 export const resendInvite = authActionClient
@@ -163,10 +168,9 @@ export const resendInvite = authActionClient
       throw new Error('Could not resend the invitation. Please try again.');
     }
 
-    const inviteUrl = new URL(paths.auth.confirm, appConfig.appUrl);
+    const inviteUrl = new URL(paths.auth.acceptInvitation, appConfig.appUrl);
     inviteUrl.searchParams.set('token_hash', link.properties.hashed_token);
     inviteUrl.searchParams.set('type', 'magiclink');
-    inviteUrl.searchParams.set('next', paths.auth.acceptInvitation);
 
     try {
       await sendInviteEmail({
@@ -238,7 +242,7 @@ export const approveEmployee = authActionClient
   .action(
     async ({ parsedInput: { employeeId }, ctx: { supabase, authUser } }) => {
       requireAdmin(authUser.user?.app_metadata.role);
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('employees')
         .update({
           account_status: 'active',
@@ -246,8 +250,29 @@ export const approveEmployee = authActionClient
           review_note: null,
         })
         .eq('id', employeeId)
-        .eq('account_status', 'submitted');
+        .eq('account_status', 'submitted')
+        .select('email, full_name');
       if (error) throw new Error(error.message);
+
+      // The `submitted` guard makes this idempotent: a re-fire (or a row that
+      // already moved on) matches nothing, so `data` is empty and we email no
+      // one. Only a real transition triggers the welcome. Best-effort — a
+      // send failure is logged, never thrown back over the committed approval.
+      const approved = data?.[0];
+      if (approved) {
+        try {
+          await sendOnboardingApprovedEmail({
+            to: approved.email,
+            fullName: approved.full_name,
+            dashboardUrl: new URL(
+              paths.employee.dashboard,
+              appConfig.appUrl,
+            ).toString(),
+          });
+        } catch (emailError) {
+          Logger.error('Failed to send onboarding approval email', emailError);
+        }
+      }
     },
   );
 
@@ -263,12 +288,33 @@ export const returnOnboarding = authActionClient
       ctx: { supabase, authUser },
     }) => {
       requireAdmin(authUser.user?.app_metadata.role);
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('employees')
         .update({ account_status: 'onboarding', review_note: reviewNote })
         .eq('id', employeeId)
-        .eq('account_status', 'submitted');
+        .eq('account_status', 'submitted')
+        .select('email, full_name');
       if (error) throw new Error(error.message);
+
+      // Idempotent like approveEmployee: no matched row → no email. The email
+      // carries the same `reviewNote` the wizard shows, so the employee has the
+      // reason in both channels. Best-effort — logged, never thrown.
+      const returned = data?.[0];
+      if (returned) {
+        try {
+          await sendOnboardingReturnedEmail({
+            to: returned.email,
+            fullName: returned.full_name,
+            reviewNote,
+            onboardingUrl: new URL(
+              paths.employee.onboarding,
+              appConfig.appUrl,
+            ).toString(),
+          });
+        } catch (emailError) {
+          Logger.error('Failed to send onboarding return email', emailError);
+        }
+      }
     },
   );
 
@@ -282,16 +328,22 @@ export const returnOnboarding = authActionClient
 
 /** Contact fields on the employees row. */
 export const updateEmployeeContact = authActionClient
-  .schema(contactInfoSchema.extend({ employeeId: employeeIdField }))
+  .schema(contactInfoWithIdSchema)
   .action(
     async ({
-      parsedInput: { employeeId, phone, emergencyContact, address },
+      parsedInput: { employeeId, phone, emergencyContact, address, city, postalCode },
       ctx: { supabase, authUser },
     }) => {
       requireAdmin(authUser.user?.app_metadata.role);
       const { error } = await supabase
         .from('employees')
-        .update({ phone, emergency_contact: emergencyContact, address })
+        .update({
+          phone,
+          emergency_contact: emergencyContact,
+          address,
+          city,
+          postal_code: postalCode,
+        })
         .eq('id', employeeId);
       if (error) throw new Error(error.message);
     },

@@ -45,6 +45,8 @@ export type Employee = {
   phone: string;
   emergencyContact: string;
   address: string;
+  city: string;
+  postalCode: string;
   cnic: string;
   dateOfBirth: string; // ISO date
   bank: BankInfo | null;

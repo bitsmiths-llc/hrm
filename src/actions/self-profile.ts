@@ -29,6 +29,8 @@ export const updateMyProfile = authActionClient
         phone: parsedInput.phone,
         emergency_contact: parsedInput.emergencyContact,
         address: parsedInput.address,
+        city: parsedInput.city,
+        postal_code: parsedInput.postalCode,
       })
       .eq('id', userId); // RLS employees_update_self
     if (error) throw new Error(error.message);

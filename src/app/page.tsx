@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { ModeToggle } from '@/components/common/mode-toggle';
 import { Button } from '@/components/ui/button';
 
 import { appConfig } from '@/config/app';
@@ -8,7 +9,10 @@ import { paths } from '@/constants/paths';
 
 export default function Home() {
   return (
-    <div className='flex min-h-screen flex-col items-center justify-center gap-8 bg-background p-6 text-center'>
+    <div className='relative flex min-h-screen flex-col items-center justify-center gap-8 bg-background p-6 text-center'>
+      <div className='absolute right-4 top-4'>
+        <ModeToggle />
+      </div>
       <Image
         src={appConfig.logo}
         alt='Bitsmiths logo'

@@ -93,6 +93,7 @@ export type Database = {
           account_status: Database['public']['Enums']['account_status'];
           activated_at: string | null;
           address: string | null;
+          city: string | null;
           cnic: string | null;
           consent_at: string | null;
           created_at: string;
@@ -103,6 +104,7 @@ export type Database = {
           id: string;
           invited_at: string | null;
           phone: string | null;
+          postal_code: string | null;
           review_note: string | null;
           role: Database['public']['Enums']['user_role'];
           updated_at: string;
@@ -112,6 +114,7 @@ export type Database = {
           account_status?: Database['public']['Enums']['account_status'];
           activated_at?: string | null;
           address?: string | null;
+          city?: string | null;
           cnic?: string | null;
           consent_at?: string | null;
           created_at?: string;
@@ -122,6 +125,7 @@ export type Database = {
           id: string;
           invited_at?: string | null;
           phone?: string | null;
+          postal_code?: string | null;
           review_note?: string | null;
           role?: Database['public']['Enums']['user_role'];
           updated_at?: string;
@@ -131,6 +135,7 @@ export type Database = {
           account_status?: Database['public']['Enums']['account_status'];
           activated_at?: string | null;
           address?: string | null;
+          city?: string | null;
           cnic?: string | null;
           consent_at?: string | null;
           created_at?: string;
@@ -141,6 +146,7 @@ export type Database = {
           id?: string;
           invited_at?: string | null;
           phone?: string | null;
+          postal_code?: string | null;
           review_note?: string | null;
           role?: Database['public']['Enums']['user_role'];
           updated_at?: string;

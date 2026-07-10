@@ -14,8 +14,8 @@ type SendInviteEmailInput = {
 /**
  * Sends the invite email through Resend. Supabase's own mailer only supports
  * the implicit-hash link flow; sending it ourselves lets the link point at
- * `/auth/confirm` with a `token_hash` (see `inviteEmployee`) and lets us render
- * our branded React Email template (`@/emails/invite-email`).
+ * `/auth/accept-invitation` with a `token_hash` (see `inviteEmployee`) and lets
+ * us render our branded React Email template (`@/emails/invite-email`).
  */
 export async function sendInviteEmail({
   to,

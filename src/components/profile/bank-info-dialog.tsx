@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import { useUpdateMyBank } from '@/hooks/actions/use-update-my-profile';
 
+import { ControlledTextField } from '@/components/hrm/form-fields';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,15 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
 
 import { bankInfoFields } from '@/constants/profile';
 import { type BankInfoInput, bankInfoSchema } from '@/schema/onboarding';
@@ -68,20 +61,11 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
             onSubmit={form.handleSubmit((values) => execute(values))}
             className='flex flex-col gap-4'
           >
-            {bankInfoFields.map(({ name, label }) => (
-              <FormField
-                key={name}
+            {bankInfoFields.map((config) => (
+              <ControlledTextField
+                key={config.name}
                 control={form.control}
-                name={name}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{label}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                config={config}
               />
             ))}
             <DialogFooter>

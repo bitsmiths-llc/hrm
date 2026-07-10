@@ -4,6 +4,7 @@ import { UserX } from 'lucide-react';
 
 import { useMyProfile } from '@/hooks/queries/self-profile';
 
+import { EmployeeDocuments } from '@/components/employees/employee-documents';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { InfoCard } from '@/components/hrm/info-card';
 import { PageHeader } from '@/components/hrm/page-header';
@@ -81,6 +82,8 @@ export function ProfileView({
               phone: employee.phone,
               emergencyContact: employee.emergencyContact,
               address: employee.address,
+              city: employee.city,
+              postalCode: employee.postalCode,
             }}
           />
         }
@@ -89,6 +92,8 @@ export function ProfileView({
           { label: 'Phone', value: employee.phone },
           { label: 'Emergency contact', value: employee.emergencyContact },
           { label: 'Address', value: employee.address },
+          { label: 'City', value: employee.city },
+          { label: 'Postal code', value: employee.postalCode },
         ]}
       />
 
@@ -152,6 +157,8 @@ export function ProfileView({
           { label: 'Twitter', value: employee.social?.twitter },
         ]}
       />
+
+      <EmployeeDocuments employeeId={employee.id} />
 
       {showEmployment && <EmploymentReadonly employee={employee} />}
     </>

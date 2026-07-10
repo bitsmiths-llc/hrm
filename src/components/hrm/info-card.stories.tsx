@@ -12,12 +12,12 @@ const meta = {
   args: {
     title: 'Personal Information',
     fields: [
-      { label: 'Full Name', value: 'Ayesha Khan' },
+      { label: 'Full Name', value: 'John Doe' },
       { label: 'Date of Birth', value: '14/03/96' },
-      { label: 'Email', value: 'ayesha@bitsmiths.studio' },
-      { label: 'Phone', value: '+92 300 1234567' },
+      { label: 'Email', value: 'john.doe@bitsmiths.studio' },
+      { label: 'Phone', value: '03001234567' },
       { label: 'CNIC', value: '61101-1234567-1' },
-      { label: 'Address', value: 'House 12, Street 4, F-8/3, Islamabad' },
+      { label: 'Address', value: 'House 12, Street 4, F-8/3' },
     ],
   },
   decorators: [

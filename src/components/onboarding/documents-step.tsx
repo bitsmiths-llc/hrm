@@ -4,12 +4,22 @@ import { Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { useUploadIdentityDoc } from '@/hooks/mutations/use-upload-identity-doc';
-import { useEmployeeDocuments } from '@/hooks/queries/onboarding';
+import {
+  useEmployeeDocuments,
+  useIdentityDocFiles,
+} from '@/hooks/queries/onboarding';
 
+import { DocumentPreview } from '@/components/hrm/document-preview';
 import { FileUpload } from '@/components/hrm/file-upload';
 import { Button } from '@/components/ui/button';
 
-import { identityDocuments } from '@/constants/onboarding';
+import {
+  IDENTITY_DOC_ACCEPT,
+  IDENTITY_DOC_HINT,
+  IDENTITY_DOC_MAX_SIZE_MB,
+  IDENTITY_DOC_MIME_TYPES,
+  identityDocuments,
+} from '@/constants/onboarding';
 import { type DocType } from '@/schema/onboarding';
 
 type DocumentsStepProps = {
@@ -21,11 +31,14 @@ type DocumentsStepProps = {
 /**
  * Section 4 · Identity documents. Each file uploads immediately to
  * `identity-docs` at `<uid>/<doc_type>` and upserts one `employee_documents`
- * row — re-selecting a file replaces it. Continue unlocks once all three types
- * are present.
+ * row — re-selecting a file replaces it. Only PNG or PDF up to
+ * {@link IDENTITY_DOC_MAX_SIZE_MB}MB are accepted, and each uploaded file shows
+ * a preview. Continue unlocks once all three types are present.
  */
 export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
   const { data: documents } = useEmployeeDocuments(userId);
+  const { data: docFiles, isLoading: filesLoading } =
+    useIdentityDocFiles(userId);
   const upload = useUploadIdentityDoc(userId);
   const [uploading, setUploading] = useState<DocType | null>(null);
 
@@ -68,9 +81,20 @@ export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
               value={[]}
               onChange={(files) => handleFile(docType, files)}
               maxFiles={1}
-              accept='image/*,.pdf'
+              maxSizeMb={IDENTITY_DOC_MAX_SIZE_MB}
+              accept={IDENTITY_DOC_ACCEPT}
+              allowedMimeTypes={IDENTITY_DOC_MIME_TYPES}
+              hint={IDENTITY_DOC_HINT}
               label={isUploaded ? 'Replace file' : 'Upload file'}
             />
+            {isUploaded && (
+              <DocumentPreview
+                file={docFiles?.[docType]}
+                label={label}
+                isLoading={filesLoading}
+                className='max-w-xs'
+              />
+            )}
           </div>
         );
       })}
