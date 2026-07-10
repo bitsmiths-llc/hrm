@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
+import { appConfig } from '@/config/app';
 import { paths } from '@/constants/paths';
 
 /**
@@ -14,7 +15,8 @@ import { paths } from '@/constants/paths';
  * matching `employees` row before letting the session stand.
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = appConfig.appUrl;
   const code = searchParams.get('code');
   const next = searchParams.get('next');
 

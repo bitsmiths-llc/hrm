@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
+import { appConfig } from '@/config/app';
 import { paths } from '@/constants/paths';
 import { env } from '@/env';
 
@@ -28,7 +29,8 @@ function isOtpType(value: string | null): value is OtpType {
  * way the middleware does) so they survive the redirect from a route handler.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = appConfig.appUrl;
   const tokenHash = searchParams.get('token_hash');
   const type = searchParams.get('type');
   const next = searchParams.get('next');
