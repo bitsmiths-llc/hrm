@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       bank_details: {
@@ -55,6 +80,38 @@ export type Database = {
           },
         ]
       }
+      employee_documents: {
+        Row: {
+          doc_type: string
+          employee_id: string
+          id: string
+          storage_path: string
+          uploaded_at: string
+        }
+        Insert: {
+          doc_type: string
+          employee_id: string
+          id?: string
+          storage_path: string
+          uploaded_at?: string
+        }
+        Update: {
+          doc_type?: string
+          employee_id?: string
+          id?: string
+          storage_path?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           accepted_at: string | null
@@ -71,6 +128,7 @@ export type Database = {
           id: string
           invited_at: string | null
           phone: string | null
+          review_note: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -89,6 +147,7 @@ export type Database = {
           id: string
           invited_at?: string | null
           phone?: string | null
+          review_note?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -107,6 +166,7 @@ export type Database = {
           id?: string
           invited_at?: string | null
           phone?: string | null
+          review_note?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -200,7 +260,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_onboarding: { Args: never; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
+      submit_onboarding: { Args: never; Returns: undefined }
     }
     Enums: {
       account_status: "invited" | "onboarding" | "submitted" | "active"
@@ -331,6 +393,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       account_status: ["invited", "onboarding", "submitted", "active"],

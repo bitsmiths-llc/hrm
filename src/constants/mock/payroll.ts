@@ -1,0 +1,73 @@
+import { PayrollCycle, Payslip } from '@/types/hrm';
+
+export const mockPayrollCycles: PayrollCycle[] = [
+  {
+    id: 'pc-3',
+    month: '2026-07',
+    status: 'open',
+    totalPayroll: 0,
+    employeeCount: 3,
+    lockedAt: null,
+  },
+  {
+    id: 'pc-2',
+    month: '2026-06',
+    status: 'locked',
+    totalPayroll: 712_450,
+    employeeCount: 3,
+    lockedAt: '2026-06-30',
+  },
+  {
+    id: 'pc-1',
+    month: '2026-05',
+    status: 'locked',
+    totalPayroll: 668_000,
+    employeeCount: 2,
+    lockedAt: '2026-05-31',
+  },
+];
+
+export const mockPayslips: Payslip[] = [
+  {
+    id: 'ps-1',
+    employeeId: 'emp-1',
+    employeeName: 'Ayesha Khan',
+    cycleMonth: '2026-06',
+    baseSalary: 250_000,
+    daysWorked: 30,
+    daysInMonth: 30,
+    totalBase: 250_000,
+    medical: 6_200,
+    overtimeHours: 0,
+    overtimePay: 0,
+    total: 256_200,
+  },
+  {
+    id: 'ps-2',
+    employeeId: 'emp-2',
+    employeeName: 'Hamza Raza',
+    cycleMonth: '2026-06',
+    baseSalary: 320_000,
+    daysWorked: 26,
+    daysInMonth: 30,
+    totalBase: 277_333,
+    medical: 0,
+    overtimeHours: 4,
+    overtimePay: 12_000,
+    total: 289_333,
+  },
+  {
+    id: 'ps-3',
+    employeeId: 'emp-1',
+    employeeName: 'Ayesha Khan',
+    cycleMonth: '2026-05',
+    baseSalary: 250_000,
+    daysWorked: 31,
+    daysInMonth: 31,
+    totalBase: 250_000,
+    medical: 0,
+    overtimeHours: 2,
+    overtimePay: 4_688,
+    total: 254_688,
+  },
+];

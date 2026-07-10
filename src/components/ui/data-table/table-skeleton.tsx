@@ -17,7 +17,7 @@ interface TableSkeletonProps {
 
 export function TableSkeleton({ rows = 3, columns = 4 }: TableSkeletonProps) {
   return (
-    <div className='rounded-lg border border-zinc-200'>
+    <div className='rounded-lg border border-border'>
       <Table>
         <TableHeader>
           <TableRow className='text-base hover:bg-transparent'>
@@ -26,7 +26,7 @@ export function TableSkeleton({ rows = 3, columns = 4 }: TableSkeletonProps) {
               .map((_, i) => (
                 <TableHead
                   key={i}
-                  className='bg-white py-4 first-of-type:pl-5 last-of-type:pr-5'
+                  className='py-4 first-of-type:pl-5 last-of-type:pr-5'
                 >
                   <Skeleton className='h-4 w-[120px]' />
                 </TableHead>
@@ -39,8 +39,8 @@ export function TableSkeleton({ rows = 3, columns = 4 }: TableSkeletonProps) {
             .map((_, rowIndex) => (
               <TableRow
                 key={rowIndex}
-                className={`h-1 border-zinc-100 text-sm hover:bg-transparent ${
-                  rowIndex % 2 === 0 ? 'bg-zinc-50' : 'bg-white'
+                className={`h-1 border-border text-sm hover:bg-transparent ${
+                  rowIndex % 2 === 0 ? 'bg-muted/50' : ''
                 }`}
               >
                 {Array(columns)
@@ -48,7 +48,7 @@ export function TableSkeleton({ rows = 3, columns = 4 }: TableSkeletonProps) {
                   .map((_, colIndex) => (
                     <TableCell
                       key={colIndex}
-                      className='border-zinc-200 py-5 first-of-type:pl-5 last-of-type:pr-5'
+                      className='py-5 first-of-type:pl-5 last-of-type:pr-5'
                     >
                       <Skeleton className='h-4 w-[120px]' />
                     </TableCell>

@@ -6,15 +6,15 @@ export const appConfig = {
   title: 'Bitsmiths HRM',
   description: 'Human resource management, built by Bitsmiths.',
   keywords: 'hrm, human resources, employees, payroll, bitsmiths',
-  logo: '/logo/main.png',
-  defaultLocale: 'en-US',
-  defaultCurrency: 'USD',
-  defaultCountryCode: 'US',
+  logo: '/logo.svg',
+  defaultLocale: 'en-PK',
+  defaultCurrency: 'PKR',
+  defaultCountryCode: 'PK',
   appUrl: env.NEXT_PUBLIC_APP_URL,
   appName: env.NEXT_PUBLIC_APP_NAME,
   emails: {
-    support: 'support@example.com',
-    sender: 'noreply@example.com',
+    support: 'support@bitsmiths.studio',
+    sender: 'noreply@bitsmiths.studio',
   },
 } as const;
 

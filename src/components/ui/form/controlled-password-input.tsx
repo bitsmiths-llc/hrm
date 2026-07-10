@@ -62,9 +62,7 @@ export const ControlledPasswordInput = <TFormValues extends FieldValues>({
         >
           {label && (
             <div className='flex items-start gap-1'>
-              <FormLabel className='text-sm font-medium uppercase text-muted-foreground'>
-                {label}
-              </FormLabel>
+              <FormLabel>{label}</FormLabel>
 
               {!hideInstructions && (
                 <Tooltip>
