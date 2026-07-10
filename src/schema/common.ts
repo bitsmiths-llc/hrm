@@ -55,6 +55,37 @@ export const phonesAreDistinct = (value: {
   emergencyContact: string;
 }): boolean => value.phone !== value.emergencyContact;
 
+/**
+ * A full profile URL constrained to specific host(s), so a GitHub field can't
+ * accept a LinkedIn link and vice-versa. A leading `www.` and any subdomain are
+ * tolerated. Requires a protocol (matches Zod's `.url()`), so a bare
+ * `github.com/x` without `https://` is rejected — consistent with asking for a
+ * *full* profile URL.
+ */
+export const profileUrl = (
+  label: string,
+  allowedHosts: readonly string[],
+  example: string,
+): z.ZodEffects<z.ZodString> =>
+  z
+    .string()
+    .url(`Enter a valid ${label} URL`)
+    .refine(
+      (value) => {
+        try {
+          const host = new URL(value).hostname
+            .toLowerCase()
+            .replace(/^www\./, '');
+          return allowedHosts.some(
+            (allowed) => host === allowed || host.endsWith(`.${allowed}`),
+          );
+        } catch {
+          return false;
+        }
+      },
+      { message: `Enter a ${label} URL (e.g. ${example})` },
+    );
+
 export function optional<T>(
   schema: z.ZodType<T>,
 ): z.ZodType<T | undefined | null> {

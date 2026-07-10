@@ -27,12 +27,15 @@ export function useUploadIdentityDoc(userId: string) {
         .upload(path, file, { upsert: true });
       if (upload.error) throw upload.error;
 
-      const { error } = await supabase
-        .from('employee_documents')
-        .upsert(
-          { employee_id: userId, doc_type: docType, storage_path: path },
-          { onConflict: 'employee_id,doc_type' },
-        );
+      const { error } = await supabase.from('employee_documents').upsert(
+        {
+          employee_id: userId,
+          doc_type: docType,
+          storage_path: path,
+          file_name: file.name,
+        },
+        { onConflict: 'employee_id,doc_type' },
+      );
       if (error) throw error;
     },
     onSuccess: () =>

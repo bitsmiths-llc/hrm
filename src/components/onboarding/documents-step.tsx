@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Loader2 } from 'lucide-react';
+import { Check, FileText, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { useUploadIdentityDoc } from '@/hooks/mutations/use-upload-identity-doc';
@@ -42,9 +42,9 @@ export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
   const upload = useUploadIdentityDoc(userId);
   const [uploading, setUploading] = useState<DocType | null>(null);
 
-  const uploadedTypes = new Set(documents?.map((doc) => doc.doc_type));
+  const docByType = new Map((documents ?? []).map((doc) => [doc.doc_type, doc]));
   const allUploaded = identityDocuments.every(({ docType }) =>
-    uploadedTypes.has(docType),
+    docByType.has(docType),
   );
 
   const handleFile = (docType: DocType, files: File[]) => {
@@ -57,7 +57,8 @@ export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
   return (
     <div className='flex flex-col gap-6'>
       {identityDocuments.map(({ docType, label }) => {
-        const isUploaded = uploadedTypes.has(docType);
+        const record = docByType.get(docType);
+        const isUploaded = !!record;
         const isUploading = uploading === docType;
         return (
           <div key={docType} className='flex flex-col gap-2'>
@@ -77,6 +78,21 @@ export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
                 )
               )}
             </div>
+            {isUploaded && (
+              <div className='flex max-w-sm flex-col gap-1.5'>
+                <DocumentPreview
+                  file={docFiles?.[docType]}
+                  label={label}
+                  isLoading={filesLoading}
+                />
+                {record?.file_name && (
+                  <p className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                    <FileText className='size-3.5 shrink-0' aria-hidden />
+                    <span className='truncate'>{record.file_name}</span>
+                  </p>
+                )}
+              </div>
+            )}
             <FileUpload
               value={[]}
               onChange={(files) => handleFile(docType, files)}
@@ -87,14 +103,6 @@ export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
               hint={IDENTITY_DOC_HINT}
               label={isUploaded ? 'Replace file' : 'Upload file'}
             />
-            {isUploaded && (
-              <DocumentPreview
-                file={docFiles?.[docType]}
-                label={label}
-                isLoading={filesLoading}
-                className='max-w-xs'
-              />
-            )}
           </div>
         );
       })}

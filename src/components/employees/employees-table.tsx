@@ -12,7 +12,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Users } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useEmployees } from '@/hooks/queries/employees';
 
@@ -42,22 +42,28 @@ export function EmployeesTable() {
   const { data: employees, isLoading } = useEmployees();
   const columns = useEmployeesTableColumns();
 
+  // Stable reference — `employees ?? []` would allocate a new array every
+  // render, invalidating the table's row models each time.
+  const data = useMemo(() => employees ?? [], [employees]);
+
   // Departments are free text, so their filter options are derived from the
   // data rather than a fixed enum.
   const departmentOptions = useMemo(() => {
-    const names = new Set(
-      (employees ?? []).map((e) => e.department).filter(Boolean),
-    );
+    const names = new Set(data.map((e) => e.department).filter(Boolean));
     return [...names].sort().map((name) => ({ value: name, label: name }));
-  }, [employees]);
+  }, [data]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
 
   const table = useReactTable({
-    data: employees ?? [],
+    data,
     columns,
+    // Off by design: the built-in reset fires `setPagination` during render
+    // (React warns about updating an unmounted component). We reset the page on
+    // filter/search changes ourselves from an effect below instead.
+    autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -69,6 +75,12 @@ export function EmployeesTable() {
     onGlobalFilterChange: setGlobalFilter,
     state: { sorting, columnFilters, globalFilter },
   });
+
+  // Jump back to the first page whenever the search or filters change, so a
+  // narrowed result set never leaves the user stranded on an out-of-range page.
+  useEffect(() => {
+    table.setPageIndex(0);
+  }, [globalFilter, columnFilters]);
 
   if (isLoading) return <TableSkeleton rows={4} columns={5} />;
 

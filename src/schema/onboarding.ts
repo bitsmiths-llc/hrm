@@ -5,6 +5,7 @@ import {
   digitsOnly,
   EMERGENCY_CONTACT_DISTINCT_MESSAGE,
   phonesAreDistinct,
+  profileUrl,
 } from '@/schema/common';
 
 // Email is intentionally NOT part of this schema: it's the invite identity, set
@@ -37,11 +38,13 @@ export const bankInfoSchema = z.object({
 export type BankInfoInput = z.infer<typeof bankInfoSchema>;
 
 export const socialAccountsSchema = z.object({
-  github: z.string().url('Enter your full GitHub profile URL'),
-  linkedin: z.string().url('Enter your full LinkedIn profile URL'),
-  twitter: z
-    .string()
-    .url('Enter a full profile URL')
+  github: profileUrl('GitHub', ['github.com'], 'github.com/username'),
+  linkedin: profileUrl(
+    'LinkedIn',
+    ['linkedin.com'],
+    'linkedin.com/in/username',
+  ),
+  twitter: profileUrl('Twitter/X', ['twitter.com', 'x.com'], 'x.com/username')
     .optional()
     .or(z.literal('')),
 });

@@ -59,6 +59,7 @@ export type Database = {
         Row: {
           doc_type: string;
           employee_id: string;
+          file_name: string | null;
           id: string;
           storage_path: string;
           uploaded_at: string;
@@ -66,6 +67,7 @@ export type Database = {
         Insert: {
           doc_type: string;
           employee_id: string;
+          file_name?: string | null;
           id?: string;
           storage_path: string;
           uploaded_at?: string;
@@ -73,6 +75,7 @@ export type Database = {
         Update: {
           doc_type?: string;
           employee_id?: string;
+          file_name?: string | null;
           id?: string;
           storage_path?: string;
           uploaded_at?: string;

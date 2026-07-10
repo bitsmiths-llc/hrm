@@ -62,7 +62,7 @@ export const personalInfoFields: TextFieldConfig<
 /** Section 2 bank fields, in display order. Account number accepts digits
  *  only. */
 export const bankInfoFields: TextFieldConfig<keyof BankInfoInput>[] = [
-  { name: 'bankName', label: 'Bank name', placeholder: 'Meezan Bank' },
+  { name: 'bankName', label: 'Bank name', placeholder: 'e.g. Meezan Bank' },
   {
     name: 'accountHolderName',
     label: 'Account holder name',

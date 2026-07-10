@@ -104,14 +104,14 @@ export const useOnboardingData = () =>
 
 type UploadedDocument = Pick<
   Tables<'employee_documents'>,
-  'doc_type' | 'storage_path' | 'uploaded_at'
+  'doc_type' | 'storage_path' | 'uploaded_at' | 'file_name'
 >;
 
 const fetchEmployeeDocuments = authQuery<undefined, UploadedDocument[]>(
   async ({ supabase, user }) => {
     const { data, error } = await supabase
       .from('employee_documents')
-      .select('doc_type, storage_path, uploaded_at')
+      .select('doc_type, storage_path, uploaded_at, file_name')
       .eq('employee_id', user.id);
     if (error) throw new Error(error.message);
     return data;

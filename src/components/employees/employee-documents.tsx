@@ -43,7 +43,7 @@ export function EmployeeDocuments({ employeeId }: EmployeeDocumentsProps) {
                   ) : file ? (
                     <DocumentPreview file={file} label={label} />
                   ) : (
-                    <div className='flex h-40 items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground'>
+                    <div className='flex h-56 items-center justify-center rounded-lg border border-dashed border-border text-xs text-muted-foreground'>
                       Not uploaded
                     </div>
                   )}

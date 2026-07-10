@@ -75,10 +75,7 @@ export function OnboardingSubmittedEmail({
         </Text>
 
         <Section style={emailStyles.buttonWrap}>
-          <Button
-            href={reviewUrl}
-            style={{ ...emailStyles.button, backgroundColor: brand.blue }}
-          >
+          <Button href={reviewUrl} style={emailStyles.button}>
             Review submission
           </Button>
         </Section>

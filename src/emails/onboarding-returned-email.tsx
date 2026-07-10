@@ -60,10 +60,7 @@ export function OnboardingReturnedEmail({
         </Text>
 
         <Section style={emailStyles.buttonWrap}>
-          <Button
-            href={onboardingUrl}
-            style={{ ...emailStyles.button, backgroundColor: brand.amber }}
-          >
+          <Button href={onboardingUrl} style={emailStyles.button}>
             Update my onboarding
           </Button>
         </Section>
