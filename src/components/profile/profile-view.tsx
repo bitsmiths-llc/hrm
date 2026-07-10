@@ -11,6 +11,7 @@ import { StatusBadge } from '@/components/hrm/status-badge';
 import { BankInfoDialog } from '@/components/profile/bank-info-dialog';
 import { ContactInfoDialog } from '@/components/profile/contact-info-dialog';
 import { EmploymentReadonly } from '@/components/profile/employment-readonly';
+import { PersonalInfoDialog } from '@/components/profile/personal-info-dialog';
 import { SocialsInfoDialog } from '@/components/profile/socials-info-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -24,11 +25,19 @@ type ProfileViewProps = {
    *  hides that section and uses a role-neutral header. Defaults to the full
    *  employee view. */
   showEmployment?: boolean;
+  /** Personal identity fields (name / DOB / CNIC) are admin-managed, so an
+   *  employee's own profile shows them read-only. Admins have no admin above
+   *  them, so their profile enables self-editing. Defaults to read-only. */
+  canEditPersonal?: boolean;
 };
 
 /** Self-service profile: the signed-in user views their own data and edits
- *  contact, bank, and socials. Employment stays read-only (admin-owned). */
-export function ProfileView({ showEmployment = true }: ProfileViewProps) {
+ *  contact, bank, and socials. Employment stays read-only (admin-owned), and
+ *  personal identity fields are editable only for admins (see props). */
+export function ProfileView({
+  showEmployment = true,
+  canEditPersonal = false,
+}: ProfileViewProps) {
   const { data: employee, isLoading } = useMyProfile();
 
   if (isLoading) {
@@ -85,6 +94,17 @@ export function ProfileView({ showEmployment = true }: ProfileViewProps) {
 
       <InfoCard
         title='Personal Information'
+        action={
+          canEditPersonal ? (
+            <PersonalInfoDialog
+              defaultValues={{
+                fullName: employee.fullName,
+                dateOfBirth: employee.dateOfBirth,
+                cnic: employee.cnic,
+              }}
+            />
+          ) : undefined
+        }
         fields={[
           { label: 'Full name', value: employee.fullName },
           { label: 'Date of birth', value: formatDate(employee.dateOfBirth) },

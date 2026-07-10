@@ -5,6 +5,7 @@ import { useAction } from 'next-safe-action/hooks';
 
 import {
   updateMyBank,
+  updateMyPersonalInfo,
   updateMyProfile,
   updateMySocials,
 } from '@/actions/self-profile';
@@ -25,6 +26,21 @@ export function useUpdateMyProfile(onSuccess?: () => void) {
   return useAction(updateMyProfile, {
     onSuccess: () => {
       invalidate();
+      onSuccess?.();
+    },
+    onError,
+  });
+}
+
+export function useUpdateMyPersonalInfo(onSuccess?: () => void) {
+  const queryClient = useQueryClient();
+  return useAction(updateMyPersonalInfo, {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.MY_PROFILE] });
+      // Full name also drives the sidebar identity card and dashboard greeting.
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.CURRENT_EMPLOYEE],
+      });
       onSuccess?.();
     },
     onError,

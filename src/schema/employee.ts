@@ -46,6 +46,18 @@ export const contactInfoSchema = z.object({
 
 export type ContactInfoInput = z.infer<typeof contactInfoSchema>;
 
+/** Identity fields on the employees row. Same three columns onboarding's
+ *  `savePersonal` writes (name / DOB / CNIC), minus the contact fields that
+ *  have their own card. Admins self-edit these on their own profile — an admin
+ *  has no admin above them to manage their record. */
+export const personalDetailsSchema = z.object({
+  fullName: z.string().min(2, 'Enter your full name'),
+  dateOfBirth: z.string().min(1, 'Enter your date of birth'),
+  cnic: z.string().regex(/^\d{5}-\d{7}-\d$/, 'CNIC format: 12345-1234567-1'),
+});
+
+export type PersonalDetailsInput = z.infer<typeof personalDetailsSchema>;
+
 /** Admin's note when returning a submission to onboarding (BIT-10). */
 export const returnOnboardingSchema = z.object({
   reviewNote: requiredString('A review note'),
