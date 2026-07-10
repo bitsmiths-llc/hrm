@@ -9,6 +9,7 @@ Reference for implementing accessible interactive components. Each pattern defin
 Vertically stacked headers that expand/collapse associated content panels.
 
 **Roles & Properties:**
+
 ```html
 <div class="accordion">
   <h3>
@@ -41,10 +42,9 @@ Vertically stacked headers that expand/collapse associated content panels.
 A live region that announces important, time-sensitive information.
 
 **Roles & Properties:**
+
 ```html
-<div role="alert">
-  Form submitted successfully.
-</div>
+<div role="alert">Form submitted successfully.</div>
 <!-- Or for dismissible alerts: -->
 <div role="alert" aria-live="assertive" aria-atomic="true">
   <p>Error: Email is required.</p>
@@ -53,6 +53,7 @@ A live region that announces important, time-sensitive information.
 ```
 
 **Key Rules:**
+
 - `role="alert"` implicitly sets `aria-live="assertive"` and `aria-atomic="true"`
 - Content injected into the live region is announced immediately
 - Do NOT move focus to the alert unless it contains interactive elements the user must address
@@ -65,6 +66,7 @@ A live region that announces important, time-sensitive information.
 A clickable element that triggers an action (not navigation — use `<a>` for links).
 
 **Roles & Properties:**
+
 ```html
 <!-- Native button (preferred) -->
 <button type="button">Save</button>
@@ -83,6 +85,7 @@ A clickable element that triggers an action (not navigation — use `<a>` for li
 | Space | Activate button (prevent scroll) |
 
 **Key Rules:**
+
 - Always prefer native `<button>` — it provides keyboard, focus, and activation for free
 - `role="button"` on non-button elements requires `tabindex="0"`, Enter, and Space handlers
 - Toggle buttons use `aria-pressed` (true/false), NOT `aria-checked`
@@ -95,6 +98,7 @@ A clickable element that triggers an action (not navigation — use `<a>` for li
 A control that allows toggling between checked and unchecked states.
 
 **Roles & Properties:**
+
 ```html
 <!-- Native (preferred) -->
 <label>
@@ -103,9 +107,7 @@ A control that allows toggling between checked and unchecked states.
 </label>
 
 <!-- Tri-state (mixed) checkbox -->
-<div role="checkbox" aria-checked="mixed" tabindex="0">
-  Select all
-</div>
+<div role="checkbox" aria-checked="mixed" tabindex="0">Select all</div>
 ```
 
 **Keyboard:**
@@ -115,6 +117,7 @@ A control that allows toggling between checked and unchecked states.
 | Tab | Move to next focusable element |
 
 **Key Rules:**
+
 - `aria-checked`: `true`, `false`, or `mixed` (tri-state for "select all" patterns)
 - Group related checkboxes with `role="group"` and `aria-labelledby`
 - Mixed state: cycles true → false → mixed (or true → false in simple implementations)
@@ -126,8 +129,14 @@ A control that allows toggling between checked and unchecked states.
 An overlay window that requires user interaction before returning to the main page.
 
 **Roles & Properties:**
+
 ```html
-<div role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-desc">
+<div
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="dialog-title"
+  aria-describedby="dialog-desc"
+>
   <h2 id="dialog-title">Confirm Delete</h2>
   <p id="dialog-desc">This action cannot be undone.</p>
   <button>Cancel</button>
@@ -143,6 +152,7 @@ An overlay window that requires user interaction before returning to the main pa
 | Escape | Close dialog |
 
 **Focus Management:**
+
 1. On open: move focus to first focusable element (or the dialog itself if no focusable child)
 2. Trap focus: Tab and Shift+Tab cycle within the dialog only
 3. On close: return focus to the element that triggered the dialog
@@ -155,10 +165,9 @@ An overlay window that requires user interaction before returning to the main pa
 A button that controls the visibility of a section of content.
 
 **Roles & Properties:**
+
 ```html
-<button aria-expanded="false" aria-controls="details-1">
-  Show Details
-</button>
+<button aria-expanded="false" aria-controls="details-1">Show Details</button>
 <div id="details-1" hidden>
   <p>Additional details here...</p>
 </div>
@@ -170,6 +179,7 @@ A button that controls the visibility of a section of content.
 | Enter / Space | Toggle visibility |
 
 **Key Rules:**
+
 - Simpler than accordion — no header grouping needed
 - `aria-expanded` on the button, NOT on the content
 - Use `hidden` attribute or `display: none` to truly hide content from screen readers
@@ -181,6 +191,7 @@ A button that controls the visibility of a section of content.
 A list of options where the user selects one or more items.
 
 **Roles & Properties:**
+
 ```html
 <label id="label-1">Choose color</label>
 <ul role="listbox" aria-labelledby="label-1" tabindex="0">
@@ -190,7 +201,12 @@ A list of options where the user selects one or more items.
 </ul>
 
 <!-- Multi-select -->
-<ul role="listbox" aria-labelledby="label-2" aria-multiselectable="true" tabindex="0">
+<ul
+  role="listbox"
+  aria-labelledby="label-2"
+  aria-multiselectable="true"
+  tabindex="0"
+>
   <li role="option" aria-selected="false">Option A</li>
   <li role="option" aria-selected="true">Option B</li>
 </ul>
@@ -216,6 +232,7 @@ A list of options where the user selects one or more items.
 A widget that offers a list of actions or functions.
 
 **Roles & Properties:**
+
 ```html
 <button aria-haspopup="true" aria-expanded="false" aria-controls="menu-1">
   Actions
@@ -250,10 +267,13 @@ A widget that offers a list of actions or functions.
 A set of mutually exclusive options.
 
 **Roles & Properties:**
+
 ```html
 <div role="radiogroup" aria-labelledby="group-label">
   <span id="group-label">Shipping method</span>
-  <label><input type="radio" name="ship" value="standard" checked /> Standard</label>
+  <label
+    ><input type="radio" name="ship" value="standard" checked /> Standard</label
+  >
   <label><input type="radio" name="ship" value="express" /> Express</label>
   <label><input type="radio" name="ship" value="overnight" /> Overnight</label>
 </div>
@@ -268,6 +288,7 @@ A set of mutually exclusive options.
 | Space | Select focused radio (if not auto-select) |
 
 **Key Rules:**
+
 - Only ONE radio in the group is in the tab order (the selected one, or first if none selected)
 - Arrow keys move selection AND focus (roving tabindex)
 - Wraps: Down from last → first, Up from first → last
@@ -279,18 +300,32 @@ A set of mutually exclusive options.
 A control for selecting a value within a range.
 
 **Roles & Properties:**
+
 ```html
 <label id="vol-label">Volume</label>
-<input type="range" min="0" max="100" value="50" step="1"
-       aria-labelledby="vol-label" aria-valuemin="0" aria-valuemax="100"
-       aria-valuenow="50" aria-valuetext="50%">
+<input
+  type="range"
+  min="0"
+  max="100"
+  value="50"
+  step="1"
+  aria-labelledby="vol-label"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  aria-valuenow="50"
+  aria-valuetext="50%"
+/>
 
 <!-- Custom slider -->
-<div role="slider" tabindex="0"
-     aria-labelledby="vol-label"
-     aria-valuemin="0" aria-valuemax="100"
-     aria-valuenow="50" aria-valuetext="50%">
-</div>
+<div
+  role="slider"
+  tabindex="0"
+  aria-labelledby="vol-label"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  aria-valuenow="50"
+  aria-valuetext="50%"
+></div>
 ```
 
 **Keyboard:**
@@ -304,6 +339,7 @@ A control for selecting a value within a range.
 | End | Set to maximum |
 
 **Key Rules:**
+
 - `aria-valuetext` for non-numeric display (e.g., "Medium", "50%", "$100")
 - For range sliders (two thumbs), use two `role="slider"` elements
 
@@ -314,10 +350,9 @@ A control for selecting a value within a range.
 An on/off control similar to a checkbox but semantically indicates an immediate state change.
 
 **Roles & Properties:**
+
 ```html
-<button role="switch" aria-checked="false">
-  Dark Mode
-</button>
+<button role="switch" aria-checked="false">Dark Mode</button>
 
 <!-- Or with hidden input for form submission -->
 <label>
@@ -335,6 +370,7 @@ An on/off control similar to a checkbox but semantically indicates an immediate 
 | Enter | Toggle on/off |
 
 **Key Rules:**
+
 - Use `role="switch"` with `aria-checked`, NOT `role="checkbox"`
 - Switch implies immediate effect (no Submit button needed)
 - Provide visible on/off labels or states for users who can't perceive color
@@ -346,15 +382,38 @@ An on/off control similar to a checkbox but semantically indicates an immediate 
 A set of layered sections, only one visible at a time, selected via tab buttons.
 
 **Roles & Properties:**
+
 ```html
 <div role="tablist" aria-label="Project settings">
-  <button role="tab" id="tab-1" aria-selected="true" aria-controls="panel-1">General</button>
-  <button role="tab" id="tab-2" aria-selected="false" aria-controls="panel-2" tabindex="-1">Members</button>
-  <button role="tab" id="tab-3" aria-selected="false" aria-controls="panel-3" tabindex="-1">Billing</button>
+  <button role="tab" id="tab-1" aria-selected="true" aria-controls="panel-1">
+    General
+  </button>
+  <button
+    role="tab"
+    id="tab-2"
+    aria-selected="false"
+    aria-controls="panel-2"
+    tabindex="-1"
+  >
+    Members
+  </button>
+  <button
+    role="tab"
+    id="tab-3"
+    aria-selected="false"
+    aria-controls="panel-3"
+    tabindex="-1"
+  >
+    Billing
+  </button>
 </div>
 <div role="tabpanel" id="panel-1" aria-labelledby="tab-1">General content</div>
-<div role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden>Members content</div>
-<div role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden>Billing content</div>
+<div role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden>
+  Members content
+</div>
+<div role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden>
+  Billing content
+</div>
 ```
 
 **Keyboard:**
@@ -368,6 +427,7 @@ A set of layered sections, only one visible at a time, selected via tab buttons.
 | Delete (optional) | Remove closeable tab |
 
 **Focus Management:**
+
 - Only the active tab has `tabindex="0"`; others have `tabindex="-1"` (roving tabindex)
 - Arrow keys move focus AND activate (automatic activation) — preferred for fast switching
 - Alternative: Arrow keys move focus only, Enter/Space to activate (manual activation) — for expensive content loads
@@ -379,14 +439,13 @@ A set of layered sections, only one visible at a time, selected via tab buttons.
 A popup that displays a description for an element on hover or focus.
 
 **Roles & Properties:**
+
 ```html
 <button aria-describedby="tip-1">
   <svg><!-- icon --></svg>
   <span class="sr-only">Settings</span>
 </button>
-<div role="tooltip" id="tip-1">
-  Open application settings
-</div>
+<div role="tooltip" id="tip-1">Open application settings</div>
 ```
 
 **Keyboard:**
@@ -397,6 +456,7 @@ A popup that displays a description for an element on hover or focus.
 | Tab (away) | Hide tooltip |
 
 **Key Rules:**
+
 - Tooltip appears on hover AND focus
 - Content is supplementary — never put essential info only in tooltips
 - `role="tooltip"` + `aria-describedby` links tooltip to trigger
@@ -410,6 +470,7 @@ A popup that displays a description for an element on hover or focus.
 A hierarchical list where items can be expanded/collapsed.
 
 **Roles & Properties:**
+
 ```html
 <ul role="tree" aria-label="File explorer">
   <li role="treeitem" aria-expanded="true">
@@ -438,7 +499,7 @@ A hierarchical list where items can be expanded/collapsed.
 | End | Last visible treeitem |
 | Enter | Activate item |
 | Space | Select item (multi-select: toggle) |
-| * | Expand all siblings |
+| \* | Expand all siblings |
 | Type-ahead | Focus matching item |
 
 **Focus Management:** Single `tabindex="0"` in the tree, roving tabindex moves with arrow keys.
@@ -450,14 +511,18 @@ A hierarchical list where items can be expanded/collapsed.
 A text input with a popup listbox for suggestions.
 
 **Roles & Properties:**
+
 ```html
 <label for="city-input">City</label>
 <div class="combobox-wrapper">
-  <input id="city-input" role="combobox"
-         aria-expanded="false"
-         aria-autocomplete="list"
-         aria-controls="city-listbox"
-         aria-activedescendant="">
+  <input
+    id="city-input"
+    role="combobox"
+    aria-expanded="false"
+    aria-autocomplete="list"
+    aria-controls="city-listbox"
+    aria-activedescendant=""
+  />
   <ul role="listbox" id="city-listbox" hidden>
     <li role="option" id="opt-1">Bangkok</li>
     <li role="option" id="opt-2">Berlin</li>
@@ -478,6 +543,7 @@ A text input with a popup listbox for suggestions.
 | Alt+Down | Open popup without changing selection |
 
 **Focus Management:**
+
 - Focus always stays in the input
 - Use `aria-activedescendant` to indicate which option is visually highlighted
 - Update `aria-expanded` when popup opens/closes
@@ -515,7 +581,7 @@ Grouped set of controls (formatting bars, chart actions).
 
 **Roles:** `role="toolbar"` + `aria-label` (or `aria-orientation` if vertical).
 
-**Keyboard (roving tabindex):** Toolbar is a single tab stop; Left/Right (or Up/Down when vertical) move between controls; Home/End jump to first/last. Tab moves *out* of the toolbar. Nested controls keep their own activation keys.
+**Keyboard (roving tabindex):** Toolbar is a single tab stop; Left/Right (or Up/Down when vertical) move between controls; Home/End jump to first/last. Tab moves _out_ of the toolbar. Nested controls keep their own activation keys.
 
 ---
 
@@ -525,35 +591,41 @@ Scrollable stream of comparable articles (timelines, infinite lists).
 
 **Roles:** container `role="feed"` (+ `aria-busy` while loading more); each item `role="article"` with `aria-labelledby`, `aria-posinset`, and `aria-setsize` (use a large/estimated value for infinite feeds).
 
-**Keyboard:** PageDown/PageUp move between articles; Home/End to first/last loaded; focus moves *into* article content with Tab. Load more before the user reaches the end to avoid focus loss.
+**Keyboard:** PageDown/PageUp move between articles; Home/End to first/last loaded; focus moves _into_ article content with Tab. Load more before the user reaches the end to avoid focus loss.
 
 ---
 
 ## General Patterns
 
 ### Focus Indicator Spec
+
 All interactive elements must have a visible focus indicator:
+
 - Minimum: 2px solid outline with 3:1 contrast against adjacent colors
 - Recommended: Use the `focus-ring` shadow token (2px white + 2px blue double ring)
 - Use `outline-offset: 2px` to prevent overlap with component borders
 - Honor `prefers-reduced-motion` but NEVER remove focus indicators
 
 ### Roving Tabindex Pattern
+
 For composite widgets (tabs, radio groups, tree views, menus):
+
 1. Container has a single tab stop
 2. Selected/active child has `tabindex="0"`, all others have `tabindex="-1"`
 3. Arrow keys move `tabindex="0"` between children
 4. Tab moves focus out of the entire widget
 
 ### Live Region Priority
-| Urgency | Attribute | Use Case |
-|---------|-----------|----------|
-| High | `aria-live="assertive"` | Errors, critical alerts |
-| Normal | `aria-live="polite"` | Success messages, status updates |
-| Status | `role="status"` | Search result counts, loading states |
-| Log | `role="log"` | Chat messages, activity feeds |
+
+| Urgency | Attribute               | Use Case                             |
+| ------- | ----------------------- | ------------------------------------ |
+| High    | `aria-live="assertive"` | Errors, critical alerts              |
+| Normal  | `aria-live="polite"`    | Success messages, status updates     |
+| Status  | `role="status"`         | Search result counts, loading states |
+| Log     | `role="log"`            | Chat messages, activity feeds        |
 
 ### Screen Reader Testing Checklist
+
 1. All interactive elements announce their name, role, and state
 2. Dynamic content changes are announced via live regions
 3. Form errors are announced when they appear

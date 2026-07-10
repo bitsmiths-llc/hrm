@@ -66,7 +66,11 @@ export const socialAccountsFields: {
   label: string;
   placeholder: string;
 }[] = [
-  { name: 'github', label: 'GitHub', placeholder: 'https://github.com/username' },
+  {
+    name: 'github',
+    label: 'GitHub',
+    placeholder: 'https://github.com/username',
+  },
   {
     name: 'linkedin',
     label: 'LinkedIn',

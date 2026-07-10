@@ -15,7 +15,7 @@ mutations, actions, constants). The rules below are the ones most often broken.
   and have the page file import and compose them in order. The page file itself should
   read as a short list of sections, not the sections' implementation.
 - This is about file size, not premature abstraction — don't extract a subcomponent
-  that's only rendered once *unless* it's what's keeping the parent file short. Splitting
+  that's only rendered once _unless_ it's what's keeping the parent file short. Splitting
   a 300-line page into five 60-line section components is correct even though each
   section has exactly one caller.
 

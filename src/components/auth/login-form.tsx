@@ -1,13 +1,16 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAction } from 'next-safe-action/hooks';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { signInWithPassword } from '@/actions/auth';
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -27,13 +30,12 @@ import {
 import { ControlledPasswordInput } from '@/components/ui/form/controlled-password-input';
 import { Input } from '@/components/ui/input';
 
-import { onError } from '@/lib/show-error-toast';
-
 import { paths } from '@/constants/paths';
 import { type LoginInput, loginSchema } from '@/schema/auth';
 
 export function LoginForm() {
   const router = useRouter();
+  const [signInError, setSignInError] = useState<string | null>(null);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -49,8 +51,18 @@ export function LoginForm() {
       );
       router.refresh();
     },
-    onError,
+    // Show the failure inline in the card rather than as a corner toast — the
+    // action returns a uniform, user-safe message ("Invalid email or password").
+    onError: ({ error }) =>
+      setSignInError(
+        error.serverError ?? 'Something went wrong. Please try again.',
+      ),
   });
+
+  const onSubmit = (values: LoginInput) => {
+    setSignInError(null);
+    execute(values);
+  };
 
   return (
     <Card>
@@ -63,9 +75,16 @@ export function LoginForm() {
       <CardContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(execute)}
+            onSubmit={form.handleSubmit(onSubmit)}
             className='flex flex-col gap-4'
           >
+            {signInError && (
+              <Alert variant='destructive'>
+                <AlertCircle className='h-4 w-4' />
+                <AlertTitle>Sign in failed</AlertTitle>
+                <AlertDescription>{signInError}</AlertDescription>
+              </Alert>
+            )}
             <FormField
               control={form.control}
               name='email'

@@ -38,7 +38,7 @@ export const paths = {
 import Link from 'next/link';
 import { paths } from '@/constants/paths';
 
-<Link href={paths.auth.login}>Sign in</Link>
+<Link href={paths.auth.login}>Sign in</Link>;
 ```
 
 **Programmatic navigation with `useRouter`**
@@ -85,18 +85,18 @@ export const paths = {
 Then use them the same way:
 
 ```tsx
-<Link href={paths.listings.detail(listing.id)}>View listing</Link>
+<Link href={paths.listings.detail(listing.id)}>View listing</Link>;
 
 router.push(paths.listings.edit(listing.id));
 ```
 
 ### Common mistakes
 
-| Mistake | Fix |
-|---------|-----|
-| `router.push('/dashboard')` | `router.push(paths.dashboard)` |
-| `<Link href="/auth/login">` | `<Link href={paths.auth.login}>` |
-| `window.location.href = '/settings'` | `window.location.href = paths.settings` |
+| Mistake                                     | Fix                                                    |
+| ------------------------------------------- | ------------------------------------------------------ |
+| `router.push('/dashboard')`                 | `router.push(paths.dashboard)`                         |
+| `<Link href="/auth/login">`                 | `<Link href={paths.auth.login}>`                       |
+| `window.location.href = '/settings'`        | `window.location.href = paths.settings`                |
 | Forgetting to add a new route to `paths.ts` | Add the route to `paths` first, then reference the key |
 
 ### Extending `paths`

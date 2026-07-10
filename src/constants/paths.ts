@@ -27,5 +27,6 @@ export const paths = {
     payroll: '/admin/payroll',
     policies: '/admin/policies',
     settings: '/admin/settings',
+    profile: '/admin/profile',
   },
 } as const;

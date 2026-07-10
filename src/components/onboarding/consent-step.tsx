@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-import { type ConsentInput,consentSchema } from '@/schema/onboarding';
+import { type ConsentInput, consentSchema } from '@/schema/onboarding';
 
 type ConsentStepProps = {
   onSubmit: (values: ConsentInput) => Promise<void>;

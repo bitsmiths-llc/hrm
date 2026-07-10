@@ -25,7 +25,7 @@ Client-side validation using Zod with `standardSchemaResolver`.
 
 ```tsx
 <Controller
-  name="email"
+  name='email'
   control={form.control}
   render={({ field, fieldState }) => (
     <Field data-invalid={fieldState.invalid}>
@@ -34,8 +34,8 @@ Client-side validation using Zod with `standardSchemaResolver`.
         {...field}
         id={`${formId}-email`}
         aria-invalid={fieldState.invalid}
-        placeholder="test@example.com"
-        autoComplete="off"
+        placeholder='test@example.com'
+        autoComplete='off'
         disabled={form.formState.isSubmitting}
       />
     </Field>
@@ -58,7 +58,7 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
     {...field}
     id={`${formId}-email`}
     aria-invalid={fieldState.invalid}
-    type="email"
+    type='email'
   />
   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
 </Field>
@@ -68,7 +68,7 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
 
 ```tsx
 <Controller
-  name="name"
+  name='name'
   control={form.control}
   render={({ field, fieldState }) => (
     <Field data-invalid={fieldState.invalid}>
@@ -77,7 +77,7 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
         {...field}
         id={`${formId}-name`}
         aria-invalid={fieldState.invalid}
-        placeholder="test@example.com"
+        placeholder='test@example.com'
         disabled={form.formState.isSubmitting}
       />
       {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -90,7 +90,7 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
 
 ```tsx
 <Controller
-  name="about"
+  name='about'
   control={form.control}
   render={({ field, fieldState }) => (
     <Field data-invalid={fieldState.invalid}>
@@ -100,7 +100,7 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
         id={`${formId}-about`}
         aria-invalid={fieldState.invalid}
         placeholder="I'm a software engineer..."
-        className="min-h-[120px]"
+        className='min-h-[120px]'
       />
       {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
     </Field>
@@ -112,10 +112,10 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
 
 ```tsx
 <Controller
-  name="language"
+  name='language'
   control={form.control}
   render={({ field, fieldState }) => (
-    <Field orientation="responsive" data-invalid={fieldState.invalid}>
+    <Field orientation='responsive' data-invalid={fieldState.invalid}>
       <FieldContent>
         <FieldLabel htmlFor={`${formId}-select`}>Spoken Language</FieldLabel>
         <FieldDescription>
@@ -131,13 +131,13 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
         <SelectTrigger
           id={`${formId}-select`}
           aria-invalid={fieldState.invalid}
-          className="min-w-[120px]"
+          className='min-w-[120px]'
         >
-          <SelectValue placeholder="Select" />
+          <SelectValue placeholder='Select' />
         </SelectTrigger>
-        <SelectContent position="item-aligned">
-          <SelectItem value="auto">Auto</SelectItem>
-          <SelectItem value="en">English</SelectItem>
+        <SelectContent position='item-aligned'>
+          <SelectItem value='auto'>Auto</SelectItem>
+          <SelectItem value='en'>English</SelectItem>
         </SelectContent>
       </Select>
     </Field>
@@ -149,19 +149,19 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
 
 ```tsx
 <Controller
-  name="tasks"
+  name='tasks'
   control={form.control}
   render={({ field, fieldState }) => (
     <FieldSet>
-      <FieldLegend variant="label">Tasks</FieldLegend>
+      <FieldLegend variant='label'>Tasks</FieldLegend>
       <FieldDescription>
         Get notified when tasks you&apos;ve created have updates.
       </FieldDescription>
-      <FieldGroup data-slot="checkbox-group">
+      <FieldGroup data-slot='checkbox-group'>
         {tasks.map((task) => (
           <Field
             key={task.id}
-            orientation="horizontal"
+            orientation='horizontal'
             data-invalid={fieldState.invalid}
           >
             <Checkbox
@@ -178,7 +178,7 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
             />
             <FieldLabel
               htmlFor={`${formId}-task-${task.id}`}
-              className="font-normal"
+              className='font-normal'
             >
               {task.label}
             </FieldLabel>
@@ -195,7 +195,7 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
 
 ```tsx
 <Controller
-  name="plan"
+  name='plan'
   control={form.control}
   render={({ field, fieldState }) => (
     <FieldSet>
@@ -210,7 +210,7 @@ Add the aria-invalid prop to the form control such as `<Input />`, `<SelectTrigg
       >
         {plans.map((plan) => (
           <FieldLabel key={plan.id} htmlFor={`${formId}-plan-${plan.id}`}>
-            <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+            <Field orientation='horizontal' data-invalid={fieldState.invalid}>
               <FieldContent>
                 <FieldTitle>{plan.title}</FieldTitle>
                 <FieldDescription>{plan.description}</FieldDescription>

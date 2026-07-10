@@ -41,6 +41,34 @@ export const inviteEmployee = authActionClient
 
     // Collapse a blank/whitespace name to null so the row stores null, not ''.
     const name = fullName?.trim() || null;
+    // Normalise to match how Supabase auth stores emails (lower-cased). Keeps
+    // the existence guard below reliable and stops a case-only variant from
+    // creating a second row for the same person.
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Guard the re-invite case explicitly. Every invited/active person already
+    // has an `employees` row, so an existing row means this email is spent.
+    // Checking here — before we create anything — matters for correctness AND
+    // safety: `generateLink` returns the *existing* auth user for an
+    // already-registered email rather than erroring, so without this guard we
+    // would fall through to the insert below, hit a duplicate-key error, and
+    // then the compensating `deleteUser` would CASCADE-delete this person's
+    // real employees row (and every satellite) via the ON DELETE CASCADE FK.
+    const { data: existing, error: existingError } = await supabaseAdmin
+      .from('employees')
+      .select('account_status')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+    if (existingError) {
+      throw new Error('Could not send the invitation. Please try again.');
+    }
+    if (existing) {
+      throw new Error(
+        existing.account_status === 'invited'
+          ? 'This person has already been invited. Use Resend on their row to send a new link.'
+          : 'An employee with this email already exists.',
+      );
+    }
 
     // generateLink creates the auth.users row without sending Supabase's own
     // (unbrandable) mailer email. We build our own /auth/confirm link from the
@@ -48,7 +76,7 @@ export const inviteEmployee = authActionClient
     const { data: invited, error: inviteError } =
       await supabaseAdmin.auth.admin.generateLink({
         type: 'invite',
-        email,
+        email: normalizedEmail,
         options: { data: name ? { full_name: name } : undefined },
       });
     if (inviteError || !invited.user) {
@@ -64,7 +92,7 @@ export const inviteEmployee = authActionClient
 
     try {
       await sendInviteEmail({
-        to: email,
+        to: normalizedEmail,
         fullName: name,
         inviteUrl: inviteUrl.toString(),
       });
@@ -76,19 +104,123 @@ export const inviteEmployee = authActionClient
 
     const { error: rowError } = await supabaseAdmin.from('employees').insert({
       id: invited.user.id,
-      email,
+      email: normalizedEmail,
       full_name: name,
       role: 'employee',
       account_status: 'invited',
       invited_at: new Date().toISOString(),
     });
     if (rowError) {
-      // Compensating rollback: undo the auth user so no orphan is left behind.
-      await supabaseAdmin.auth.admin.deleteUser(invited.user.id);
-      throw new Error('Could not create the employee record. Please try again.');
+      // A unique violation (23505) means the account already exists — a race
+      // with a concurrent invite, or a pre-existing auth user `generateLink`
+      // handed back. That user is NOT ours to remove, so we must never delete
+      // it: doing so would CASCADE-delete a real employees row. Only roll back
+      // when the insert failed for some other reason, where the auth user we
+      // just created would otherwise be orphaned.
+      if (rowError.code !== '23505') {
+        await supabaseAdmin.auth.admin.deleteUser(invited.user.id);
+        throw new Error(
+          'Could not create the employee record. Please try again.',
+        );
+      }
+      throw new Error('An employee with this email already exists.');
     }
 
     return { id: invited.user.id };
+  });
+
+/**
+ * Admin-only. Re-send a pending invitation. Guarded to `invited` only — once the
+ * person accepts, the invite is spent and they manage their own account.
+ *
+ * The original invite used a one-time `invite` link, which Supabase won't re-mint
+ * for an already-existing auth user. A fresh `magiclink` reaches the same
+ * /auth/confirm → /auth/accept-invitation flow (the confirm route accepts it) and
+ * lets them set a password — the accept page still gates on `invited` status.
+ */
+export const resendInvite = authActionClient
+  .schema(employeeIdSchema)
+  .action(async ({ parsedInput: { employeeId }, ctx: { authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: employee, error: readError } = await supabaseAdmin
+      .from('employees')
+      .select('email, full_name, account_status')
+      .eq('id', employeeId)
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+    if (!employee) throw new Error('Employee not found.');
+    if (employee.account_status !== 'invited') {
+      throw new Error('This person has already accepted their invitation.');
+    }
+
+    const { data: link, error: linkError } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: employee.email,
+      });
+    if (linkError || !link.properties) {
+      throw new Error('Could not resend the invitation. Please try again.');
+    }
+
+    const inviteUrl = new URL(paths.auth.confirm, appConfig.appUrl);
+    inviteUrl.searchParams.set('token_hash', link.properties.hashed_token);
+    inviteUrl.searchParams.set('type', 'magiclink');
+    inviteUrl.searchParams.set('next', paths.auth.acceptInvitation);
+
+    try {
+      await sendInviteEmail({
+        to: employee.email,
+        fullName: employee.full_name,
+        inviteUrl: inviteUrl.toString(),
+      });
+    } catch {
+      throw new Error('Could not resend the invitation. Please try again.');
+    }
+
+    // Re-stamp so the directory's "Invited" date reflects the latest send.
+    await supabaseAdmin
+      .from('employees')
+      .update({ invited_at: new Date().toISOString() })
+      .eq('id', employeeId);
+  });
+
+/**
+ * Admin-only. Revoke a pending invitation before it's accepted — deletes both
+ * halves of the paired account: the `employees` row (which cascades to its
+ * satellite tables) and the `auth.users` row. There is no FK between the two
+ * (see `inviteEmployee`), so each side is deleted explicitly. Guarded to
+ * `invited` only: an onboarding/active employee is managed, not un-invited.
+ */
+export const cancelInvite = authActionClient
+  .schema(employeeIdSchema)
+  .action(async ({ parsedInput: { employeeId }, ctx: { authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: employee, error: readError } = await supabaseAdmin
+      .from('employees')
+      .select('account_status')
+      .eq('id', employeeId)
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+    if (!employee) throw new Error('Employee not found.');
+    if (employee.account_status !== 'invited') {
+      throw new Error('Only a pending invitation can be cancelled.');
+    }
+
+    // The status guard on the delete keeps it a no-op if the invite was accepted
+    // in the meantime, rather than racing the auth-user deletion below.
+    const { error: rowError } = await supabaseAdmin
+      .from('employees')
+      .delete()
+      .eq('id', employeeId)
+      .eq('account_status', 'invited');
+    if (rowError) throw new Error(rowError.message);
+
+    // Remove the paired auth user so the email is free to be invited again.
+    const { error: authError } =
+      await supabaseAdmin.auth.admin.deleteUser(employeeId);
+    if (authError) throw new Error(authError.message);
   });
 
 // ---------------------------------------------------------------------------
@@ -103,19 +235,21 @@ export const inviteEmployee = authActionClient
 /** Approve a submission: → active, stamp activation, clear any prior note. */
 export const approveEmployee = authActionClient
   .schema(employeeIdSchema)
-  .action(async ({ parsedInput: { employeeId }, ctx: { supabase, authUser } }) => {
-    requireAdmin(authUser.user?.app_metadata.role);
-    const { error } = await supabase
-      .from('employees')
-      .update({
-        account_status: 'active',
-        activated_at: new Date().toISOString(),
-        review_note: null,
-      })
-      .eq('id', employeeId)
-      .eq('account_status', 'submitted');
-    if (error) throw new Error(error.message);
-  });
+  .action(
+    async ({ parsedInput: { employeeId }, ctx: { supabase, authUser } }) => {
+      requireAdmin(authUser.user?.app_metadata.role);
+      const { error } = await supabase
+        .from('employees')
+        .update({
+          account_status: 'active',
+          activated_at: new Date().toISOString(),
+          review_note: null,
+        })
+        .eq('id', employeeId)
+        .eq('account_status', 'submitted');
+      if (error) throw new Error(error.message);
+    },
+  );
 
 /** Return a submission to onboarding with a required note (the return channel
  *  the employee sees on their onboarding wizard). */

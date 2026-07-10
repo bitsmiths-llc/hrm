@@ -1,19 +1,17 @@
 'use client';
 
 import { type ColumnDef } from '@tanstack/react-table';
-import { ArrowRight } from 'lucide-react';
-import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { StatusBadge } from '@/components/hrm/status-badge';
-import { Button } from '@/components/ui/button';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 
 import { formatDate } from '@/utils/date-functions';
 
 import { employmentTypeLabels } from '@/constants/hrm-labels';
-import { paths } from '@/constants/paths';
+
+import { EmployeesTableRowActions } from './employees-table-row-actions';
 
 import { Employee } from '@/types/hrm';
 
@@ -110,15 +108,7 @@ export function useEmployeesTableColumns() {
       {
         id: 'actions',
         header: () => null,
-        cell: ({ row }) => (
-          <div className='flex justify-end'>
-            <Link href={`${paths.admin.employees}/${row.original.id}`}>
-              <Button variant='ghost' size='sm' icon={ArrowRight}>
-                View
-              </Button>
-            </Link>
-          </div>
-        ),
+        cell: ({ row }) => <EmployeesTableRowActions employee={row.original} />,
         enableSorting: false,
       },
     ],

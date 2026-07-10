@@ -58,10 +58,14 @@ export function toEmployee(row: EmployeeRow): Employee {
   };
 }
 
+// The directory lists employees only: admins manage their own profile from the
+// sidebar and are never surfaced here (an admin should see neither their own
+// row nor other admins), so the query is scoped to the `employee` role.
 const fetchEmployees = authQuery(async ({ supabase }) => {
   const { data, error } = await supabase
     .from('employees')
     .select('*, employment_details(*), bank_details(*), socials(*)')
+    .eq('role', 'employee')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return data.map(toEmployee);

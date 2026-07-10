@@ -8,13 +8,13 @@ Design and build so the UI works in any language and writing direction. The chea
 
 Use **flow-relative** CSS, never physical, so layout mirrors automatically for RTL:
 
-| Physical (avoid) | Logical (use) |
-|------------------|---------------|
+| Physical (avoid)                | Logical (use)                                |
+| ------------------------------- | -------------------------------------------- |
 | `margin-left` / `padding-right` | `margin-inline-start` / `padding-inline-end` |
-| `left` / `right` | `inset-inline-start` / `inset-inline-end` |
-| `text-align: left` | `text-align: start` |
-| `border-left` | `border-inline-start` |
-| `width` / `height` | `inline-size` / `block-size` |
+| `left` / `right`                | `inset-inline-start` / `inset-inline-end`    |
+| `text-align: left`              | `text-align: start`                          |
+| `border-left`                   | `border-inline-start`                        |
+| `width` / `height`              | `inline-size` / `block-size`                 |
 
 Our token CSS already uses `block-size`/`padding-inline` (see `frameworks/adapters/*`). Set direction once: `<html dir="rtl" lang="ar">` — children inherit. In SwiftUI/Compose/Flutter use the native start/end leading/trailing equivalents (`leadingMargin`, `MaterialLocalizations`, `Directionality`).
 
@@ -42,6 +42,7 @@ Our token CSS already uses `block-size`/`padding-inline` (see `frameworks/adapte
 - `font-feature-settings`/optical sizing differ per script; don't letter-space non-Latin text.
 
 ## Verification
+
 - Flip `dir="rtl"` — does the whole layout mirror, with directional icons flipped and no hard-coded left/right?
 - Run the pseudo-locale — any clipped, overlapped, or concatenated strings?
 - Are all user-facing strings externalized (zero hard-coded copy) and formatted via `Intl`?

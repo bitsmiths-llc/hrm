@@ -23,7 +23,7 @@ Designing for memory, attention, language processing, and executive function. Co
 ## Memory & attention
 
 - **Accessible Authentication (3.3.8 AA / 3.3.7 AA):** never require recalling/transcribing codes, solving puzzles, or re-entering info already provided. Allow password managers (don't block paste), support passkeys/email-link, and offer "Show password".
-- Keep instructions visible *while* the task is performed — don't put them only in a dismissed dialog.
+- Keep instructions visible _while_ the task is performed — don't put them only in a dismissed dialog.
 - Avoid timeouts; if unavoidable, warn and allow extension (WCAG 2.2.1). Persist progress so a lapse doesn't lose work.
 - Minimize concurrent decisions; default sensible values; remember preferences.
 
@@ -46,6 +46,7 @@ Designing for memory, attention, language processing, and executive function. Co
 - Don't block core tasks behind large downloads; show lightweight skeletons (`components/feedback.md`) over spinners-then-jank.
 
 ## Verification
+
 - Read every label/error aloud — does a tired, distracted first-time user understand it?
 - Can the task complete without remembering anything from a previous screen?
 - Does any timeout, puzzle, or transcription step exist? If so, remove or provide an exemption path.

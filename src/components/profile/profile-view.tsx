@@ -18,9 +18,17 @@ import { formatDate } from '@/utils/date-functions';
 
 import { employmentTypeLabels } from '@/constants/hrm-labels';
 
-/** Self-service profile: the signed-in employee views their own data and edits
+type ProfileViewProps = {
+  /** Employment (salary/designation/type) is admin-owned and only meaningful
+   *  for employees. Admins have no employment record, so their own profile
+   *  hides that section and uses a role-neutral header. Defaults to the full
+   *  employee view. */
+  showEmployment?: boolean;
+};
+
+/** Self-service profile: the signed-in user views their own data and edits
  *  contact, bank, and socials. Employment stays read-only (admin-owned). */
-export function ProfileView() {
+export function ProfileView({ showEmployment = true }: ProfileViewProps) {
   const { data: employee, isLoading } = useMyProfile();
 
   if (isLoading) {
@@ -47,7 +55,11 @@ export function ProfileView() {
     <>
       <PageHeader
         title='My Profile'
-        description={`${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`}
+        description={
+          showEmployment
+            ? `${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`
+            : employee.email
+        }
       >
         <StatusBadge status={employee.status} />
       </PageHeader>
@@ -121,7 +133,7 @@ export function ProfileView() {
         ]}
       />
 
-      <EmploymentReadonly employee={employee} />
+      {showEmployment && <EmploymentReadonly employee={employee} />}
     </>
   );
 }

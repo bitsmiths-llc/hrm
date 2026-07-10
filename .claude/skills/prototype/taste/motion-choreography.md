@@ -1,6 +1,6 @@
 # Motion Choreography
 
-Tokens in `tokens/motion.json` define the *vocabulary* (durations, easings, presets). This file is the *grammar* — how to compose motion that feels intentional and premium instead of busy or janky.
+Tokens in `tokens/motion.json` define the _vocabulary_ (durations, easings, presets). This file is the _grammar_ — how to compose motion that feels intentional and premium instead of busy or janky.
 
 > Motion serves the **Aesthetics** tier and must honor `prefers-reduced-motion` (WCAG 2.3.3). Every effect below has a reduced-motion fallback. Never block content or delay interaction on animation.
 
@@ -19,35 +19,42 @@ Tokens in `tokens/motion.json` define the *vocabulary* (durations, easings, pres
 ## Patterns
 
 ### Entrance reveals (on scroll / mount)
+
 - Translate ≤ 8–16px + fade. Never animate from far offscreen.
 - `duration.moderate`, `ease-out`. Use `tokens/motion.json` → `transition.enter`.
 - **Reduced motion:** opacity-only fade, ≤ `duration.fast`, no translate.
 
 ### Stagger
+
 - Reveal grouped items with a small delay step (40–80ms) to imply order.
 - Cap total stagger so the last item isn't perceptibly late (< ~400ms overall).
 - **Reduced motion:** reveal the whole group at once.
 
 ### Hover physics (pointer devices)
+
 - Subtle lift: `translateY(-2px)` + elevation step up, `duration.fast`, `ease-out`.
 - Optional colored shadow on primary CTAs only (`tokens/shadows.json` → `colored`).
 - **Touch:** no hover dependency — the resting state must be complete on its own.
 
 ### Press / active feedback
+
 - Scale down slightly (`scale(0.97)`) on press, snap back on release, `duration.fast`.
 - Gives tactile confirmation without layout shift.
 
 ### Section transitions / scroll scrub
+
 - Use sparingly for storytelling. Pin + scrub must remain interruptible and never trap scroll.
 - Keep scrubbed movement to transform/opacity; avoid heavy per-frame layout.
 - **Reduced motion:** disable pin/scrub; show sections statically.
 
 ### Overlay enter/exit (modal, drawer, popover, toast)
+
 - Enter: `scale-in` (0.96→1) + fade, `transition.enter`. Exit: faster fade, `transition.exit`.
 - Backdrop fades with the surface. Focus moves on enter; focus restores on exit (see `accessibility/aria-patterns.md`).
 - **Reduced motion:** fade only, no scale.
 
 ### Loading
+
 - Skeleton `pulse` (opacity 1↔0.5) or shimmer, `linear`, infinite. Spinner `spin`, 600–1000ms, `linear`.
 - Prefer skeletons that match final layout over spinners for perceived speed.
 

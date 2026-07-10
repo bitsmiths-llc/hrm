@@ -28,11 +28,11 @@ Install it once, on the account that owns the repo (`TayyabSohail`):
 
 **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
 
-| Secret name              | Required by                                              | Value                                                                                                                                                             |
-| ------------------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CLAUDE_CODE_OAUTH_TOKEN` | all three workflows                                     | **Required.** Generate with `claude setup-token` in the Claude Code CLI (uses your Claude Pro/Max subscription). Paste the whole token. See note below.          |
-| `LINEAR_API_KEY`         | `claude-code-review.yml` (review + final-review)         | Optional. Linear → Settings → Security & access → API → Personal API keys. Enables ticket-context lookups. Ticket lookups are silently skipped without it.        |
-| `GITHUB_TOKEN`           | `claude-fix.yml`, `claude-code-review.yml`               | Automatic — provided by GitHub Actions, no manual setup.                                                                                                          |
+| Secret name               | Required by                                      | Value                                                                                                                                                      |
+| ------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLAUDE_CODE_OAUTH_TOKEN` | all three workflows                              | **Required.** Generate with `claude setup-token` in the Claude Code CLI (uses your Claude Pro/Max subscription). Paste the whole token. See note below.    |
+| `LINEAR_API_KEY`          | `claude-code-review.yml` (review + final-review) | Optional. Linear → Settings → Security & access → API → Personal API keys. Enables ticket-context lookups. Ticket lookups are silently skipped without it. |
+| `GITHUB_TOKEN`            | `claude-fix.yml`, `claude-code-review.yml`       | Automatic — provided by GitHub Actions, no manual setup.                                                                                                   |
 
 **Generating `CLAUDE_CODE_OAUTH_TOKEN`:** run `claude setup-token` locally (requires a
 Claude Pro or Max plan). This mirrors the FlyWithClass setup, which authenticates the
@@ -64,11 +64,11 @@ Usernames are **case-sensitive**. Update this list as the team changes.
 
 ### `claude-code-review.yml` — three-job PR review system
 
-| Job            | Trigger                                                   | Who can trigger                        | What it posts                                                                        |
-| -------------- | --------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
+| Job            | Trigger                                                            | Who can trigger                               | What it posts                                                                                                     |
+| -------------- | ------------------------------------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `review`       | PR opened, or a draft marked ready-for-review, or `/claude-review` | GitHub Actions (auto) / any non-bot commenter | Heartbeat → inline `[BLOCKER]/[MAJOR]/[MINOR]/[NIT]` findings → sticky summary with the Domain Blockers checklist |
-| `final-review` | PR comment starting with `/final-review`                  | Allowlisted users only (see §2)        | Pre-merge PM report: what ships, acceptance criteria, risk, deploy order, verdict     |
-| `claude-agent` | PR comment starting with `/claude ` (not the commands above) | Any non-bot commenter                  | Read-only Q&A by default; commits only when you say "commit" / "push"                 |
+| `final-review` | PR comment starting with `/final-review`                           | Allowlisted users only (see §2)               | Pre-merge PM report: what ships, acceptance criteria, risk, deploy order, verdict                                 |
+| `claude-agent` | PR comment starting with `/claude ` (not the commands above)       | Any non-bot commenter                         | Read-only Q&A by default; commits only when you say "commit" / "push"                                             |
 
 The `review` job skips PRs that are draft or have "WIP" / "Draft" / "DO NOT MERGE" in the
 title. Auto-review fires **once** per PR (on open or draft→ready); it does **not** re-run on
@@ -101,13 +101,13 @@ default; never pushes to `main` without explicit instruction.
 
 Keep these current — the reviewer reads them before flagging anything.
 
-| File                                         | Update when                                            |
-| -------------------------------------------- | ------------------------------------------------------ |
-| `docs/review/review-protocol.md`             | The review steps or severity rules change              |
-| `docs/review/domain-blockers.md`             | A new hard rule that must block merge is introduced    |
-| `.claude/skills/coding-standards/SKILL.md`   | The canonical implementation standard changes          |
-| `.claude/docs/rules/*.md`                    | TypeScript / boundary / data-fetching conventions change |
-| `docs/backend/auth-and-supabase.md`          | Auth, RLS, or service-role patterns change             |
+| File                                       | Update when                                              |
+| ------------------------------------------ | -------------------------------------------------------- |
+| `docs/review/review-protocol.md`           | The review steps or severity rules change                |
+| `docs/review/domain-blockers.md`           | A new hard rule that must block merge is introduced      |
+| `.claude/skills/coding-standards/SKILL.md` | The canonical implementation standard changes            |
+| `.claude/docs/rules/*.md`                  | TypeScript / boundary / data-fetching conventions change |
+| `docs/backend/auth-and-supabase.md`        | Auth, RLS, or service-role patterns change               |
 
 ---
 

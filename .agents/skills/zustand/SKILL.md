@@ -18,14 +18,14 @@ Requires Zustand v5+. Zustand v4 is not supported due to breaking API changes in
 ## Usage
 
 ```tsx
-import { createStore } from "zustand/vanilla";
-import { zustandStateStore } from "@json-render/zustand";
-import { StateProvider } from "@json-render/react";
+import { createStore } from 'zustand/vanilla';
+import { zustandStateStore } from '@json-render/zustand';
+import { StateProvider } from '@json-render/react';
 
 // 1. Create a Zustand vanilla store
 const bearStore = createStore(() => ({
   count: 0,
-  name: "Bear",
+  name: 'Bear',
 }));
 
 // 2. Create the json-render StateStore adapter
@@ -34,7 +34,7 @@ const store = zustandStateStore({ store: bearStore });
 // 3. Use it
 <StateProvider store={store}>
   {/* json-render reads/writes go through Zustand */}
-</StateProvider>
+</StateProvider>;
 ```
 
 ### With a Nested Slice
@@ -58,8 +58,8 @@ const store = zustandStateStore({
 
 Creates a `StateStore` backed by a Zustand store.
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `store` | `StoreApi<S>` | Yes | Zustand vanilla store (from `createStore` in `zustand/vanilla`) |
-| `selector` | `(state) => StateModel` | No | Select the json-render slice. Defaults to entire state. |
-| `updater` | `(nextState, store) => void` | No | Apply next state to the store. Defaults to shallow merge. Override for nested slices, or use `(next, s) => s.setState(next, true)` for full replacement. |
+| Option     | Type                         | Required | Description                                                                                                                                              |
+| ---------- | ---------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `store`    | `StoreApi<S>`                | Yes      | Zustand vanilla store (from `createStore` in `zustand/vanilla`)                                                                                          |
+| `selector` | `(state) => StateModel`      | No       | Select the json-render slice. Defaults to entire state.                                                                                                  |
+| `updater`  | `(nextState, store) => void` | No       | Apply next state to the store. Defaults to shallow merge. Override for nested slices, or use `(next, s) => s.setState(next, true)` for full replacement. |

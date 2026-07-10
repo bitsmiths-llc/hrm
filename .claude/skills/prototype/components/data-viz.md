@@ -9,7 +9,7 @@ Charts and graphs. Color comes from `tokens/data-viz.json` (color-blind-aware ca
 ## Universal chart rules
 
 1. **Token-driven series color** — map series to `dataviz.categorical.*`; sequences to `dataviz.sequential.*`; +/− to `dataviz.diverging.*` / `dataviz.semantic.*`. Limit to ≤ 8 categorical series; beyond that, group "Other" or switch encoding.
-2. **Never color-alone** — pair series with **direct labels**, distinct markers/dash patterns, or texture. Provide a legend *and* on-hover labels.
+2. **Never color-alone** — pair series with **direct labels**, distinct markers/dash patterns, or texture. Provide a legend _and_ on-hover labels.
 3. **Axes & grid** — use `dataviz.axis.*` / `dataviz.grid.*` (low-contrast gridlines `~1.4:1` are acceptable as they are non-essential; axis text meets 4.5:1).
 4. **Motion** — entrance/transition from `tokens/motion.json` (`ease-out`, ≤ 300ms); animate value changes, not on every re-render. Honor `prefers-reduced-motion` (render final frame).
 5. **Accessible alternative** — every chart ships a text/table equivalent (visually-hidden `<table>` or `<figcaption>` summary) and a descriptive `aria-label`/`aria-labelledby`.

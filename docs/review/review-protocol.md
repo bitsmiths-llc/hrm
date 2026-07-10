@@ -45,19 +45,19 @@ Always load before reviewing (these are the canonical standard for this repo):
 
 Also load the extra context below for any path the diff touches:
 
-| Diff touches…                                  | Extra context                                                                                     |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `src/actions/**`                               | `docs/data/mutations-and-actions.md` — auth first via `authActionClient`, next-safe-action shape  |
-| `src/hooks/queries/**`, `src/hooks/mutations/**` | `docs/data/react-query.md` — `authQuery()`, central `QueryKeys`, invalidation on mutation        |
-| `src/lib/supabase/server.ts`                   | Server-only Supabase client — must never be imported by a `'use client'` module                   |
-| `src/lib/supabase/client.ts`                   | Browser client only — never carries the service-role key                                          |
-| `src/lib/server/safe-action.ts`                | `authActionClient` vs `safeActionClient` — auth gate lives here                                    |
-| `src/middleware.ts`, `src/lib/supabase/middleware.ts` | Session refresh + route protection; high blast radius — see `docs/backend/auth-and-supabase.md` |
-| `src/env.ts`                                    | t3-env — the ONLY place `process.env` may be read. Direct `process.env.X` elsewhere is a blocker  |
-| `src/types/supabase.ts`                         | Generated — OFF-LIMITS; regenerate with `pnpm supa:types`, never hand-edit                         |
-| `src/components/ui/**`                          | shadcn primitives — add via `pnpm ui add <component>`, never hand-edit                             |
-| `supabase/migrations/**`                        | Must be paired with a regenerated `src/types/supabase.ts` (`pnpm supa:types`)                      |
-| `src/app/**` (forms / tables)                   | `.claude/docs/ui/forms.md`, `.claude/docs/ui/data-tables.md`, `.claude/docs/ui/states.md`         |
+| Diff touches…                                         | Extra context                                                                                    |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `src/actions/**`                                      | `docs/data/mutations-and-actions.md` — auth first via `authActionClient`, next-safe-action shape |
+| `src/hooks/queries/**`, `src/hooks/mutations/**`      | `docs/data/react-query.md` — `authQuery()`, central `QueryKeys`, invalidation on mutation        |
+| `src/lib/supabase/server.ts`                          | Server-only Supabase client — must never be imported by a `'use client'` module                  |
+| `src/lib/supabase/client.ts`                          | Browser client only — never carries the service-role key                                         |
+| `src/lib/server/safe-action.ts`                       | `authActionClient` vs `safeActionClient` — auth gate lives here                                  |
+| `src/middleware.ts`, `src/lib/supabase/middleware.ts` | Session refresh + route protection; high blast radius — see `docs/backend/auth-and-supabase.md`  |
+| `src/env.ts`                                          | t3-env — the ONLY place `process.env` may be read. Direct `process.env.X` elsewhere is a blocker |
+| `src/types/supabase.ts`                               | Generated — OFF-LIMITS; regenerate with `pnpm supa:types`, never hand-edit                       |
+| `src/components/ui/**`                                | shadcn primitives — add via `pnpm ui add <component>`, never hand-edit                           |
+| `supabase/migrations/**`                              | Must be paired with a regenerated `src/types/supabase.ts` (`pnpm supa:types`)                    |
+| `src/app/**` (forms / tables)                         | `.claude/docs/ui/forms.md`, `.claude/docs/ui/data-tables.md`, `.claude/docs/ui/states.md`        |
 
 ---
 

@@ -20,8 +20,8 @@ Validation strategy before a user submits the form. The validation occurs during
 ```tsx
 useForm({
   defaultValues: {
-    firstName: "",
-    lastName: "",
+    firstName: '',
+    lastName: '',
   },
 });
 ```

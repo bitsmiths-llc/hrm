@@ -13,7 +13,7 @@
 Always use `{ error: "message" }` format to report error messages.
 
 ```tsx
-z.string().trim().min(5, { error: "Must be at least 5 characters." });
+z.string().trim().min(5, { error: 'Must be at least 5 characters.' });
 ```
 
 ### Strings
@@ -21,7 +21,7 @@ z.string().trim().min(5, { error: "Must be at least 5 characters." });
 When validating strings, always use `.trim()` to avoid leading/trailing whitespace issues.
 
 ```tsx
-z.string().trim().min(5, { error: "Must be at least 5 characters." });
+z.string().trim().min(5, { error: 'Must be at least 5 characters.' });
 ```
 
 Also, don't suggest a max value unless there is a specific reason for it.
@@ -31,20 +31,20 @@ When a string property is optional use a union instead of `.optional()` to ensur
 ```tsx
 z.string()
   .trim()
-  .min(5, { error: "Must be at least 5 characters." })
-  .or(z.literal(""));
+  .min(5, { error: 'Must be at least 5 characters.' })
+  .or(z.literal(''));
 ```
 
 To validate email addresses:
 
 ```tsx
-z.email({ error: "Please enter a valid email address" });
+z.email({ error: 'Please enter a valid email address' });
 ```
 
 To validate any WHATWG-compatible URL:
 
 ```tsx
-z.url({ error: "Invalid URL" });
+z.url({ error: 'Invalid URL' });
 ```
 
 ### Arrays
@@ -53,7 +53,7 @@ When an array property is required use the `.nonempty()` method to ensure proper
 
 ```tsx
 z.array(z.string().trim()).nonempty({
-  error: "At least one element must be provided",
+  error: 'At least one element must be provided',
 });
 ```
 

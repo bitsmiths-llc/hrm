@@ -77,14 +77,10 @@ import { useQuery } from 'react-query';
 import { fetchUser, User } from '@/services/api/users';
 
 export function useUser(userId: string) {
-  return useQuery<User, Error>(
-    ['user', userId],
-    () => fetchUser(userId),
-    {
-      enabled: !!userId,
-      staleTime: 1000 * 60 * 10, // 10 minutes
-    }
-  );
+  return useQuery<User, Error>(['user', userId], () => fetchUser(userId), {
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
 }
 ```
 
@@ -122,13 +118,9 @@ function UserProfile({ userId }: { userId: string }) {
 function useUserWithPosts(userId: string) {
   const userQuery = useUser(userId);
 
-  const postsQuery = useQuery(
-    ['posts', userId],
-    () => fetchUserPosts(userId),
-    {
-      enabled: !!userQuery.data,
-    }
-  );
+  const postsQuery = useQuery(['posts', userId], () => fetchUserPosts(userId), {
+    enabled: !!userQuery.data,
+  });
 
   return { userQuery, postsQuery };
 }
@@ -143,7 +135,7 @@ function usePaginatedUsers(page: number, limit: number = 10) {
     () => fetchUsers({ page, limit }),
     {
       keepPreviousData: true,
-    }
+    },
   );
 }
 ```
@@ -159,7 +151,7 @@ function useInfiniteUsers() {
     ({ pageParam = 1 }) => fetchUsers({ page: pageParam }),
     {
       getNextPageParam: (lastPage) => lastPage.nextPage ?? undefined,
-    }
+    },
   );
 }
 ```
@@ -203,7 +195,10 @@ function useUpdateUser() {
     },
     onError: (err, updatedUser, context) => {
       if (context?.previousUser) {
-        queryClient.setQueryData(['user', updatedUser.id], context.previousUser);
+        queryClient.setQueryData(
+          ['user', updatedUser.id],
+          context.previousUser,
+        );
       }
     },
     onSettled: (data, error, updatedUser) => {

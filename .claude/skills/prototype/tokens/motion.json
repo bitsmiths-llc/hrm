@@ -62,27 +62,47 @@
     "$description": "Composite presets — duration + easing pairs ready to apply. Reference these in components.",
     "micro": {
       "$type": "transition",
-      "$value": { "duration": "{duration.fast}", "timingFunction": "{easing.ease-out}", "delay": "0ms" },
+      "$value": {
+        "duration": "{duration.fast}",
+        "timingFunction": "{easing.ease-out}",
+        "delay": "0ms"
+      },
       "$description": "Hover/focus on atoms — buttons, links, inputs"
     },
     "default": {
       "$type": "transition",
-      "$value": { "duration": "{duration.base}", "timingFunction": "{easing.ease-out}", "delay": "0ms" },
+      "$value": {
+        "duration": "{duration.base}",
+        "timingFunction": "{easing.ease-out}",
+        "delay": "0ms"
+      },
       "$description": "General-purpose state change — the safe default"
     },
     "enter": {
       "$type": "transition",
-      "$value": { "duration": "{duration.moderate}", "timingFunction": "{easing.ease-out}", "delay": "0ms" },
+      "$value": {
+        "duration": "{duration.moderate}",
+        "timingFunction": "{easing.ease-out}",
+        "delay": "0ms"
+      },
       "$description": "Element entering the screen — modal open, toast appear, menu reveal"
     },
     "exit": {
       "$type": "transition",
-      "$value": { "duration": "{duration.base}", "timingFunction": "{easing.ease-in}", "delay": "0ms" },
+      "$value": {
+        "duration": "{duration.base}",
+        "timingFunction": "{easing.ease-in}",
+        "delay": "0ms"
+      },
       "$description": "Element leaving the screen — exits are faster than entrances"
     },
     "emphasis": {
       "$type": "transition",
-      "$value": { "duration": "{duration.moderate}", "timingFunction": "{easing.spring}", "delay": "0ms" },
+      "$value": {
+        "duration": "{duration.moderate}",
+        "timingFunction": "{easing.spring}",
+        "delay": "0ms"
+      },
       "$description": "Celebratory feedback — success states, confirmations"
     }
   },
@@ -100,17 +120,29 @@
     },
     "slide-up": {
       "$type": "other",
-      "$value": { "property": "transform, opacity", "from": "translateY(8px), 0", "to": "translateY(0), 1" },
+      "$value": {
+        "property": "transform, opacity",
+        "from": "translateY(8px), 0",
+        "to": "translateY(0), 1"
+      },
       "$description": "Subtle rise on entrance — popovers, toasts. Pair with fade."
     },
     "scale-in": {
       "$type": "other",
-      "$value": { "property": "transform, opacity", "from": "scale(0.96), 0", "to": "scale(1), 1" },
+      "$value": {
+        "property": "transform, opacity",
+        "from": "scale(0.96), 0",
+        "to": "scale(1), 1"
+      },
       "$description": "Modal/dialog entrance — grows from 96% to 100%"
     },
     "spin": {
       "$type": "other",
-      "$value": { "property": "transform", "from": "rotate(0deg)", "to": "rotate(360deg)" },
+      "$value": {
+        "property": "transform",
+        "from": "rotate(0deg)",
+        "to": "rotate(360deg)"
+      },
       "$description": "Loading spinner — use with duration 600–1000ms and linear easing"
     },
     "pulse": {

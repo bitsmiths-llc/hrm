@@ -17,6 +17,7 @@ Text input with a filtered list of suggestions.
 **States (8):** default, hover, focus, open (popup), selected/active-descendant, disabled, loading (fetching), error.
 
 **Accessibility (ARIA Combobox pattern):**
+
 - Input `role="combobox"`, `aria-expanded`, `aria-controls`, `aria-activedescendant`, `aria-autocomplete`.
 - Popup `role="listbox"`; options `role="option"` with `aria-selected`.
 - `↓/↑` move active option, `Enter` select, `Esc` close, `Home/End`; typing filters. Announce result count politely.
@@ -34,6 +35,7 @@ Custom-styled selection from a list (single or multi), groups, custom rendering.
 **States (8):** default, hover, focus, open, selected, disabled, loading, error (`state.error.border`).
 
 **Accessibility:**
+
 - Prefer native `<select>` when styling allows — free a11y. For custom: ARIA Listbox or Combobox pattern (above).
 - Trigger announces current value; `aria-expanded`; keyboard parity with native select (typeahead, arrows, `Esc`).
 
@@ -52,6 +54,7 @@ Select a value (or range) along a continuum.
 **States (8):** default, hover (thumb grows), focus (`focus-ring` on thumb), active (dragging), filled track, disabled, loading (n/a), error.
 
 **Accessibility (ARIA Slider pattern):**
+
 - Thumb `role="slider"`, `aria-valuenow/min/max`, `aria-valuetext` (human-readable, e.g. "$50"), `aria-label`.
 - `←/→/↑/↓` step, `Home/End`, `PageUp/PageDown` large step. Each thumb separately focusable in a range.
 - Visible current value; don't rely on position alone.
@@ -69,6 +72,7 @@ Pick a date, range, or time.
 **States (8):** default, hover (day cells), focus (focused day), selected (day/range endpoints + in-range fill), today marker, disabled days, loading, error (invalid input).
 
 **Accessibility:**
+
 - Text input accepts typed dates (don't force the calendar) — supports password managers / autofill where relevant.
 - Calendar = grid (`role="grid"`, `gridcell`); `←/→/↑/↓` by day/week, `PageUp/Down` month, `Home/End` week. Announce focused date; `aria-selected` on chosen.
 - Localized format; respect locale first-day-of-week.
@@ -86,6 +90,7 @@ Add files via button or drag-and-drop.
 **States (8):** default, hover, focus (keyboard), drag-over (active dropzone), uploading (per-file progress), success, disabled, error (rejected type/size — say which + the limit).
 
 **Accessibility:**
+
 - Real `<input type="file">` reachable by keyboard (drag-drop is an enhancement, never the only path).
 - Each file row labeled; remove = labeled button. Progress via `role="progressbar"`.
 - Errors explain the constraint and how to fix (`content/voice-tone.md`).

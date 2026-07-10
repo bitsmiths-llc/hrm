@@ -10,8 +10,16 @@
     "4": { "$type": "color", "$value": "#D81B7A", "$description": "Magenta" },
     "5": { "$type": "color", "$value": "#7C3AED", "$description": "Purple" },
     "6": { "$type": "color", "$value": "#0891B2", "$description": "Cyan" },
-    "7": { "$type": "color", "$value": "#B45309", "$description": "Brown/amber" },
-    "8": { "$type": "color", "$value": "#64748B", "$description": "Slate (neutral series)" }
+    "7": {
+      "$type": "color",
+      "$value": "#B45309",
+      "$description": "Brown/amber"
+    },
+    "8": {
+      "$type": "color",
+      "$value": "#64748B",
+      "$description": "Slate (neutral series)"
+    }
   },
 
   "sequential": {
@@ -34,16 +42,30 @@
 
   "semantic": {
     "$description": "Outcome-coded series (gains vs. losses). Distinct from feedback tokens so charts theme independently.",
-    "positive": { "$type": "color", "$value": "{dataviz.diverging.positive-strong}" },
-    "negative": { "$type": "color", "$value": "{dataviz.diverging.negative-strong}" },
+    "positive": {
+      "$type": "color",
+      "$value": "{dataviz.diverging.positive-strong}"
+    },
+    "negative": {
+      "$type": "color",
+      "$value": "{dataviz.diverging.negative-strong}"
+    },
     "neutral": { "$type": "color", "$value": "#64748B" }
   },
 
   "axis": {
     "$description": "Axis lines, ticks, and labels.",
-    "line": { "$type": "color", "$value": "{semantic.border.strong}", "$description": "Baseline/zero axis" },
+    "line": {
+      "$type": "color",
+      "$value": "{semantic.border.strong}",
+      "$description": "Baseline/zero axis"
+    },
     "tick": { "$type": "color", "$value": "{semantic.border.default}" },
-    "label": { "$type": "color", "$value": "{semantic.text.secondary}", "$description": "Meets 4.5:1 — axis labels are essential text" }
+    "label": {
+      "$type": "color",
+      "$value": "{semantic.text.secondary}",
+      "$description": "Meets 4.5:1 — axis labels are essential text"
+    }
   },
 
   "grid": {
@@ -53,7 +75,11 @@
   },
 
   "surface": {
-    "tooltip-bg": { "$type": "color", "$value": "{primitive.gray.900}", "$description": "Dark tooltip surface (inverse of page)" },
+    "tooltip-bg": {
+      "$type": "color",
+      "$value": "{primitive.gray.900}",
+      "$description": "Dark tooltip surface (inverse of page)"
+    },
     "tooltip-text": { "$type": "color", "$value": "{semantic.text.on-dark}" },
     "plot-bg": { "$type": "color", "$value": "{semantic.surface.page}" }
   }

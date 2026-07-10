@@ -35,7 +35,7 @@ export async function sendInviteEmail({
         <p style="margin: 32px 0;">
           <a
             href="${inviteUrl}"
-            style="background: #111827; color: #ffffff; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;"
+            style="background: #04CD77; color: #ffffff; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;"
           >
             Accept invitation
           </a>
