@@ -20,7 +20,6 @@ export const paths = {
   },
   admin: {
     dashboard: '/admin',
-    onboarding: '/admin/onboarding',
     approvals: '/admin/approvals',
     employees: '/admin/employees',
     payroll: '/admin/payroll',

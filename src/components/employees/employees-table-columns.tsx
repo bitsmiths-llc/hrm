@@ -15,6 +15,10 @@ import { EmployeesTableRowActions } from './employees-table-row-actions';
 
 import { Employee } from '@/types/hrm';
 
+// None of the directory's columns hold numeric/ordered data, so none carry a
+// sort control — the sort chevrons are dropped (`enableSorting: false`) and each
+// header renders as a plain label aligned to its cell (Name left, the rest
+// centered). Finding a row is search- and filter-driven instead.
 export function useEmployeesTableColumns() {
   return useMemo<ColumnDef<Employee>[]>(
     () => [
@@ -24,7 +28,11 @@ export function useEmployeesTableColumns() {
         // indexes column values) matches on either.
         accessorFn: (row) => `${row.fullName} ${row.email}`,
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Name' />
+          <DataTableColumnHeader
+            column={column}
+            title='Name'
+            className='text-left'
+          />
         ),
         cell: ({ row }) => (
           <div className='flex max-w-[220px] flex-col'>
@@ -36,6 +44,7 @@ export function useEmployeesTableColumns() {
             </span>
           </div>
         ),
+        enableSorting: false,
       },
       {
         accessorKey: 'designation',
@@ -48,6 +57,7 @@ export function useEmployeesTableColumns() {
             formatter={(value) => (value as string) || '—'}
           />
         ),
+        enableSorting: false,
       },
       {
         accessorKey: 'department',
@@ -60,6 +70,7 @@ export function useEmployeesTableColumns() {
             formatter={(value) => (value as string) || '—'}
           />
         ),
+        enableSorting: false,
         filterFn: (row, id, value: string[]) =>
           value.includes(row.getValue(id)),
       },
@@ -76,6 +87,7 @@ export function useEmployeesTableColumns() {
             }
           />
         ),
+        enableSorting: false,
         filterFn: (row, id, value: string[]) =>
           value.includes(row.getValue(id)),
       },
@@ -89,6 +101,7 @@ export function useEmployeesTableColumns() {
             <StatusBadge status={row.original.status} />
           </div>
         ),
+        enableSorting: false,
         filterFn: (row, id, value: string[]) =>
           value.includes(row.getValue(id)),
       },
@@ -104,6 +117,7 @@ export function useEmployeesTableColumns() {
             className='whitespace-nowrap'
           />
         ),
+        enableSorting: false,
       },
       {
         id: 'actions',

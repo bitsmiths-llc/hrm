@@ -22,6 +22,7 @@ import { AdminContactDialog } from './admin-contact-dialog';
 import { AdminSocialsDialog } from './admin-socials-dialog';
 import { EmployeeDocuments } from './employee-documents';
 import { EmploymentConfigForm } from './employment-config-form';
+import { EmployeeReviewActions } from './review-actions';
 
 type EmployeeDetailProps = {
   employeeId: string;
@@ -69,7 +70,12 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
         title={employee.fullName || employee.email}
         description={`${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`}
       >
-        <StatusBadge status={employee.status} />
+        <div className='flex items-center gap-3'>
+          <StatusBadge status={employee.status} />
+          {employee.status === 'submitted' && (
+            <EmployeeReviewActions employee={employee} />
+          )}
+        </div>
       </PageHeader>
 
       {!!employee.reviewNote && (

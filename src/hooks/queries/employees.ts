@@ -86,19 +86,6 @@ const fetchEmployee = authQuery(
   { paramsSchema: z.object({ id: z.string() }) },
 );
 
-// The onboarding review queue: employees who submitted and are awaiting an
-// admin decision. Same join/shape as the directory, filtered to `submitted`
-// and latest-first so the most recent submission surfaces at the top.
-const fetchOnboardingQueue = authQuery(async ({ supabase }) => {
-  const { data, error } = await supabase
-    .from('employees')
-    .select('*, employment_details(*), bank_details(*), socials(*)')
-    .eq('account_status', 'submitted')
-    .order('consent_at', { ascending: false });
-  if (error) throw new Error(error.message);
-  return data.map(toEmployee);
-});
-
 export const useEmployees = () => {
   return useQuery({
     queryKey: [QueryKeys.EMPLOYEES],
@@ -110,14 +97,6 @@ export const useEmployee = (id: string) => {
   return useQuery({
     queryKey: [QueryKeys.EMPLOYEES, id],
     queryFn: () => fetchEmployee({ id }),
-  });
-};
-
-/** Employees awaiting onboarding review (admin, via RLS employees_select_admin). */
-export const useOnboardingQueue = () => {
-  return useQuery({
-    queryKey: [QueryKeys.ONBOARDING_QUEUE],
-    queryFn: () => fetchOnboardingQueue(),
   });
 };
 

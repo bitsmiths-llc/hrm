@@ -9,12 +9,12 @@ import { onError } from '@/lib/show-error-toast';
 
 import { QueryKeys } from '@/constants/query-keys';
 
-/** Shared invalidation: an approve/return changes the queue and the directory
- *  (the row moves out of `submitted`), so both caches are refreshed. */
+/** Shared invalidation: an approve/return moves the row out of `submitted`, so
+ *  the directory list and — since the detail query is keyed `[EMPLOYEES, id]`,
+ *  a prefix of this key — the open employee detail page both refresh. */
 function useInvalidateReview() {
   const queryClient = useQueryClient();
   return () => {
-    queryClient.invalidateQueries({ queryKey: [QueryKeys.ONBOARDING_QUEUE] });
     queryClient.invalidateQueries({ queryKey: [QueryKeys.EMPLOYEES] });
   };
 }

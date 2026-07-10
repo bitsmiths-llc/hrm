@@ -40,7 +40,8 @@ type ReturnOnboardingDialogProps = {
 
 /** Returns a submission to onboarding with a required note. The note becomes the
  *  employee's `review_note` — surfaced on their onboarding wizard so they know
- *  what to fix. */
+ *  what to fix. Surfaced from the employees table row and the employee detail
+ *  page for `submitted` employees. */
 export function ReturnOnboardingDialog({
   employeeId,
   employeeName,
