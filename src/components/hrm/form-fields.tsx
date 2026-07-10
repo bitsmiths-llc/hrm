@@ -22,7 +22,10 @@ export type TextFieldConfig<TName extends string = string> = {
   placeholder?: string;
   /** `digits` allows digits only; `cnic` auto-inserts dashes. */
   mask?: 'digits' | 'cnic';
-  maxLength?: number;
+  /** Character cap. Pass a function of the current value when the cap depends on
+   *  what's been typed (e.g. a Pakistan mobile number starting with 0 caps at
+   *  11 digits, an international one at 15). */
+  maxLength?: number | ((value: string) => number);
   /** Span both columns in a 2-column grid layout. */
   fullWidth?: boolean;
 };
@@ -47,30 +50,37 @@ export function ControlledTextField<T extends FieldValues>({
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem className={cn('flex flex-col', fullWidth && 'sm:col-span-2')}>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            {mask ? (
-              <MaskedInput
-                mask={mask}
-                maxLength={maxLength}
-                placeholder={placeholder}
-                {...field}
-                value={field.value ?? ''}
-              />
-            ) : (
-              <Input
-                maxLength={maxLength}
-                placeholder={placeholder}
-                {...field}
-                value={field.value ?? ''}
-              />
-            )}
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        const value = String(field.value ?? '');
+        const currentMaxLength =
+          typeof maxLength === 'function' ? maxLength(value) : maxLength;
+        return (
+          <FormItem
+            className={cn('flex flex-col', fullWidth && 'sm:col-span-2')}
+          >
+            <FormLabel>{label}</FormLabel>
+            <FormControl>
+              {mask ? (
+                <MaskedInput
+                  mask={mask}
+                  maxLength={currentMaxLength}
+                  placeholder={placeholder}
+                  {...field}
+                  value={value}
+                />
+              ) : (
+                <Input
+                  maxLength={currentMaxLength}
+                  placeholder={placeholder}
+                  {...field}
+                  value={value}
+                />
+              )}
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }

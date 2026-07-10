@@ -27,7 +27,7 @@ export const inviteEmployeeSchema = z.object({
 export type InviteEmployeeInput = z.infer<typeof inviteEmployeeSchema>;
 
 export const employmentConfigSchema = z.object({
-  employmentType: z.enum(['full_time', 'part_time'], {
+  employmentType: z.enum(['full_time', 'part_time', 'contract', 'internship'], {
     required_error: 'Select an employment type',
   }),
   baseSalary: z.coerce

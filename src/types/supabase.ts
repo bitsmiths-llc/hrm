@@ -252,7 +252,7 @@ export type Database = {
     };
     Enums: {
       account_status: 'invited' | 'onboarding' | 'submitted' | 'active';
-      employment_type: 'full_time' | 'part_time';
+      employment_type: 'full_time' | 'part_time' | 'contract' | 'internship';
       user_role: 'admin' | 'employee';
     };
     CompositeTypes: {
@@ -385,7 +385,7 @@ export const Constants = {
   public: {
     Enums: {
       account_status: ['invited', 'onboarding', 'submitted', 'active'],
-      employment_type: ['full_time', 'part_time'],
+      employment_type: ['full_time', 'part_time', 'contract', 'internship'],
       user_role: ['admin', 'employee'],
     },
   },

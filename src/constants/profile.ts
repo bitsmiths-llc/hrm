@@ -1,10 +1,11 @@
 import { type TextFieldConfig } from '@/components/hrm/form-fields';
 
+import { phoneMaxLength } from '@/schema/common';
 import {
   type ContactInfoInput,
   type PersonalDetailsInput,
 } from '@/schema/employee';
-import { type BankInfoInput } from '@/schema/onboarding';
+import { type BankInfoInput, PK_IBAN_LENGTH } from '@/schema/onboarding';
 
 /** Identity text fields an admin self-edits (name + CNIC). Date of birth is a
  *  separate picker, rendered between them, so it isn't listed here. CNIC
@@ -30,14 +31,14 @@ export const contactInfoFields: TextFieldConfig<keyof ContactInfoInput>[] = [
     label: 'Phone number',
     placeholder: '03001234567',
     mask: 'digits',
-    maxLength: 15,
+    maxLength: phoneMaxLength,
   },
   {
     name: 'emergencyContact',
     label: 'Emergency contact number',
     placeholder: '03017654321',
     mask: 'digits',
-    maxLength: 15,
+    maxLength: phoneMaxLength,
   },
   {
     name: 'address',
@@ -65,6 +66,6 @@ export const bankInfoFields: TextFieldConfig<keyof BankInfoInput>[] = [
     mask: 'digits',
     maxLength: 20,
   },
-  { name: 'iban', label: 'IBAN' },
+  { name: 'iban', label: 'IBAN', maxLength: PK_IBAN_LENGTH },
   { name: 'branch', label: 'Bank branch (optional)' },
 ];

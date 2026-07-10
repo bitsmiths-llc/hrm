@@ -1,6 +1,7 @@
 'use client';
 
 import { ExternalLink } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { type IdentityDocFile } from '@/hooks/queries/onboarding';
 
@@ -24,10 +25,12 @@ const FRAME =
 
 /**
  * Shows an uploaded identity document fitted whole into a fixed frame — no
- * cropping, no scrolling. Images render with object-contain; PDFs embed the
- * first page fitted to the frame with the viewer's toolbar/scrollbars hidden,
- * plus an "Open" affordance for the full document. Renders nothing until a file
- * exists, so callers can drop it in unconditionally.
+ * cropping, no scrolling. The frame is rendered up-front and a skeleton fills it
+ * until the media has actually decoded (not just until the query resolved), so
+ * it never flashes borderless → bordered → empty → image. Images render with
+ * object-contain; PDFs embed the first page fitted with the viewer chrome
+ * hidden, plus an "Open" affordance. Renders nothing until there's something to
+ * show.
  */
 export function DocumentPreview({
   file,
@@ -35,49 +38,68 @@ export function DocumentPreview({
   isLoading,
   className,
 }: DocumentPreviewProps) {
-  if (isLoading) {
-    return <Skeleton className={cn('h-56 w-full rounded-lg', className)} />;
-  }
-  if (!file?.url) return null;
+  const url = file?.url;
+  const isPdf = !!file && file.mimeType.includes('pdf');
+  const [loaded, setLoaded] = useState(false);
 
-  if (file.mimeType.includes('pdf')) {
-    return (
-      <div className={cn(FRAME, className)}>
-        <iframe
-          title={label}
-          // Fit the whole page to the frame and hide the viewer chrome so the
-          // preview shows the document, not a scrollable mini-app.
-          src={`${file.url}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
-          className='h-full w-full'
-        />
-        <Button
-          asChild
-          size='sm'
-          variant='secondary'
-          className='absolute bottom-2 right-2 gap-1.5 shadow-sm'
-        >
-          <a href={file.url} target='_blank' rel='noreferrer'>
-            <ExternalLink />
-            Open
-          </a>
-        </Button>
-      </div>
-    );
-  }
+  // A fresh signed URL (e.g. after replacing the file) is a new document to
+  // load, so fall back to the skeleton until it has rendered again.
+  useEffect(() => {
+    setLoaded(false);
+  }, [url]);
+
+  if (!isLoading && !url) return null;
+
+  const fade = cn(
+    'transition-opacity duration-200',
+    loaded ? 'opacity-100' : 'opacity-0',
+  );
 
   return (
-    <a
-      href={file.url}
-      target='_blank'
-      rel='noreferrer'
-      className={cn(FRAME, 'transition-colors hover:bg-muted/50', className)}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element -- private signed Supabase URL, not a static asset; the Next image optimizer must not proxy/cache identity documents */}
-      <img
-        src={file.url}
-        alt={label}
-        className='max-h-full max-w-full object-contain'
-      />
-    </a>
+    <div className={cn(FRAME, className)}>
+      {(isLoading || !loaded) && <Skeleton className='absolute inset-0' />}
+
+      {url &&
+        (isPdf ? (
+          <>
+            <iframe
+              title={label}
+              // Fit the whole page to the frame and hide the viewer chrome so
+              // the preview shows the document, not a scrollable mini-app.
+              src={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
+              onLoad={() => setLoaded(true)}
+              className={cn('h-full w-full', fade)}
+            />
+            {loaded && (
+              <Button
+                asChild
+                size='sm'
+                variant='secondary'
+                className='absolute bottom-2 right-2 gap-1.5 shadow-sm'
+              >
+                <a href={url} target='_blank' rel='noreferrer'>
+                  <ExternalLink />
+                  Open
+                </a>
+              </Button>
+            )}
+          </>
+        ) : (
+          <a
+            href={url}
+            target='_blank'
+            rel='noreferrer'
+            className='flex h-full w-full items-center justify-center transition-colors hover:bg-muted/50'
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- private signed Supabase URL, not a static asset; the Next image optimizer must not proxy/cache identity documents */}
+            <img
+              src={url}
+              alt={label}
+              onLoad={() => setLoaded(true)}
+              className={cn('max-h-full max-w-full object-contain', fade)}
+            />
+          </a>
+        ))}
+    </div>
   );
 }

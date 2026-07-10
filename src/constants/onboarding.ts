@@ -1,9 +1,11 @@
 import { type TextFieldConfig } from '@/components/hrm/form-fields';
 
+import { phoneMaxLength } from '@/schema/common';
 import {
   type BankInfoInput,
   type DocType,
   type PersonalInfoInput,
+  PK_IBAN_LENGTH,
   type SocialAccountsInput,
 } from '@/schema/onboarding';
 
@@ -28,14 +30,14 @@ export const personalInfoFields: TextFieldConfig<
     label: 'Phone number',
     placeholder: '03001234567',
     mask: 'digits',
-    maxLength: 15,
+    maxLength: phoneMaxLength,
   },
   {
     name: 'emergencyContact',
     label: 'Emergency contact number',
     placeholder: '03017654321',
     mask: 'digits',
-    maxLength: 15,
+    maxLength: phoneMaxLength,
   },
   {
     name: 'cnic',
@@ -75,7 +77,12 @@ export const bankInfoFields: TextFieldConfig<keyof BankInfoInput>[] = [
     mask: 'digits',
     maxLength: 20,
   },
-  { name: 'iban', label: 'IBAN', placeholder: 'PK36MEZN0001234567890123' },
+  {
+    name: 'iban',
+    label: 'IBAN',
+    placeholder: 'PK36MEZN0001234567890123',
+    maxLength: PK_IBAN_LENGTH,
+  },
   {
     name: 'branch',
     label: 'Bank branch (optional)',

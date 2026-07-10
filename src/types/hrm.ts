@@ -8,7 +8,11 @@ export type AccountStatus = 'invited' | 'onboarding' | 'submitted' | 'active';
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
-export type EmploymentType = 'full_time' | 'part_time';
+export type EmploymentType =
+  | 'full_time'
+  | 'part_time'
+  | 'contract'
+  | 'internship';
 
 /** Paid, Sick, and Half Day draw from the shared 22-day pool (half day = 0.5).
  *  Unpaid is separate, uncapped, and the only type that prorates pay. */

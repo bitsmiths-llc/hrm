@@ -145,6 +145,12 @@ export const useIdentityDocFiles = (ownerId: string) =>
   useQuery({
     queryKey: [QueryKeys.IDENTITY_DOC_FILES, ownerId],
     enabled: !!ownerId,
+    // Each fetch mints fresh signed URLs, so refetching swaps the <img>/<iframe>
+    // src and reloads the preview. Keep the URLs stable for most of their TTL
+    // (and don't refetch on focus) so previews don't flicker mid-session; the
+    // upload mutation still invalidates this key to surface a replaced file.
+    staleTime: (SIGNED_URL_TTL_SECONDS - 5 * 60) * 1000,
+    refetchOnWindowFocus: false,
     queryFn: async (): Promise<Partial<Record<DocType, IdentityDocFile>>> => {
       const supabase = createSupabaseBrowserClient();
       const { data: files, error } = await supabase.storage

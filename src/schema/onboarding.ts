@@ -25,6 +25,11 @@ export const personalInfoSchema = z
 
 export type PersonalInfoInput = z.infer<typeof personalInfoSchema>;
 
+/** A Pakistan IBAN is a fixed 24 characters: PK + 2 check digits + 4-letter
+ *  bank code + 16 digits — the shape the `iban` regex below pins. Exported as
+ *  the matching keystroke `maxLength` for the IBAN input. */
+export const PK_IBAN_LENGTH = 24;
+
 export const bankInfoSchema = z.object({
   bankName: z.string().min(2, 'Enter your bank name'),
   accountHolderName: z.string().min(2, 'Enter the account holder name'),
