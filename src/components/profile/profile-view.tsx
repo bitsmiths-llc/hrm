@@ -30,6 +30,9 @@ type ProfileViewProps = {
    *  employee's own profile shows them read-only. Admins have no admin above
    *  them, so their profile enables self-editing. Defaults to read-only. */
   canEditPersonal?: boolean;
+  /** Identity documents are collected during onboarding, which admins never go
+   *  through — so their profile omits the documents card. Defaults to shown. */
+  showDocuments?: boolean;
 };
 
 /** Self-service profile: the signed-in user views their own data and edits
@@ -38,6 +41,7 @@ type ProfileViewProps = {
 export function ProfileView({
   showEmployment = true,
   canEditPersonal = false,
+  showDocuments = true,
 }: ProfileViewProps) {
   const { data: employee, isLoading } = useMyProfile();
 
@@ -158,7 +162,7 @@ export function ProfileView({
         ]}
       />
 
-      <EmployeeDocuments employeeId={employee.id} />
+      {showDocuments && <EmployeeDocuments employeeId={employee.id} />}
 
       {showEmployment && <EmploymentReadonly employee={employee} />}
     </>

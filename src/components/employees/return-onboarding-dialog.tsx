@@ -36,17 +36,31 @@ import {
 type ReturnOnboardingDialogProps = {
   employeeId: string;
   employeeName: string;
+  /** Controlled mode: when `open`/`onOpenChange` are provided the dialog renders
+   *  without its own trigger button and is opened by the caller (e.g. from a
+   *  row's actions menu). Omit them for the standalone "Return" button. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 /** Returns a submission to onboarding with a required note. The note becomes the
  *  employee's `review_note` — surfaced on their onboarding wizard so they know
- *  what to fix. Surfaced from the employees table row and the employee detail
- *  page for `submitted` employees. */
+ *  what to fix. Surfaced from the employees table row (controlled, via the
+ *  actions menu) and the employee detail page (its own trigger button) for
+ *  `submitted` employees. */
 export function ReturnOnboardingDialog({
   employeeId,
   employeeName,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ReturnOnboardingDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (next: boolean) => {
+    if (isControlled) controlledOnOpenChange?.(next);
+    else setInternalOpen(next);
+  };
 
   const form = useForm<ReturnOnboardingInput>({
     resolver: zodResolver(returnOnboardingSchema),
@@ -61,11 +75,13 @@ export function ReturnOnboardingDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant='outline' size='sm' iconLeft={RotateCcw}>
-          Return
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button variant='outline' size='sm' iconLeft={RotateCcw}>
+            Return
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Return for changes</DialogTitle>

@@ -34,7 +34,29 @@ async function notifyAdminsOfSubmission(employeeId: string) {
       .eq('role', 'admin'),
   ]);
 
-  if (!employee || !admins?.length) return;
+  if (!employee) return;
+
+  // Recipients = every admin-role employee plus the always-notify address(es)
+  // from config, deduped by lowercased email so an address that also holds an
+  // admin role isn't emailed twice.
+  const seen = new Set<string>();
+  const recipients = [
+    ...(admins ?? []).map((admin) => ({
+      email: admin.email,
+      name: admin.full_name as string | null,
+    })),
+    ...appConfig.emails.onboardingNotify.map((email) => ({
+      email,
+      name: null,
+    })),
+  ].filter(({ email }) => {
+    const key = email.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  if (!recipients.length) return;
 
   const employeeName = employee.full_name || employee.email;
   const reviewUrl = new URL(
@@ -43,10 +65,10 @@ async function notifyAdminsOfSubmission(employeeId: string) {
   ).toString();
 
   await Promise.all(
-    admins.map((admin) =>
+    recipients.map((recipient) =>
       sendOnboardingSubmittedEmail({
-        to: admin.email,
-        adminName: admin.full_name,
+        to: recipient.email,
+        adminName: recipient.name,
         employeeName,
         employeeEmail: employee.email,
         reviewUrl,
