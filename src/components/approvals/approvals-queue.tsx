@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -10,15 +11,17 @@ import {
   useAllOvertimeLogs,
 } from '@/hooks/queries/approvals';
 
-import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { DetailSheet } from '@/components/hrm/detail-sheet';
 import { EmptyState } from '@/components/hrm/empty-state';
+import { RejectRequestDialog } from '@/components/hrm/reject-request-dialog';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { ProofFilesList } from '@/components/medical/proof-files-list';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+import { QueryKeys } from '@/constants/query-keys';
 
 import {
   type ApprovalItem,
@@ -29,15 +32,31 @@ import {
   overtimeToItem,
 } from './approval-items';
 
+import { RequestStatus } from '@/types/hrm';
+
 type Decision = 'approved' | 'rejected';
 
+/** Just the fields every rejectable record shares — enough to update status
+ *  and reason without needing a kind-specific type per query key family. */
+type RejectableRecord = {
+  id: string;
+  status: RequestStatus;
+  rejectionReason: string | null;
+};
+
+const queryKeyByKind: Record<ApprovalKind, QueryKeys> = {
+  leave: QueryKeys.LEAVE_REQUESTS,
+  medical: QueryKeys.MEDICAL_CLAIMS,
+  overtime: QueryKeys.OVERTIME_LOGS,
+};
+
 export function ApprovalsQueue() {
+  const queryClient = useQueryClient();
   const leave = useAllLeaveRequests();
   const medical = useAllMedicalClaims();
   const overtime = useAllOvertimeLogs();
 
   const [tab, setTab] = useState<'all' | ApprovalKind>('all');
-  const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [selected, setSelected] = useState<ApprovalItem | null>(null);
 
   const isLoading = leave.isLoading || medical.isLoading || overtime.isLoading;
@@ -49,15 +68,31 @@ export function ApprovalsQueue() {
       ...(overtime.data ?? []).map(overtimeToItem),
     ];
     return all
-      .filter((item) => item.status === 'pending' && !decisions[item.id])
+      .filter((item) => item.status === 'pending')
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  }, [leave.data, medical.data, overtime.data, decisions]);
+  }, [leave.data, medical.data, overtime.data]);
 
   const visible =
     tab === 'all' ? pending : pending.filter((item) => item.kind === tab);
 
-  const decide = (item: ApprovalItem, decision: Decision) => {
-    setDecisions((prev) => ({ ...prev, [item.id]: decision }));
+  const decide = (item: ApprovalItem, decision: Decision, reason?: string) => {
+    // Partial-key match updates both the admin's all-records cache entry
+    // and each employee's own per-employee cache entry in one pass — see
+    // the equivalent reasoning in hooks/queries/settings.ts.
+    queryClient.setQueriesData<RejectableRecord[]>(
+      { queryKey: [queryKeyByKind[item.kind]] },
+      (old) =>
+        old?.map((record) =>
+          record.id === item.id
+            ? {
+                ...record,
+                status: decision,
+                rejectionReason:
+                  decision === 'rejected' ? (reason ?? null) : null,
+              }
+            : record,
+        ),
+    );
     setSelected(null);
     toast.success(
       `${item.title} from ${item.employeeName} ${decision === 'approved' ? 'approved' : 'rejected'}`,
@@ -139,17 +174,15 @@ export function ApprovalsQueue() {
           ]}
           footer={
             <div className='flex w-full gap-2'>
-              <ConfirmDialog
+              <RejectRequestDialog
                 trigger={
                   <Button variant='destructive' className='flex-1'>
                     Reject
                   </Button>
                 }
                 title={`Reject this ${approvalKindLabels[selected.kind].toLowerCase()} request?`}
-                description={`${selected.employeeName} will see the request as rejected.`}
-                confirmLabel='Reject request'
-                destructive
-                onConfirm={() => decide(selected, 'rejected')}
+                description={`${selected.employeeName} will see the request as rejected, along with your reason.`}
+                onConfirm={(reason) => decide(selected, 'rejected', reason)}
               />
               <Button
                 className='flex-1'

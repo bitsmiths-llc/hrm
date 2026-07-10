@@ -69,17 +69,9 @@ export function useEmployeesTableColumns() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader
-            column={column}
-            title='Status'
-            align='center'
-          />
+          <DataTableColumnHeader column={column} title='Status' />
         ),
-        cell: ({ row }) => (
-          <div className='flex justify-center'>
-            <StatusBadge status={row.original.status} />
-          </div>
-        ),
+        cell: ({ row }) => <StatusBadge status={row.original.status} />,
         filterFn: (row, id, value: string[]) =>
           value.includes(row.getValue(id)),
       },

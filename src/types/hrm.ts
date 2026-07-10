@@ -88,6 +88,8 @@ export type LeaveRequest = {
   startDate: string;
   days: number; // 0.5 for half day
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee. */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -102,6 +104,8 @@ export type MedicalClaim = {
   expenseDate: string;
   proofFiles: string[]; // file names/URLs
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee. */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -114,6 +118,8 @@ export type OvertimeLog = {
   project: string;
   task: string;
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee. */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -132,6 +138,9 @@ export type Payslip = {
    *  while the cycle is open — frozen here once the cycle is locked. */
   overtimeMultiplier: number;
   overtimePay: number;
+  /** Ad-hoc per-employee line items (bonus, deduction, etc.) admin adds
+   *  during the cycle — each folds into `total`. */
+  customFields: { label: string; amount: number }[];
   total: number;
 };
 
@@ -156,6 +165,12 @@ export type HrmSettings = {
   medicalMonthlyAccrual: number;
   /** Absolute cap on accrued medical allowance, in PKR. */
   medicalBalanceCap: number;
+};
+
+/** Admin-managed list employees pick from when logging overtime. */
+export type Project = {
+  id: string;
+  name: string;
 };
 
 export type Policy = {
