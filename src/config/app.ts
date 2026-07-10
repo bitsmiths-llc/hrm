@@ -14,7 +14,9 @@ export const appConfig = {
   appName: env.NEXT_PUBLIC_APP_NAME,
   emails: {
     support: 'support@bitsmiths.studio',
-    sender: 'noreply@bitsmiths.studio',
+    // People-facing invites read better from a human-sounding, monitored
+    // address than from `noreply@`. Replies are routed to `support` above.
+    sender: 'Bitsmiths HRM <people@bitsmiths.studio>',
   },
 } as const;
 

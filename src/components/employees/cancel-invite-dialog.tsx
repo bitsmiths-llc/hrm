@@ -1,7 +1,5 @@
 'use client';
 
-import { X } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { useCancelInvite } from '@/hooks/actions/use-invite-employee';
@@ -14,35 +12,33 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 
 type CancelInviteDialogProps = {
   employeeId: string;
   employeeName: string;
+  /** Controlled by the caller — the trigger lives in the row's actions menu, so
+   *  the dialog is rendered outside that menu and opened via these props. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 };
 
 /** Confirmation for revoking a pending invitation. It's destructive — the
  *  invitee's account is deleted outright — so it's gated behind an explicit
- *  confirm rather than firing straight from the row. */
+ *  confirm rather than firing straight from the menu. */
 export function CancelInviteDialog({
   employeeId,
   employeeName,
+  open,
+  onOpenChange,
 }: CancelInviteDialogProps) {
-  const [open, setOpen] = useState(false);
-
   const { execute, isPending } = useCancelInvite(() => {
     toast.success(`Invitation for ${employeeName} cancelled`);
-    setOpen(false);
+    onOpenChange(false);
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant='ghost' size='sm' iconLeft={X}>
-          Cancel
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Cancel invitation</DialogTitle>
@@ -56,7 +52,7 @@ export function CancelInviteDialog({
           <Button
             type='button'
             variant='outline'
-            onClick={() => setOpen(false)}
+            onClick={() => onOpenChange(false)}
           >
             Keep invitation
           </Button>
