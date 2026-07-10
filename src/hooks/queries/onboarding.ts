@@ -12,6 +12,7 @@ import {
   type SocialAccountsInput,
 } from '@/schema/onboarding';
 
+import { type AccountStatus } from '@/types/hrm';
 import { type Tables } from '@/types/supabase';
 
 /** The caller's saved onboarding values, mapped from the DB columns back onto
@@ -67,6 +68,32 @@ const fetchOnboarding = authQuery<undefined, OnboardingData>(
     };
   },
 );
+
+const fetchAccountStatus = authQuery<undefined, AccountStatus | null>(
+  async ({ supabase, user }) => {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('account_status')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data?.account_status as AccountStatus | undefined) ?? null;
+  },
+);
+
+/**
+ * Polls the caller's own `account_status` while they sit on the pending page.
+ * An admin's approve (→ active) or return (→ onboarding) decision updates the
+ * row out-of-band, so this is how the waiting employee learns of it without a
+ * manual re-login — the `PendingStatusWatcher` reacts to the change.
+ */
+export const usePendingAccountStatus = () =>
+  useQuery({
+    queryKey: [QueryKeys.PENDING_STATUS],
+    queryFn: () => fetchAccountStatus(),
+    refetchInterval: 12_000,
+    refetchOnWindowFocus: true,
+  });
 
 /** Section 1–3 saved values for the onboarding wizard (self, via RLS). */
 export const useOnboardingData = () =>
