@@ -41,6 +41,7 @@ export const mockPayslips: Payslip[] = [
     overtimeHours: 0,
     overtimeMultiplier: 1.5,
     overtimePay: 0,
+    customFields: [],
     total: 256_200,
   },
   {
@@ -56,6 +57,7 @@ export const mockPayslips: Payslip[] = [
     overtimeHours: 4,
     overtimeMultiplier: 1.5,
     overtimePay: 12_000,
+    customFields: [],
     total: 289_333,
   },
   {
@@ -71,6 +73,7 @@ export const mockPayslips: Payslip[] = [
     overtimeHours: 2,
     overtimeMultiplier: 1.5,
     overtimePay: 4_688,
+    customFields: [],
     total: 254_688,
   },
   {
@@ -86,6 +89,7 @@ export const mockPayslips: Payslip[] = [
     overtimeHours: 0,
     overtimeMultiplier: 1.5,
     overtimePay: 0,
+    customFields: [],
     total: 240_000,
   },
   {
@@ -101,6 +105,7 @@ export const mockPayslips: Payslip[] = [
     overtimeHours: 5,
     overtimeMultiplier: 1.5,
     overtimePay: 14_500,
+    customFields: [],
     total: 329_500,
   },
 ];

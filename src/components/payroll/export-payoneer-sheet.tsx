@@ -7,15 +7,7 @@ import * as XLSX from 'xlsx';
 import { useEmployees } from '@/hooks/queries/employees';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -23,11 +15,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 import { Payslip } from '@/types/hrm';
 
-const BALANCE_CURRENCIES = ['PKR', 'USD', 'GBP', 'EUR'] as const;
+const BALANCE_CURRENCIES = ['USD', 'GBP', 'EUR'] as const;
 type BalanceCurrency = (typeof BALANCE_CURRENCIES)[number];
+const DEFAULT_CURRENCY: BalanceCurrency = 'USD';
 
 const formatAmount = (amount: number, currency: BalanceCurrency) =>
   new Intl.NumberFormat('en-US', {
@@ -36,21 +46,68 @@ const formatAmount = (amount: number, currency: BalanceCurrency) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-type ExportPayoneerDialogProps = {
+type ExportPayoneerSheetProps = {
   rows: Payslip[];
   disabled?: boolean;
 };
 
-export function ExportPayoneerDialog({
+export function ExportPayoneerSheet({
   rows,
   disabled,
-}: ExportPayoneerDialogProps) {
+}: ExportPayoneerSheetProps) {
   const { data: employees } = useEmployees();
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [currencies, setCurrencies] = useState<Record<string, BalanceCurrency>>(
     {},
   );
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkCurrency, setBulkCurrency] =
+    useState<BalanceCurrency>(DEFAULT_CURRENCY);
+
+  const currencyFor = (employeeId: string) =>
+    currencies[employeeId] ?? DEFAULT_CURRENCY;
+
+  const toggleRow = (employeeId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(employeeId)) next.delete(employeeId);
+      else next.add(employeeId);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    setSelectedIds((prev) =>
+      prev.size === rows.length
+        ? new Set()
+        : new Set(rows.map((r) => r.employeeId)),
+    );
+  };
+
+  const applyBulkCurrency = () => {
+    setCurrencies((prev) => {
+      const next = { ...prev };
+      selectedIds.forEach((employeeId) => {
+        next[employeeId] = bulkCurrency;
+      });
+      return next;
+    });
+    toast.success(
+      `Set ${bulkCurrency} for ${selectedIds.size} ${selectedIds.size === 1 ? 'employee' : 'employees'}`,
+    );
+  };
+
+  const breakdown = BALANCE_CURRENCIES.map((currency) => {
+    const inCurrency = rows.filter(
+      (row) => currencyFor(row.employeeId) === currency,
+    );
+    return {
+      currency,
+      count: inCurrency.length,
+      total: inCurrency.reduce((sum, row) => sum + row.total, 0),
+    };
+  }).filter((group) => group.count > 0);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -59,7 +116,7 @@ export function ExportPayoneerDialog({
     const sheetRows = rows.flatMap((row) => {
       const employee = employees?.find((e) => e.id === row.employeeId);
       if (!employee?.bank) return [];
-      const currency = currencies[row.employeeId] ?? 'PKR';
+      const currency = currencyFor(row.employeeId);
       return [
         {
           'Bank Account Holder Name': employee.bank.accountHolderName,
@@ -88,68 +145,148 @@ export function ExportPayoneerDialog({
     toast.success(`Exported ${sheetRows.length} payslips for Payoneer`);
   };
 
+  const allSelected = rows.length > 0 && selectedIds.size === rows.length;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button variant='outline' disabled={disabled}>
           Export for Payoneer
         </Button>
-      </DialogTrigger>
-      <DialogContent className='sm:max-w-lg'>
-        <DialogHeader>
-          <DialogTitle>Export for Payoneer</DialogTitle>
-          <DialogDescription>
+      </SheetTrigger>
+      <SheetContent className='flex w-full flex-col gap-4 overflow-y-auto sm:max-w-2xl'>
+        <SheetHeader>
+          <SheetTitle>Export for Payoneer</SheetTitle>
+          <SheetDescription>
             Choose the balance currency Payoneer should pay each employee from.
             The recipient bank account is always PKR.
-          </DialogDescription>
-        </DialogHeader>
-        <div className='flex flex-col gap-3'>
-          {rows.map((row) => {
-            const currency = currencies[row.employeeId] ?? 'PKR';
-            return (
-              <div
-                key={row.employeeId}
-                className='flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2'
-              >
-                <div className='flex flex-col gap-0.5'>
-                  <p className='text-sm font-medium'>{row.employeeName}</p>
-                  <p className='text-xs text-muted-foreground'>
-                    {formatAmount(row.total, currency)}
-                  </p>
-                </div>
-                <Select
-                  value={currency}
-                  onValueChange={(value) =>
-                    setCurrencies((prev) => ({
-                      ...prev,
-                      [row.employeeId]: value as BalanceCurrency,
-                    }))
-                  }
-                >
-                  <SelectTrigger className='h-9 w-28'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {BALANCE_CURRENCIES.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            );
-          })}
+          </SheetDescription>
+        </SheetHeader>
+
+        {selectedIds.size > 0 && (
+          <div className='flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2'>
+            <span className='text-sm text-muted-foreground'>
+              {selectedIds.size} selected
+            </span>
+            <Select
+              value={bulkCurrency}
+              onValueChange={(value) =>
+                setBulkCurrency(value as BalanceCurrency)
+              }
+            >
+              <SelectTrigger className='h-8 w-28'>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {BALANCE_CURRENCIES.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button type='button' size='sm' onClick={applyBulkCurrency}>
+              Apply to selected
+            </Button>
+          </div>
+        )}
+
+        <div className='rounded-lg border border-border'>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className='w-10'>
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={toggleAll}
+                    aria-label='Select all rows'
+                  />
+                </TableHead>
+                <TableHead>Employee</TableHead>
+                <TableHead className='text-center'>Amount</TableHead>
+                <TableHead className='text-center'>Currency</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => {
+                const currency = currencyFor(row.employeeId);
+                return (
+                  <TableRow key={row.employeeId}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(row.employeeId)}
+                        onCheckedChange={() => toggleRow(row.employeeId)}
+                        aria-label={`Select ${row.employeeName}`}
+                      />
+                    </TableCell>
+                    <TableCell className='font-medium'>
+                      {row.employeeName}
+                    </TableCell>
+                    <TableCell className='text-center'>
+                      {formatAmount(row.total, currency)}
+                    </TableCell>
+                    <TableCell className='text-center'>
+                      <Select
+                        value={currency}
+                        onValueChange={(value) =>
+                          setCurrencies((prev) => ({
+                            ...prev,
+                            [row.employeeId]: value as BalanceCurrency,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className='mx-auto h-9 w-28'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {BALANCE_CURRENCIES.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
-        <DialogFooter>
+
+        {breakdown.length > 0 && (
+          <div className='rounded-lg border border-border px-4 py-3'>
+            <p className='mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+              Breakdown by currency
+            </p>
+            <div className='flex flex-col gap-1'>
+              {breakdown.map((group) => (
+                <div
+                  key={group.currency}
+                  className='flex items-center justify-between text-sm'
+                >
+                  <span className='text-muted-foreground'>
+                    {group.currency} · {group.count}{' '}
+                    {group.count === 1 ? 'employee' : 'employees'}
+                  </span>
+                  <span className='font-medium'>
+                    {formatAmount(group.total, group.currency)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <SheetFooter className='mt-auto'>
           <Button variant='outline' onClick={() => setOpen(false)}>
             Cancel
           </Button>
           <Button isLoading={isExporting} onClick={handleExport}>
             Export
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

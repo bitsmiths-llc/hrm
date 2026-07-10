@@ -1,3 +1,4 @@
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -10,7 +11,9 @@ import {
 
 import { formatCurrency } from '@/utils/number-functions';
 
-import { DownloadPayslipButton } from './download-payslip-button';
+import { CustomFieldsCell } from './custom-fields-cell';
+import { SendInvoiceButton } from './send-invoice-button';
+import { ViewInvoiceButton } from './view-invoice-button';
 
 import { Payslip } from '@/types/hrm';
 
@@ -25,6 +28,13 @@ type CurrentCycleTableProps = {
     employeeId: string,
     overtimeMultiplier: number,
   ) => void;
+  onAddCustomField: (
+    employeeId: string,
+    field: { label: string; amount: number },
+  ) => void;
+  selectedIds: Set<string>;
+  onToggleRow: (employeeId: string) => void;
+  onToggleAll: () => void;
 };
 
 export function CurrentCycleTable({
@@ -32,25 +42,46 @@ export function CurrentCycleTable({
   locked,
   onDaysWorkedChange,
   onOvertimeMultiplierChange,
+  onAddCustomField,
+  selectedIds,
+  onToggleRow,
+  onToggleAll,
 }: CurrentCycleTableProps) {
+  const allSelected = rows.length > 0 && selectedIds.size === rows.length;
+
   return (
     <div className='rounded-lg border border-border'>
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className='w-10'>
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={onToggleAll}
+                aria-label='Select all rows'
+              />
+            </TableHead>
             <TableHead>Employee</TableHead>
             <TableHead className='text-center'>Days Worked</TableHead>
             <TableHead className='text-center'>Total Base</TableHead>
             <TableHead className='text-center'>Medical</TableHead>
             <TableHead className='text-center'>OT Rate</TableHead>
             <TableHead className='text-center'>Overtime</TableHead>
+            <TableHead className='text-center'>Adjustments</TableHead>
             <TableHead className='text-center'>Total</TableHead>
-            <TableHead className='text-center'>PDF</TableHead>
+            <TableHead className='text-center'>Invoice</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.employeeId}>
+              <TableCell>
+                <Checkbox
+                  checked={selectedIds.has(row.employeeId)}
+                  onCheckedChange={() => onToggleRow(row.employeeId)}
+                  aria-label={`Select ${row.employeeName}`}
+                />
+              </TableCell>
               <TableCell className='font-medium'>{row.employeeName}</TableCell>
               <TableCell className='text-center'>
                 {locked || !onDaysWorkedChange ? (
@@ -103,11 +134,23 @@ export function CurrentCycleTable({
               <TableCell className='text-center'>
                 {row.overtimeHours}h · {formatCurrency(row.overtimePay) || '—'}
               </TableCell>
+              <TableCell className='text-center'>
+                <div className='flex justify-center'>
+                  <CustomFieldsCell
+                    fields={row.customFields}
+                    disabled={locked}
+                    onAdd={(field) => onAddCustomField(row.employeeId, field)}
+                  />
+                </div>
+              </TableCell>
               <TableCell className='text-center font-semibold'>
                 {formatCurrency(row.total)}
               </TableCell>
               <TableCell className='text-center'>
-                <DownloadPayslipButton payslip={row} iconOnly />
+                <div className='flex items-center justify-center gap-1'>
+                  <ViewInvoiceButton payslip={row} />
+                  <SendInvoiceButton employeeName={row.employeeName} />
+                </div>
               </TableCell>
             </TableRow>
           ))}
