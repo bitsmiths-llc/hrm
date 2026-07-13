@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useCreateLeaveRequest } from '@/hooks/actions/use-create-leave-request';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -31,7 +33,10 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { hrmConfig } from '@/constants/hrm-config';
 import { leaveTypeLabels } from '@/constants/hrm-labels';
-import { type LeaveRequestInput, leaveRequestSchema } from '@/schema/leave';
+import {
+  createLeaveRequestSchema,
+  type LeaveRequestInput,
+} from '@/schema/leave';
 
 const leaveTypeOptions = Object.entries(leaveTypeLabels).map(
   ([value, label]) => ({ value, label }),
@@ -41,7 +46,7 @@ export function RequestLeaveDialog() {
   const [open, setOpen] = useState(false);
 
   const form = useForm<LeaveRequestInput>({
-    resolver: zodResolver(leaveRequestSchema),
+    resolver: zodResolver(createLeaveRequestSchema),
     defaultValues: {
       type: undefined,
       startDate: '',
@@ -57,14 +62,11 @@ export function RequestLeaveDialog() {
     if (isHalfDay) form.setValue('days', hrmConfig.halfDayValue);
   }, [isHalfDay, form]);
 
-  const onSubmit = async (values: LeaveRequestInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(
-      `${leaveTypeLabels[values.type]} request submitted for approval`,
-    );
+  const { execute, isPending } = useCreateLeaveRequest(() => {
+    toast.success(`${leaveTypeLabels[type]} request submitted for approval`);
     form.reset();
     setOpen(false);
-  };
+  });
 
   return (
     <Dialog
@@ -87,7 +89,7 @@ export function RequestLeaveDialog() {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit((values) => execute(values))}
             className='flex flex-col gap-4'
           >
             <ControlledSelect<LeaveRequestInput>
@@ -147,7 +149,7 @@ export function RequestLeaveDialog() {
               >
                 Cancel
               </Button>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Submit request
               </Button>
             </DialogFooter>

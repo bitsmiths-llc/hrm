@@ -39,7 +39,7 @@ export function OnboardingReturnedEmail({
       appName={appName}
       baseUrl={baseUrl}
       supportEmail={supportEmail}
-      preview="Your onboarding needs a few changes before it can be approved"
+      preview='Your onboarding needs a few changes before it can be approved'
     >
       <Section style={{ ...emailStyles.card, borderTopColor: brand.amber }}>
         <Heading style={emailStyles.heading}>A few changes needed</Heading>

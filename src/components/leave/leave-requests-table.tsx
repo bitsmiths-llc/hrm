@@ -80,8 +80,17 @@ function useLeaveHistoryColumns() {
           />
         ),
         cell: ({ row }) => (
-          <div className='flex justify-center'>
+          <div className='flex flex-col items-center gap-1'>
             <StatusBadge status={row.original.status} />
+            {row.original.status === 'rejected' &&
+              row.original.rejectionReason && (
+                <span
+                  className='max-w-[220px] truncate text-xs text-muted-foreground'
+                  title={row.original.rejectionReason}
+                >
+                  {row.original.rejectionReason}
+                </span>
+              )}
           </div>
         ),
       },

@@ -56,7 +56,11 @@ export function ControlledSelect<TFieldValues extends FieldValues>({
             <FormControl>
               <SelectTrigger
                 className={cn(
-                  'w-full gap-2.5 focus:ring-0 focus:ring-white md:min-w-28',
+                  // Match Input's focus treatment: no ring on pointer/auto
+                  // focus (kills the leftover ring-offset that showed as corner
+                  // marks when the dialog auto-focuses the trigger), clean ring
+                  // on keyboard focus only.
+                  'w-full gap-2.5 focus:ring-0 focus:ring-offset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:min-w-28',
                   className,
                 )}
               >

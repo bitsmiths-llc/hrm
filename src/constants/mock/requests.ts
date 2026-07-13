@@ -10,6 +10,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2026-07-08',
     days: 2,
     status: 'pending',
+    rejectionReason: null,
     createdAt: '2026-07-05',
   },
   {
@@ -21,6 +22,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2026-06-15',
     days: 3,
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2026-06-01',
   },
   {
@@ -32,6 +34,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2026-07-10',
     days: 0.5,
     status: 'pending',
+    rejectionReason: null,
     createdAt: '2026-07-04',
   },
   {
@@ -43,6 +46,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2026-05-20',
     days: 4,
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2026-05-05',
   },
   {
@@ -54,6 +58,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2026-04-02',
     days: 2,
     status: 'rejected',
+    rejectionReason: 'Pool exhausted for the year — please resubmit as unpaid.',
     createdAt: '2026-03-25',
   },
   {
@@ -65,6 +70,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2025-11-05',
     days: 2,
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2025-11-01',
   },
   {
@@ -76,6 +82,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2025-08-12',
     days: 1,
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2025-08-10',
   },
   {
@@ -87,6 +94,7 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2026-07-20',
     days: 3,
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2026-07-15',
   },
 ];

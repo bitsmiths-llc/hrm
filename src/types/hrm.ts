@@ -98,6 +98,9 @@ export type LeaveRequest = {
   startDate: string;
   days: number; // 0.5 for half day
   status: RequestStatus;
+  /** Admin's note when a request is rejected — shown in the decision email and
+   *  the employee's history (BIT-12). Null unless status = 'rejected'. */
+  rejectionReason: string | null;
   createdAt: string;
 };
 

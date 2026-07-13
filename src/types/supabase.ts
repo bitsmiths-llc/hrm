@@ -206,6 +206,66 @@ export type Database = {
           },
         ];
       };
+      leave_requests: {
+        Row: {
+          created_at: string;
+          employee_id: string;
+          id: string;
+          leave_type: Database['public']['Enums']['leave_type'];
+          num_days: number;
+          reason: string;
+          rejection_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          start_date: string;
+          status: Database['public']['Enums']['request_status'];
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          employee_id: string;
+          id?: string;
+          leave_type: Database['public']['Enums']['leave_type'];
+          num_days: number;
+          reason: string;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          start_date: string;
+          status?: Database['public']['Enums']['request_status'];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          employee_id?: string;
+          id?: string;
+          leave_type?: Database['public']['Enums']['leave_type'];
+          num_days?: number;
+          reason?: string;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          start_date?: string;
+          status?: Database['public']['Enums']['request_status'];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'leave_requests_employee_id_fkey';
+            columns: ['employee_id'];
+            isOneToOne: false;
+            referencedRelation: 'employees';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'leave_requests_reviewed_by_fkey';
+            columns: ['reviewed_by'];
+            isOneToOne: false;
+            referencedRelation: 'employees';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       socials: {
         Row: {
           created_at: string;
@@ -248,11 +308,21 @@ export type Database = {
     Functions: {
       accept_onboarding: { Args: never; Returns: undefined };
       is_admin: { Args: never; Returns: boolean };
+      leave_balance: {
+        Args: { p_employee: string; p_year?: number };
+        Returns: {
+          pool_total: number;
+          remaining: number;
+          used: number;
+        }[];
+      };
       submit_onboarding: { Args: never; Returns: undefined };
     };
     Enums: {
       account_status: 'invited' | 'onboarding' | 'submitted' | 'active';
       employment_type: 'full_time' | 'part_time' | 'contract' | 'internship';
+      leave_type: 'paid' | 'sick' | 'unpaid' | 'half_day';
+      request_status: 'pending' | 'approved' | 'rejected';
       user_role: 'admin' | 'employee';
     };
     CompositeTypes: {
@@ -386,6 +456,8 @@ export const Constants = {
     Enums: {
       account_status: ['invited', 'onboarding', 'submitted', 'active'],
       employment_type: ['full_time', 'part_time', 'contract', 'internship'],
+      leave_type: ['paid', 'sick', 'unpaid', 'half_day'],
+      request_status: ['pending', 'approved', 'rejected'],
       user_role: ['admin', 'employee'],
     },
   },

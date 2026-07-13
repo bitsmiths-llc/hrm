@@ -123,7 +123,7 @@ one-time token that must survive an exchange.
      `<InviteTokenVerifier>`.
 3. **Exchange (client). Private-tab re-verification.**
    `src/components/auth/invite-token-verifier.tsx` runs `verifyOtp({ token_hash,
-   type })` on the **browser** client (a server component can't write the auth
+type })` on the **browser** client (a server component can't write the auth
    cookies). On success the session cookies are set; it then `router.replace`s to
    a clean `/auth/accept-invitation` — dropping the token from the address bar and
    history — and the page re-renders **with a session**, re-entering step 2 down

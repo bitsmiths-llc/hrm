@@ -57,8 +57,8 @@ export function InviteEmail({
           <Section style={styles.header}>
             <Img
               src={`${baseUrl}/email/logo.png`}
-              width="40"
-              height="42"
+              width='40'
+              height='42'
               alt={appName}
               style={styles.logo}
             />

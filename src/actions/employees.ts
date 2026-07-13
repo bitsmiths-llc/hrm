@@ -331,7 +331,14 @@ export const updateEmployeeContact = authActionClient
   .schema(contactInfoWithIdSchema)
   .action(
     async ({
-      parsedInput: { employeeId, phone, emergencyContact, address, city, postalCode },
+      parsedInput: {
+        employeeId,
+        phone,
+        emergencyContact,
+        address,
+        city,
+        postalCode,
+      },
       ctx: { supabase, authUser },
     }) => {
       requireAdmin(authUser.user?.app_metadata.role);

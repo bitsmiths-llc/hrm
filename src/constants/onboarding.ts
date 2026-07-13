@@ -24,7 +24,12 @@ export const onboardingSteps = [
 export const personalInfoFields: TextFieldConfig<
   Exclude<keyof PersonalInfoInput, 'dateOfBirth'>
 >[] = [
-  { name: 'fullName', label: 'Full name', placeholder: 'John Doe', fullWidth: true },
+  {
+    name: 'fullName',
+    label: 'Full name',
+    placeholder: 'John Doe',
+    fullWidth: true,
+  },
   {
     name: 'phone',
     label: 'Phone number',
@@ -93,7 +98,10 @@ export const bankInfoFields: TextFieldConfig<keyof BankInfoInput>[] = [
 /** Identity-document upload constraints (section 4). Files are restricted to
  *  PNG or PDF and capped at {@link IDENTITY_DOC_MAX_SIZE_MB}MB — enforced both
  *  by the native picker (`accept`) and by `FileUpload`'s own validation. */
-export const IDENTITY_DOC_MIME_TYPES = ['image/png', 'application/pdf'] as const;
+export const IDENTITY_DOC_MIME_TYPES = [
+  'image/png',
+  'application/pdf',
+] as const;
 export const IDENTITY_DOC_ACCEPT = IDENTITY_DOC_MIME_TYPES.join(',');
 export const IDENTITY_DOC_MAX_SIZE_MB = 5;
 export const IDENTITY_DOC_HINT = 'PNG or PDF · up to 5MB';

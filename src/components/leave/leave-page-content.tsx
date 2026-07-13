@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 
+import { useCurrentEmployee } from '@/hooks/queries/employees';
 import { useHrmSettings } from '@/hooks/queries/settings';
 
 import { MonthFilter } from '@/components/hrm/month-filter';
 import { PageHeader } from '@/components/hrm/page-header';
 import { RequestLeaveDialog } from '@/components/leave/request-leave-dialog';
-
-import { mockCurrentEmployee } from '@/constants/mock/employees';
 
 import { LeaveBalanceCards } from './leave-balance-cards';
 import { LeaveHistoryTable } from './leave-history-table';
@@ -16,6 +15,7 @@ import { LeaveHistoryTable } from './leave-history-table';
 export function LeavePageContent() {
   const [month, setMonth] = useState('all');
   const { data: settings } = useHrmSettings();
+  const { data: me } = useCurrentEmployee();
 
   return (
     <>
@@ -26,7 +26,7 @@ export function LeavePageContent() {
         <MonthFilter value={month} onChange={setMonth} />
         <RequestLeaveDialog />
       </PageHeader>
-      <LeaveBalanceCards employeeId={mockCurrentEmployee.id} month={month} />
+      <LeaveBalanceCards employeeId={me?.id} month={month} />
       <LeaveHistoryTable month={month} />
     </>
   );

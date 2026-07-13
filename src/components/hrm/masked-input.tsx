@@ -32,7 +32,9 @@ export const MaskedInput = React.forwardRef<HTMLInputElement, MaskedInputProps>(
     const transform = (raw: string): string => {
       if (mask === 'cnic') return formatCnic(raw);
       if (mask === 'digits') {
-        return maxLength ? onlyDigits(raw).slice(0, maxLength) : onlyDigits(raw);
+        return maxLength
+          ? onlyDigits(raw).slice(0, maxLength)
+          : onlyDigits(raw);
       }
       return maxLength ? raw.slice(0, maxLength) : raw;
     };

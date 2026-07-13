@@ -41,8 +41,8 @@ export function OnboardingApprovedEmail({
         <Text style={emailStyles.paragraph}>{greeting}</Text>
         <Text style={emailStyles.paragraph}>
           Good news — your onboarding has been reviewed and{' '}
-          <strong>approved</strong>. Your {appName} account is now active and you
-          have full access.
+          <strong>approved</strong>. Your {appName} account is now active and
+          you have full access.
         </Text>
 
         <Section

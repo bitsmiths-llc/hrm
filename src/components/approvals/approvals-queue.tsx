@@ -4,6 +4,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useReviewLeave } from '@/hooks/actions/use-review-leave';
 import {
   useAllLeaveRequests,
   useAllMedicalClaims,
@@ -28,6 +29,7 @@ import {
   medicalToItem,
   overtimeToItem,
 } from './approval-items';
+import { LeaveReviewActions } from './leave-review-actions';
 
 type Decision = 'approved' | 'rejected';
 
@@ -39,6 +41,10 @@ export function ApprovalsQueue() {
   const [tab, setTab] = useState<'all' | ApprovalKind>('all');
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [selected, setSelected] = useState<ApprovalItem | null>(null);
+  // Which leave row is currently being quick-approved (scopes the button's
+  // loading state to that row — a single mutation hook drives them all).
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const reviewLeave = useReviewLeave();
 
   const isLoading = leave.isLoading || medical.isLoading || overtime.isLoading;
 
@@ -62,6 +68,22 @@ export function ApprovalsQueue() {
     toast.success(
       `${item.title} from ${item.employeeName} ${decision === 'approved' ? 'approved' : 'rejected'}`,
     );
+  };
+
+  // Quick-approve straight from the row (leave only — it's the one kind backed
+  // by the real reviewLeaveRequest action). Rejection still goes through Review
+  // so the admin can supply the required reason.
+  const approveLeave = async (item: ApprovalItem) => {
+    setApprovingId(item.id);
+    const result = await reviewLeave.executeAsync({
+      id: item.id,
+      decision: 'approved',
+    });
+    setApprovingId(null);
+    if (result?.data) {
+      setDecisions((prev) => ({ ...prev, [item.id]: 'approved' }));
+      toast.success(`Leave for ${item.employeeName} approved`);
+    }
   };
 
   if (isLoading) {
@@ -110,7 +132,19 @@ export function ApprovalsQueue() {
                 </p>
               </div>
               <div className='flex items-center gap-2'>
-                <Badge variant='outline'>{approvalKindLabels[item.kind]}</Badge>
+                {item.kind === 'leave' ? (
+                  <Button
+                    size='sm'
+                    isLoading={approvingId === item.id}
+                    onClick={() => approveLeave(item)}
+                  >
+                    Approve Leave
+                  </Button>
+                ) : (
+                  <Badge variant='outline'>
+                    {approvalKindLabels[item.kind]}
+                  </Badge>
+                )}
                 <Button
                   variant='outline'
                   size='sm'
@@ -138,26 +172,43 @@ export function ApprovalsQueue() {
             },
           ]}
           footer={
-            <div className='flex w-full gap-2'>
-              <ConfirmDialog
-                trigger={
-                  <Button variant='destructive' className='flex-1'>
-                    Reject
-                  </Button>
-                }
-                title={`Reject this ${approvalKindLabels[selected.kind].toLowerCase()} request?`}
-                description={`${selected.employeeName} will see the request as rejected.`}
-                confirmLabel='Reject request'
-                destructive
-                onConfirm={() => decide(selected, 'rejected')}
+            selected.kind === 'leave' ? (
+              // Leave is backed by the real `reviewLeaveRequest` action (with a
+              // required reason on reject + employee email). Medical/overtime
+              // are still mock and use the local-state `decide` below.
+              <LeaveReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={(decision) => {
+                  setDecisions((prev) => ({
+                    ...prev,
+                    [selected.id]: decision,
+                  }));
+                  setSelected(null);
+                }}
               />
-              <Button
-                className='flex-1'
-                onClick={() => decide(selected, 'approved')}
-              >
-                Approve
-              </Button>
-            </div>
+            ) : (
+              <div className='flex w-full gap-2'>
+                <ConfirmDialog
+                  trigger={
+                    <Button variant='destructive' className='flex-1'>
+                      Reject
+                    </Button>
+                  }
+                  title={`Reject this ${approvalKindLabels[selected.kind].toLowerCase()} request?`}
+                  description={`${selected.employeeName} will see the request as rejected.`}
+                  confirmLabel='Reject request'
+                  destructive
+                  onConfirm={() => decide(selected, 'rejected')}
+                />
+                <Button
+                  className='flex-1'
+                  onClick={() => decide(selected, 'approved')}
+                >
+                  Approve
+                </Button>
+              </div>
+            )
           }
         >
           {selected.kind === 'medical' && (
