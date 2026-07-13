@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RotateCcw } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -77,8 +77,8 @@ export function ReturnOnboardingDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {!isControlled && (
         <DialogTrigger asChild>
-          <Button variant='outline' size='sm' iconLeft={RotateCcw}>
-            Return
+          <Button variant='outline' size='sm' iconLeft={X}>
+            Reject
           </Button>
         </DialogTrigger>
       )}
