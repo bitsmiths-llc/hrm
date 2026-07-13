@@ -1,4 +1,9 @@
+'use client';
+
 import { Inbox } from 'lucide-react';
+
+import { useCurrentEmployee } from '@/hooks/queries/employees';
+import { useLeaveRequests } from '@/hooks/queries/leave';
 
 import { EmptyState } from '@/components/hrm/empty-state';
 import { StatusBadge } from '@/components/hrm/status-badge';
@@ -15,18 +20,18 @@ import { formatCurrency } from '@/utils/number-functions';
 
 import { leaveTypeLabels } from '@/constants/hrm-labels';
 import { mockCurrentEmployee } from '@/constants/mock/employees';
-import {
-  mockLeaveRequests,
-  mockMedicalClaims,
-  mockOvertimeLogs,
-} from '@/constants/mock/requests';
+import { mockMedicalClaims, mockOvertimeLogs } from '@/constants/mock/requests';
 
 export function EmployeePendingRequests() {
-  const employeeId = mockCurrentEmployee.id;
+  // Leave is real (BIT-12), scoped to the signed-in employee; medical/overtime
+  // are still mock (keyed by the mock employee).
+  const { data: me } = useCurrentEmployee();
+  const { data: leaveRequests } = useLeaveRequests(me?.id);
+  const mockEmployeeId = mockCurrentEmployee.id;
 
   const rows = [
-    ...mockLeaveRequests
-      .filter((r) => r.employeeId === employeeId && r.status === 'pending')
+    ...(leaveRequests ?? [])
+      .filter((r) => r.status === 'pending')
       .map((r) => ({
         id: r.id,
         title: leaveTypeLabels[r.type],
@@ -34,7 +39,7 @@ export function EmployeePendingRequests() {
         status: r.status,
       })),
     ...mockMedicalClaims
-      .filter((c) => c.employeeId === employeeId && c.status === 'pending')
+      .filter((c) => c.employeeId === mockEmployeeId && c.status === 'pending')
       .map((c) => ({
         id: c.id,
         title: 'Medical Claim',
@@ -42,7 +47,7 @@ export function EmployeePendingRequests() {
         status: c.status,
       })),
     ...mockOvertimeLogs
-      .filter((o) => o.employeeId === employeeId && o.status === 'pending')
+      .filter((o) => o.employeeId === mockEmployeeId && o.status === 'pending')
       .map((o) => ({
         id: o.id,
         title: 'Overtime',

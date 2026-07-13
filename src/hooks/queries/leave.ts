@@ -22,6 +22,9 @@ export function toLeaveRequest(
     type: row.leave_type,
     reason: row.reason,
     startDate: row.start_date,
+    // Postgres `numeric` can arrive as a string over PostgREST despite the
+    // generated `number` type, so coerce to keep the arithmetic (balance sums,
+    // display) correct.
     days: Number(row.num_days),
     status: row.status,
     rejectionReason: row.rejection_reason,
@@ -29,25 +32,9 @@ export function toLeaveRequest(
   };
 }
 
-// The signed-in employee's own history (RLS leave_select_own scopes to self).
-const fetchMyLeaveRequests = authQuery(async ({ supabase }) => {
-  const { data, error } = await supabase
-    .from('leave_requests')
-    .select('*')
-    .order('start_date', { ascending: false });
-  if (error) throw new Error(error.message);
-  return data.map((row) => toLeaveRequest(row));
-});
-
-/** Own requests for the signed-in employee. */
-export const useMyLeaveRequests = () =>
-  useQuery({
-    queryKey: [QueryKeys.LEAVE_REQUESTS, 'me'],
-    queryFn: () => fetchMyLeaveRequests(),
-  });
-
 // One employee's history. Admins resolve anyone (RLS leave_admin_all); an
-// employee resolves only themselves.
+// employee resolves only themselves. Also drives the self /leave page (passed
+// the caller's own id) so it shares one cache entry with the balance widget.
 const fetchLeaveRequests = authQuery(
   async ({ supabase, params }) => {
     const { data, error } = await supabase
@@ -86,6 +73,8 @@ const fetchLeaveBalance = authQuery(
       })
       .single();
     if (error) throw new Error(error.message);
+    // used/remaining are SQL `numeric` and can come back as strings — coerce
+    // so callers get real numbers (pool_total is `int`, always numeric).
     return {
       poolTotal: Number(data.pool_total),
       used: Number(data.used),

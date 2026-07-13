@@ -52,10 +52,10 @@ export function LeaveReviewActions({
       decision: 'rejected',
       rejectionReason: reason,
     });
-    if (result?.data) {
-      toast.success(`Leave for ${employeeName} rejected`);
-      onReviewed('rejected');
-    }
+    if (!result?.data) return false; // keep the dialog open; reason preserved
+    toast.success(`Leave for ${employeeName} rejected`);
+    onReviewed('rejected');
+    return true;
   };
 
   return (

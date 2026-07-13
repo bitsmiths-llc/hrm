@@ -60,9 +60,10 @@ export function ApprovalsQueue() {
 
   const [tab, setTab] = useState<'all' | ApprovalKind>('all');
   const [selected, setSelected] = useState<ApprovalItem | null>(null);
-  // Which leave row is currently being quick-approved (scopes the button's
-  // loading state to that row — a single mutation hook drives them all).
-  const [approvingId, setApprovingId] = useState<string | null>(null);
+  // Leave rows currently being quick-approved. A Set (not a single id) keeps the
+  // spinner scoped correctly when several are approved concurrently — the single
+  // mutation hook drives them all.
+  const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
   const reviewLeave = useReviewLeave();
 
   const isLoading = leave.isLoading || medical.isLoading || overtime.isLoading;
@@ -111,12 +112,16 @@ export function ApprovalsQueue() {
   // the real reviewLeaveRequest action). Its invalidation drops the row from
   // the queue. Rejection still goes through Review so the admin gives a reason.
   const approveLeave = async (item: ApprovalItem) => {
-    setApprovingId(item.id);
+    setApprovingIds((prev) => new Set(prev).add(item.id));
     const result = await reviewLeave.executeAsync({
       id: item.id,
       decision: 'approved',
     });
-    setApprovingId(null);
+    setApprovingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(item.id);
+      return next;
+    });
     if (result?.data) {
       toast.success(`Leave for ${item.employeeName} approved`);
     }
@@ -179,7 +184,7 @@ export function ApprovalsQueue() {
                 {item.kind === 'leave' && (
                   <Button
                     size='sm'
-                    isLoading={approvingId === item.id}
+                    isLoading={approvingIds.has(item.id)}
                     onClick={() => approveLeave(item)}
                   >
                     Approve Leave

@@ -36,8 +36,10 @@ type RejectRequestDialogProps = {
   title: string;
   description: string;
   /** May be async — the dialog awaits it, so the submit button shows its
-   *  loading state and the dialog stays open until the decision settles. */
-  onConfirm: (reason: string) => void | Promise<void>;
+   *  loading state and the dialog stays open until the decision settles.
+   *  Return `false` to keep the dialog open (e.g. the mutation failed), so the
+   *  typed reason isn't lost; anything else closes it. */
+  onConfirm: (reason: string) => boolean | void | Promise<boolean | void>;
 };
 
 /** Rejecting requires a reason — it's stored on the request and shown to
@@ -55,7 +57,8 @@ export function RejectRequestDialog({
   });
 
   const onSubmit = async (values: RejectInput) => {
-    await onConfirm(values.reason);
+    const result = await onConfirm(values.reason);
+    if (result === false) return; // failed — keep open with the reason intact
     setOpen(false);
     form.reset();
   };

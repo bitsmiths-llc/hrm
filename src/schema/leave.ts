@@ -11,11 +11,14 @@ export const leaveTypeEnum = getZodEnum([
   'half_day',
 ] as const);
 
-/** True when `value` (a 'YYYY-MM-DD' string) is today or later in local time. */
+/** True when `value` (a 'YYYY-MM-DD' date) is today or later. Compared as
+ *  date-only strings in the runtime's local timezone — a soft "not in the past"
+ *  guard that runs on both the client (form) and the server (action), so it
+ *  avoids Date-object parsing quirks. */
 const isTodayOrLater = (value: string): boolean => {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  return new Date(`${value}T00:00:00`) >= startOfToday;
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return value >= today;
 };
 
 /**
@@ -65,13 +68,13 @@ export const reviewLeaveSchema = z
   .superRefine((data, ctx) => {
     if (
       data.decision === 'rejected' &&
-      (!data.rejectionReason || data.rejectionReason.length < 3)
+      (!data.rejectionReason || data.rejectionReason.length < 5)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['rejectionReason'],
         message:
-          'Add a reason so the employee knows why (at least 3 characters)',
+          'Add a reason so the employee knows why (at least 5 characters)',
       });
     }
   });

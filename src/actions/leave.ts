@@ -10,7 +10,6 @@ import { formatDate } from '@/utils/date-functions';
 import Logger from '@/utils/logger';
 
 import { appConfig } from '@/config/app';
-import { hrmConfig } from '@/constants/hrm-config';
 import { leaveTypeLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 import { createLeaveRequestSchema, reviewLeaveSchema } from '@/schema/leave';
@@ -72,19 +71,15 @@ async function notifyAdminsOfLeave(input: {
 
 /**
  * Employee-submitted leave request. Runs as the caller (RLS `leave_insert_own`),
- * which pins `status = 'pending'` — an employee cannot self-approve. Half Day is
- * re-derived to 0.5 server-side regardless of what the client posts.
+ * which pins `status = 'pending'` — an employee cannot self-approve. The schema
+ * is the single enforcement point for Half Day = 0.5 (it rejects any other
+ * value), so `parsedInput.days` is already correct here.
  */
 export const createLeaveRequest = authActionClient
   .schema(createLeaveRequestSchema)
   .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
     const userId = authUser.user?.id;
     if (!userId) throw new Error('Unauthorized');
-
-    const num_days =
-      parsedInput.type === 'half_day'
-        ? hrmConfig.halfDayValue
-        : parsedInput.days;
 
     const { data, error } = await supabase
       .from('leave_requests')
@@ -93,7 +88,7 @@ export const createLeaveRequest = authActionClient
         leave_type: parsedInput.type,
         reason: parsedInput.reason,
         start_date: parsedInput.startDate,
-        num_days,
+        num_days: parsedInput.days,
         status: 'pending', // RLS with check forces 'pending'
       })
       .select('id')
@@ -107,7 +102,7 @@ export const createLeaveRequest = authActionClient
         employeeId: userId,
         summary: leaveSummary(
           parsedInput.type,
-          num_days,
+          parsedInput.days,
           parsedInput.startDate,
         ),
         reason: parsedInput.reason,

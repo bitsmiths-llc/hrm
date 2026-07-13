@@ -27,7 +27,7 @@ export function LeavePageContent() {
         <RequestLeaveDialog />
       </PageHeader>
       <LeaveBalanceCards employeeId={me?.id} month={month} />
-      <LeaveHistoryTable month={month} />
+      <LeaveHistoryTable employeeId={me?.id} month={month} />
     </>
   );
 }

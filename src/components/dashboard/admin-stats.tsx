@@ -1,4 +1,8 @@
+'use client';
+
 import { Banknote, CheckSquare, Users } from 'lucide-react';
+
+import { useAllLeaveRequests } from '@/hooks/queries/approvals';
 
 import { StatCard } from '@/components/hrm/stat-card';
 
@@ -7,15 +11,13 @@ import { formatCurrency } from '@/utils/number-functions';
 import { payrollCycleStatusLabels } from '@/constants/hrm-labels';
 import { mockEmployees } from '@/constants/mock/employees';
 import { mockPayrollCycles } from '@/constants/mock/payroll';
-import {
-  mockLeaveRequests,
-  mockMedicalClaims,
-  mockOvertimeLogs,
-} from '@/constants/mock/requests';
+import { mockMedicalClaims, mockOvertimeLogs } from '@/constants/mock/requests';
 
 export function AdminStats() {
+  // Leave is real (BIT-12); medical/overtime are still mock until wired.
+  const { data: leaveRequests } = useAllLeaveRequests();
   const pendingApprovals =
-    mockLeaveRequests.filter((r) => r.status === 'pending').length +
+    (leaveRequests?.filter((r) => r.status === 'pending').length ?? 0) +
     mockMedicalClaims.filter((c) => c.status === 'pending').length +
     mockOvertimeLogs.filter((o) => o.status === 'pending').length;
 

@@ -1,5 +1,9 @@
+'use client';
+
 import { Inbox } from 'lucide-react';
 import Link from 'next/link';
+
+import { useAllLeaveRequests } from '@/hooks/queries/approvals';
 
 import { EmptyState } from '@/components/hrm/empty-state';
 import { StatusBadge } from '@/components/hrm/status-badge';
@@ -16,16 +20,14 @@ import { formatDate } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
 import { leaveTypeLabels } from '@/constants/hrm-labels';
-import {
-  mockLeaveRequests,
-  mockMedicalClaims,
-  mockOvertimeLogs,
-} from '@/constants/mock/requests';
+import { mockMedicalClaims, mockOvertimeLogs } from '@/constants/mock/requests';
 import { paths } from '@/constants/paths';
 
 export function AdminPendingQueue() {
+  // Leave is real (BIT-12); medical/overtime are still mock until wired.
+  const { data: leaveRequests } = useAllLeaveRequests();
   const rows = [
-    ...mockLeaveRequests
+    ...(leaveRequests ?? [])
       .filter((r) => r.status === 'pending')
       .map((r) => ({
         id: r.id,
