@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { useReviewLeave } from '@/hooks/actions/use-review-leave';
@@ -28,16 +29,23 @@ export function LeaveReviewActions({
   employeeName,
   onReviewed,
 }: LeaveReviewActionsProps) {
-  const { executeAsync, isPending } = useReviewLeave();
+  const { executeAsync } = useReviewLeave();
+  // Scoped to the approve action only, so a reject (whose spinner lives on the
+  // dialog's submit button) never lights up the Approve button, and vice-versa.
+  const [isApproving, setIsApproving] = useState(false);
 
   const approve = async () => {
+    setIsApproving(true);
     const result = await executeAsync({ id: itemId, decision: 'approved' });
+    setIsApproving(false);
     if (result?.data) {
       toast.success(`Leave for ${employeeName} approved`);
       onReviewed('approved');
     }
   };
 
+  // Async so RejectRequestDialog can await it: its submit button shows the
+  // loading state and the dialog stays open until the decision settles.
   const reject = async (reason: string) => {
     const result = await executeAsync({
       id: itemId,
@@ -54,7 +62,11 @@ export function LeaveReviewActions({
     <div className='flex w-full gap-2'>
       <RejectRequestDialog
         trigger={
-          <Button variant='destructive' className='flex-1' disabled={isPending}>
+          <Button
+            variant='destructive'
+            className='flex-1'
+            disabled={isApproving}
+          >
             Reject
           </Button>
         }
@@ -62,7 +74,7 @@ export function LeaveReviewActions({
         description={`${employeeName} will see this reason on their leave history and by email.`}
         onConfirm={reject}
       />
-      <Button className='flex-1' isLoading={isPending} onClick={approve}>
+      <Button className='flex-1' isLoading={isApproving} onClick={approve}>
         Approve
       </Button>
     </div>

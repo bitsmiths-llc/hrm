@@ -35,7 +35,9 @@ type RejectRequestDialogProps = {
   trigger: React.ReactNode;
   title: string;
   description: string;
-  onConfirm: (reason: string) => void;
+  /** May be async — the dialog awaits it, so the submit button shows its
+   *  loading state and the dialog stays open until the decision settles. */
+  onConfirm: (reason: string) => void | Promise<void>;
 };
 
 /** Rejecting requires a reason — it's stored on the request and shown to
@@ -52,8 +54,8 @@ export function RejectRequestDialog({
     defaultValues: { reason: '' },
   });
 
-  const onSubmit = (values: RejectInput) => {
-    onConfirm(values.reason);
+  const onSubmit = async (values: RejectInput) => {
+    await onConfirm(values.reason);
     setOpen(false);
     form.reset();
   };
