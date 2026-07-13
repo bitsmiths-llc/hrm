@@ -22,6 +22,7 @@ export const requestStatusLabels: Record<RequestStatus, StatusPresentation> = {
 export const accountStatusLabels: Record<AccountStatus, StatusPresentation> = {
   invited: { label: 'Invited', variant: 'outline' },
   onboarding: { label: 'Onboarding', variant: 'secondary' },
+  submitted: { label: 'In Review', variant: 'secondary' },
   active: { label: 'Active', variant: 'default' },
 };
 
@@ -44,6 +45,8 @@ export const leaveTypeLabels: Record<LeaveType, string> = {
 export const employmentTypeLabels: Record<EmploymentType, string> = {
   full_time: 'Full-time',
   part_time: 'Part-time',
+  contract: 'Contract',
+  internship: 'Internship',
 };
 
 export const employmentStageLabels: Record<EmploymentStage, string> = {

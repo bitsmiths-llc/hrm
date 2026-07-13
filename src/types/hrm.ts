@@ -1,13 +1,18 @@
 // Domain types for Bitsmiths HRM (PRD-aligned). These mirror the intended
 // Supabase schema so the later mock → backend swap only touches the hooks.
 
-/** Onboarding completion activates the account directly — there is no
- *  admin review step. */
-export type AccountStatus = 'invited' | 'onboarding' | 'active';
+/** Onboarding completion moves the account to `submitted`, an admin review
+ *  queue. An admin approves it (→ active) or returns it (→ onboarding) with a
+ *  note (BIT-10). */
+export type AccountStatus = 'invited' | 'onboarding' | 'submitted' | 'active';
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
-export type EmploymentType = 'full_time' | 'part_time';
+export type EmploymentType =
+  | 'full_time'
+  | 'part_time'
+  | 'contract'
+  | 'internship';
 
 /** Drives medical-allowance eligibility (Medical Allowance Policy §1) —
  *  probation and notice-period employees aren't eligible even if
@@ -53,6 +58,8 @@ export type Employee = {
   phone: string;
   emergencyContact: string;
   address: string;
+  city: string;
+  postalCode: string;
   cnic: string;
   dateOfBirth: string; // ISO date
   bank: BankInfo | null;
@@ -62,7 +69,10 @@ export type Employee = {
   baseSalary: number; // PKR
   workingHours: number; // standard hours per pay period
   designation: string;
+  department: string;
   status: AccountStatus;
+  /** Admin's note when a submission is returned to onboarding (BIT-10). */
+  reviewNote: string | null;
   invitedAt: string;
   joinedAt: string | null;
 };

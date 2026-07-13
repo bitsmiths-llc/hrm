@@ -50,5 +50,6 @@ export const adminNav: NavConfig = {
       icon: FileText,
     },
     { label: 'Settings', href: paths.admin.settings, icon: Settings },
+    { label: 'Profile', href: paths.admin.profile, icon: UserCircle },
   ],
 };

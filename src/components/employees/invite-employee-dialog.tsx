@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useInviteEmployee } from '@/hooks/actions/use-invite-employee';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -39,13 +41,11 @@ export function InviteEmployeeDialog() {
     defaultValues: { fullName: '', email: '' },
   });
 
-  const onSubmit = async (values: InviteEmployeeInput) => {
-    // Frontend-only phase: simulate the invitation request.
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(`Invitation sent to ${values.email}`);
+  const { execute, isPending } = useInviteEmployee(() => {
+    toast.success(`Invitation sent to ${form.getValues('email')}`);
     form.reset();
     setOpen(false);
-  };
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -62,7 +62,7 @@ export function InviteEmployeeDialog() {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(execute)}
             className='flex flex-col gap-4'
           >
             <FormField
@@ -70,9 +70,13 @@ export function InviteEmployeeDialog() {
               name='fullName'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full name</FormLabel>
+                  <FormLabel>Full name (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder='Ayesha Khan' {...field} />
+                    <Input
+                      placeholder='John Doe'
+                      {...field}
+                      value={field.value ?? ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -87,7 +91,7 @@ export function InviteEmployeeDialog() {
                   <FormControl>
                     <Input
                       type='email'
-                      placeholder='ayesha@bitsmiths.studio'
+                      placeholder='john.doe@bitsmiths.studio'
                       {...field}
                     />
                   </FormControl>
@@ -103,7 +107,7 @@ export function InviteEmployeeDialog() {
               >
                 Cancel
               </Button>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Send invitation
               </Button>
             </DialogFooter>
