@@ -49,8 +49,8 @@ export function EmailLayout({
           <Section style={emailStyles.header}>
             <Img
               src={`${baseUrl}/email/logo.png`}
-              width="40"
-              height="42"
+              width='40'
+              height='42'
               alt={appName}
               style={emailStyles.logo}
             />

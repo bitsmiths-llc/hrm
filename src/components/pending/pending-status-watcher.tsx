@@ -14,7 +14,9 @@ import { type AccountStatus } from '@/types/hrm';
 /** Where a no-longer-`submitted` employee belongs once an admin has decided:
  *  approved (active) opens the app; returned (onboarding) sends them back to
  *  re-upload and resubmit. `submitted` keeps them waiting. */
-function destinationFor(status: AccountStatus | null | undefined): string | null {
+function destinationFor(
+  status: AccountStatus | null | undefined,
+): string | null {
   if (status === 'active') return paths.employee.dashboard;
   if (status === 'onboarding' || status === 'invited') {
     return paths.employee.onboarding;

@@ -42,7 +42,9 @@ export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
   const upload = useUploadIdentityDoc(userId);
   const [uploading, setUploading] = useState<DocType | null>(null);
 
-  const docByType = new Map((documents ?? []).map((doc) => [doc.doc_type, doc]));
+  const docByType = new Map(
+    (documents ?? []).map((doc) => [doc.doc_type, doc]),
+  );
   const allUploaded = identityDocuments.every(({ docType }) =>
     docByType.has(docType),
   );
