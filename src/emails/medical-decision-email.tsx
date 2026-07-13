@@ -39,7 +39,6 @@ export function MedicalDecisionEmail({
 }: MedicalDecisionEmailProps) {
   const greeting = fullName ? `Hi ${fullName},` : 'Hi,';
   const approved = decision === 'approved';
-  const accent = approved ? brand.green : brand.amber;
 
   return (
     <EmailLayout
@@ -48,7 +47,7 @@ export function MedicalDecisionEmail({
       supportEmail={supportEmail}
       preview={`Your medical claim was ${decision}`}
     >
-      <Section style={{ ...emailStyles.card, borderTopColor: accent }}>
+      <Section style={emailStyles.card}>
         <Heading style={emailStyles.heading}>
           {approved ? 'Medical claim approved' : 'Medical claim rejected'}
         </Heading>
@@ -72,8 +71,18 @@ export function MedicalDecisionEmail({
             </Text>
           </Section>
         ) : (
-          <Section style={emailStyles.callout}>
-            <Text style={emailStyles.calloutLabel}>Reason for rejection</Text>
+          <Section
+            style={{
+              ...emailStyles.callout,
+              borderLeftColor: brand.green,
+              backgroundColor: brand.greenBg,
+            }}
+          >
+            <Text
+              style={{ ...emailStyles.calloutLabel, color: brand.greenDark }}
+            >
+              Reason for rejection
+            </Text>
             <Text style={emailStyles.calloutText}>
               {rejectionReason || 'No reason was provided.'}
             </Text>
@@ -81,10 +90,7 @@ export function MedicalDecisionEmail({
         )}
 
         <Section style={emailStyles.buttonWrap}>
-          <Button
-            href={medicalUrl}
-            style={{ ...emailStyles.button, backgroundColor: accent }}
-          >
+          <Button href={medicalUrl} style={emailStyles.button}>
             View my claims
           </Button>
         </Section>
@@ -92,5 +98,18 @@ export function MedicalDecisionEmail({
     </EmailLayout>
   );
 }
+
+// Sample data the React Email preview server (`pnpm email`) renders with.
+// Flip `decision` to 'rejected' to preview the amber rejection-reason callout.
+MedicalDecisionEmail.PreviewProps = {
+  fullName: 'Ayesha Khan',
+  decision: 'approved',
+  summary: 'Doctor Consultation · PKR 3,000 · Self',
+  rejectionReason: 'The attached receipt was not legible. Please resubmit.',
+  medicalUrl: 'http://localhost:3000/medical',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies MedicalDecisionEmailProps;
 
 export default MedicalDecisionEmail;

@@ -46,7 +46,7 @@ export function LeaveSubmittedEmail({
       supportEmail={supportEmail}
       preview={`${employeeName} submitted a leave request`}
     >
-      <Section style={{ ...emailStyles.card, borderTopColor: brand.blue }}>
+      <Section style={emailStyles.card}>
         <Heading style={emailStyles.heading}>New leave request</Heading>
         <Text style={emailStyles.paragraph}>{greeting}</Text>
         <Text style={emailStyles.paragraph}>
@@ -57,8 +57,8 @@ export function LeaveSubmittedEmail({
         <Section
           style={{
             ...emailStyles.callout,
-            borderLeftColor: brand.blue,
-            backgroundColor: '#eff6ff',
+            borderLeftColor: brand.green,
+            backgroundColor: brand.greenBg,
           }}
         >
           <Text style={emailStyles.detailRow}>
@@ -84,5 +84,17 @@ export function LeaveSubmittedEmail({
     </EmailLayout>
   );
 }
+
+// Sample data the React Email preview server (`pnpm email`) renders with.
+LeaveSubmittedEmail.PreviewProps = {
+  adminName: 'Bilal Ahmed',
+  employeeName: 'Ayesha Khan',
+  summary: 'Paid Leave · 3 day(s) from Jul 8, 2026',
+  reason: 'Attending my sister’s wedding out of town.',
+  reviewUrl: 'http://localhost:3000/admin/approvals',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies LeaveSubmittedEmailProps;
 
 export default LeaveSubmittedEmail;

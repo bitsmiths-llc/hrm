@@ -39,7 +39,6 @@ export function LeaveDecisionEmail({
 }: LeaveDecisionEmailProps) {
   const greeting = fullName ? `Hi ${fullName},` : 'Hi,';
   const approved = decision === 'approved';
-  const accent = approved ? brand.green : brand.amber;
 
   return (
     <EmailLayout
@@ -48,7 +47,7 @@ export function LeaveDecisionEmail({
       supportEmail={supportEmail}
       preview={`Your leave request was ${decision}`}
     >
-      <Section style={{ ...emailStyles.card, borderTopColor: accent }}>
+      <Section style={emailStyles.card}>
         <Heading style={emailStyles.heading}>
           {approved ? 'Leave request approved' : 'Leave request rejected'}
         </Heading>
@@ -72,8 +71,18 @@ export function LeaveDecisionEmail({
             </Text>
           </Section>
         ) : (
-          <Section style={emailStyles.callout}>
-            <Text style={emailStyles.calloutLabel}>Reason for rejection</Text>
+          <Section
+            style={{
+              ...emailStyles.callout,
+              borderLeftColor: brand.green,
+              backgroundColor: brand.greenBg,
+            }}
+          >
+            <Text
+              style={{ ...emailStyles.calloutLabel, color: brand.greenDark }}
+            >
+              Reason for rejection
+            </Text>
             <Text style={emailStyles.calloutText}>
               {rejectionReason || 'No reason was provided.'}
             </Text>
@@ -81,10 +90,7 @@ export function LeaveDecisionEmail({
         )}
 
         <Section style={emailStyles.buttonWrap}>
-          <Button
-            href={leaveUrl}
-            style={{ ...emailStyles.button, backgroundColor: accent }}
-          >
+          <Button href={leaveUrl} style={emailStyles.button}>
             View my leave
           </Button>
         </Section>
@@ -92,5 +98,18 @@ export function LeaveDecisionEmail({
     </EmailLayout>
   );
 }
+
+// Sample data the React Email preview server (`pnpm email`) renders with.
+// Flip `decision` to 'rejected' to preview the amber rejection-reason callout.
+LeaveDecisionEmail.PreviewProps = {
+  fullName: 'Ayesha Khan',
+  decision: 'approved',
+  summary: 'Paid Leave · 3 day(s) from Jul 8, 2026',
+  rejectionReason: 'Insufficient leave balance for the requested dates.',
+  leaveUrl: 'http://localhost:3000/leave',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies LeaveDecisionEmailProps;
 
 export default LeaveDecisionEmail;

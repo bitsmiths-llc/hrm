@@ -106,6 +106,16 @@ export function InviteEmail({
   );
 }
 
+// Sample data the React Email preview server (`pnpm email`) renders with.
+InviteEmail.PreviewProps = {
+  fullName: 'Ayesha Khan',
+  inviteUrl:
+    'http://localhost:3000/auth/accept-invitation?token_hash=preview-token',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies InviteEmailProps;
+
 export default InviteEmail;
 
 const styles: Record<string, CSSProperties> = {

@@ -46,7 +46,7 @@ export function MedicalSubmittedEmail({
       supportEmail={supportEmail}
       preview={`${employeeName} submitted a medical claim`}
     >
-      <Section style={{ ...emailStyles.card, borderTopColor: brand.blue }}>
+      <Section style={emailStyles.card}>
         <Heading style={emailStyles.heading}>New medical claim</Heading>
         <Text style={emailStyles.paragraph}>{greeting}</Text>
         <Text style={emailStyles.paragraph}>
@@ -57,8 +57,8 @@ export function MedicalSubmittedEmail({
         <Section
           style={{
             ...emailStyles.callout,
-            borderLeftColor: brand.blue,
-            backgroundColor: '#eff6ff',
+            borderLeftColor: brand.green,
+            backgroundColor: brand.greenBg,
           }}
         >
           <Text style={emailStyles.detailRow}>
@@ -85,5 +85,17 @@ export function MedicalSubmittedEmail({
     </EmailLayout>
   );
 }
+
+// Sample data the React Email preview server (`pnpm email`) renders with.
+MedicalSubmittedEmail.PreviewProps = {
+  adminName: 'Bilal Ahmed',
+  employeeName: 'Ayesha Khan',
+  summary: 'Doctor Consultation · PKR 3,000 · Self',
+  description: 'Follow-up consultation and prescribed medication.',
+  reviewUrl: 'http://localhost:3000/admin/approvals',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies MedicalSubmittedEmailProps;
 
 export default MedicalSubmittedEmail;
