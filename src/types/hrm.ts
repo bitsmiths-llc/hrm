@@ -8,7 +8,11 @@ export type AccountStatus = 'invited' | 'onboarding' | 'submitted' | 'active';
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
-export type EmploymentType = 'full_time' | 'part_time';
+export type EmploymentType =
+  | 'full_time'
+  | 'part_time'
+  | 'contract'
+  | 'internship';
 
 /** Drives medical-allowance eligibility (Medical Allowance Policy §1) —
  *  probation and notice-period employees aren't eligible even if
@@ -54,6 +58,8 @@ export type Employee = {
   phone: string;
   emergencyContact: string;
   address: string;
+  city: string;
+  postalCode: string;
   cnic: string;
   dateOfBirth: string; // ISO date
   bank: BankInfo | null;

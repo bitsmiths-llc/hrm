@@ -7,7 +7,10 @@
     "default": {
       "$description": "Bitsmiths brand green (from company web) — the default theme for this repo.",
       "action-primary": { "$type": "color", "$value": "{primitive.brand.500}" },
-      "action-primary-hover": { "$type": "color", "$value": "{primitive.brand.800}" }
+      "action-primary-hover": {
+        "$type": "color",
+        "$value": "{primitive.brand.800}"
+      }
     },
     "violet": {
       "action-primary": { "$type": "color", "$value": "#7c3aed" },
@@ -26,13 +29,21 @@
   "density": {
     "$description": "Multiplier applied to spacing + control sizing. 1 = default. Compact for data-dense enterprise UI, spacious for marketing/touch.",
     "compact": {
-      "scale": { "$type": "number", "$value": 0.875, "$description": "−12.5% spacing & control height" }
+      "scale": {
+        "$type": "number",
+        "$value": 0.875,
+        "$description": "−12.5% spacing & control height"
+      }
     },
     "default": {
       "scale": { "$type": "number", "$value": 1 }
     },
     "spacious": {
-      "scale": { "$type": "number", "$value": 1.15, "$description": "+15% spacing & control height" }
+      "scale": {
+        "$type": "number",
+        "$value": 1.15,
+        "$description": "+15% spacing & control height"
+      }
     }
   }
 }

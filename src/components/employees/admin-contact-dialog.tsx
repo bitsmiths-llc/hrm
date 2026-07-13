@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import { useUpdateEmployeeContact } from '@/hooks/actions/use-update-employee';
 
+import { ControlledTextField } from '@/components/hrm/form-fields';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,16 +18,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
 
+import { contactInfoFields } from '@/constants/profile';
 import { type ContactInfoInput, contactInfoSchema } from '@/schema/employee';
 
 type AdminContactDialogProps = {
@@ -69,45 +63,13 @@ export function AdminContactDialog({
             )}
             className='flex flex-col gap-4'
           >
-            <FormField
-              control={form.control}
-              name='phone'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone number</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='emergencyContact'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Emergency contact number</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='address'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Residential address</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {contactInfoFields.map((config) => (
+              <ControlledTextField
+                key={config.name}
+                control={form.control}
+                config={config}
+              />
+            ))}
             <DialogFooter>
               <Button
                 type='button'

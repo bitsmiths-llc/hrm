@@ -98,6 +98,72 @@ writes. The RPC only ever advances the caller's own `invited` row (matched on th
 email). It currently has **no app caller** — it's the transition mechanism for
 invite-acceptance (M1.3) and the deferred OAuth gate above.
 
+### Invite acceptance — the identity trust chain
+
+Accepting an invite must bind the new password to **the invited person**, and to
+nobody else. The rule is: **identity is session-bound, never URL-derived.** The
+email address is never read from the link; the link only carries an opaque,
+one-time token that must survive an exchange.
+
+**The chain, link by link:**
+
+1. **Mint (server, service role).** `inviteEmployee` (`src/actions/employees.ts`)
+   calls `admin.generateLink({ type: 'invite' })` and builds
+   `/auth/accept-invitation?token_hash=<hashed_token>&type=invite`. A re-invite
+   uses `admin.generateLink({ type: 'magiclink' })` and `type=magiclink`. The URL
+   carries **no email** — only the hashed token and its type.
+2. **Land (server component).** `src/app/auth/accept-invitation/page.tsx` calls
+   `getUser()`. `getUser()` is the authority:
+   - **Session already exists →** it wins outright and the token in the URL is
+     ignored. A session can only ever be _bootstrapped_ by a token, never
+     _overridden_ by one. So a signed-in admin (or any other user) who clicks an
+     invite is routed to their own app, never onto the form as the invitee.
+   - **No session (private tab / different browser / fresh device) →** the token
+     is the only proof available, so the page hands off to
+     `<InviteTokenVerifier>`.
+3. **Exchange (client). Private-tab re-verification.**
+   `src/components/auth/invite-token-verifier.tsx` runs `verifyOtp({ token_hash,
+   type })` on the **browser** client (a server component can't write the auth
+   cookies). On success the session cookies are set; it then `router.replace`s to
+   a clean `/auth/accept-invitation` — dropping the token from the address bar and
+   history — and the page re-renders **with a session**, re-entering step 2 down
+   the "session exists" branch. A one-time guard (`startedRef`) stops React strict
+   mode from spending the token twice.
+4. **Authorize (server, RLS).** With a session, the page reads the `employees` row
+   keyed by `user.id` (not by any URL value). That row is the source of truth for
+   both **who they are** (`email`, shown read-only) and **what they may do**: only
+   an `invited` caller sees the password form; `onboarding` → onboarding wizard,
+   anything else → dashboard.
+5. **Commit (server action, caller-scoped).** `acceptInvite`
+   (`src/actions/onboarding.ts`) runs as the caller: `updateUser({ password })`
+   then the `accept_onboarding()` RPC, which advances **only the caller's own**
+   `invited` row to `onboarding` (matched on the JWT email, guard bypassed via a
+   transaction-local GUC — see above).
+
+**Expired / reused / tampered tokens.** A spent or expired `token_hash` fails
+`verifyOtp`; a malformed `type` never matches the allowlist. Either way
+`<InviteTokenVerifier>` shows an explicit "this invitation link is no longer
+valid — ask your admin for a fresh invite" state instead of a silent bounce. The
+one exception: if a valid session somehow already exists on a failed exchange
+(e.g. the invitee reopened the old link after accepting), it routes them into the
+app by their `employees` row rather than showing the error. The `employees`-row
+gate in step 4 is the backstop — a reused link can never re-open the password
+form for an already-`onboarding`/`active` account.
+
+**Recovery/OAuth code exchange (the other token path).** Password recovery (and,
+later, OAuth) round-trips through `src/app/auth/callback/route.ts`, which exchanges
+a **PKCE `code`** (not a `token_hash`) via `exchangeCodeForSession`. It now fails
+closed: a missing code, or a code that won't exchange (expired/reused), redirects
+to `/auth/login` instead of forwarding to the reset form with no recovery session.
+The `next` redirect target is restricted to internal relative paths to prevent an
+open redirect.
+
+**Why not honor the token over an existing session?** Deliberately: trusting the
+URL token over a live session would let a link decide identity, which is exactly
+what "session-bound, not URL-derived" forbids. To accept an invite while another
+account is signed in, sign out first or open the link in a private tab — the
+re-verification path (step 3) then runs cleanly.
+
 ### First-admin bootstrap (chicken-and-egg)
 
 `inviteEmployee` (M1.3) needs an admin to exist, but no admin exists to invite the

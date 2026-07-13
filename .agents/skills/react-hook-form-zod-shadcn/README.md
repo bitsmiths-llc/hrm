@@ -24,4 +24,3 @@ This skill was designed for the following technology versions:
 - **React**: 19.2.1
 - **React DOM**: 19.2.1
 - **TypeScript**: ^5
-

@@ -24,13 +24,13 @@ get it for free by using the semantic classes below. **Unless a task explicitly 
 for different colors, brand green is the default and you must not substitute another
 hue.** The palette:
 
-| Token | Hex | HSL var | Used for |
-|---|---|---|---|
-| `brand-500` | `#04CD77` | `--brand-500: 152 96% 41%` | Primary green — `--primary`, `--ring`, `chart-1` |
-| `brand-800` | `#02502E` | `--brand-800: 152 94% 16%` | Deep green — accents, chart-2 |
-| `brand-900` | `#012817` | `--brand-900: 153 94% 8%` | Darkest green — dark-mode background, chart-3 |
-| `neutral-42` | `#424242` | — | Brand neutral (dark text/surfaces) |
-| `neutral-b3` | `#B3B3B3` | — | Brand neutral (muted/borders) |
+| Token        | Hex       | HSL var                    | Used for                                         |
+| ------------ | --------- | -------------------------- | ------------------------------------------------ |
+| `brand-500`  | `#04CD77` | `--brand-500: 152 96% 41%` | Primary green — `--primary`, `--ring`, `chart-1` |
+| `brand-800`  | `#02502E` | `--brand-800: 152 94% 16%` | Deep green — accents, chart-2                    |
+| `brand-900`  | `#012817` | `--brand-900: 153 94% 8%`  | Darkest green — dark-mode background, chart-3    |
+| `neutral-42` | `#424242` | —                          | Brand neutral (dark text/surfaces)               |
+| `neutral-b3` | `#B3B3B3` | —                          | Brand neutral (muted/borders)                    |
 
 Because brand green is mapped onto `--primary`/`--ring`/`--accent`/charts, a plain
 `bg-primary` button, `ring-ring` focus outline, and default chart all come out on
@@ -57,16 +57,16 @@ in `src/app/layout.tsx`. It's the default, so you rarely set it explicitly.
   a component. The brand green lives in the `--brand-500/800/900` variables at the top
   of `:root`; re-point those to rebrand the whole app.
 
-  | Use | Token | Not |
-  |---|---|---|
-  | Page/section background | `bg-background` | `bg-white` |
-  | Card surface | `bg-card` | `bg-white` / `bg-gray-50` |
-  | Body text | `text-foreground` | `text-black` |
-  | Secondary text/labels | `text-muted-foreground` | `text-gray-500` |
-  | Dividers/input borders | `border-border` / `border-input` | `border-gray-200` |
-  | Primary action (brand green) | `bg-primary` / `text-primary-foreground` | raw `#04CD77` / `bg-green-500` |
-  | Destructive action/error | `bg-destructive` / `text-destructive-foreground` | `bg-red-500` |
-  | Focus ring | `ring-ring` | custom outline colors |
+  | Use                          | Token                                            | Not                            |
+  | ---------------------------- | ------------------------------------------------ | ------------------------------ |
+  | Page/section background      | `bg-background`                                  | `bg-white`                     |
+  | Card surface                 | `bg-card`                                        | `bg-white` / `bg-gray-50`      |
+  | Body text                    | `text-foreground`                                | `text-black`                   |
+  | Secondary text/labels        | `text-muted-foreground`                          | `text-gray-500`                |
+  | Dividers/input borders       | `border-border` / `border-input`                 | `border-gray-200`              |
+  | Primary action (brand green) | `bg-primary` / `text-primary-foreground`         | raw `#04CD77` / `bg-green-500` |
+  | Destructive action/error     | `bg-destructive` / `text-destructive-foreground` | `bg-red-500`                   |
+  | Focus ring                   | `ring-ring`                                      | custom outline colors          |
 
 - **Note:** the token config supports dark mode, but nothing currently toggles the
   `.dark` class — there's no `next-themes` `ThemeProvider` wired into

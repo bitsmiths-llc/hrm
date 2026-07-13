@@ -3,16 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 
+import { ControlledTextField } from '@/components/hrm/form-fields';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
 
 import { bankInfoFields } from '@/constants/onboarding';
 import { type BankInfoInput, bankInfoSchema } from '@/schema/onboarding';
@@ -39,20 +32,11 @@ export function BankInfoStep({
         onSubmit={form.handleSubmit(onNext)}
         className='grid gap-4 sm:grid-cols-2'
       >
-        {bankInfoFields.map(({ name, label, placeholder }) => (
-          <FormField
-            key={name}
+        {bankInfoFields.map((config) => (
+          <ControlledTextField
+            key={config.name}
             control={form.control}
-            name={name}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{label}</FormLabel>
-                <FormControl>
-                  <Input placeholder={placeholder} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            config={config}
           />
         ))}
         <div className='flex justify-between sm:col-span-2'>

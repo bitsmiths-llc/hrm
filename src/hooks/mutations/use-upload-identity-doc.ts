@@ -28,15 +28,26 @@ export function useUploadIdentityDoc(userId: string) {
       if (upload.error) throw upload.error;
 
       const { error } = await supabase.from('employee_documents').upsert(
-        { employee_id: userId, doc_type: docType, storage_path: path },
+        {
+          employee_id: userId,
+          doc_type: docType,
+          storage_path: path,
+          file_name: file.name,
+        },
         { onConflict: 'employee_id,doc_type' },
       );
       if (error) throw error;
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: [QueryKeys.EMPLOYEE_DOCUMENTS, userId],
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.EMPLOYEE_DOCUMENTS, userId],
+        }),
+        // Refresh the signed-URL preview cache so the new upload shows at once.
+        queryClient.invalidateQueries({
+          queryKey: [QueryKeys.IDENTITY_DOC_FILES, userId],
+        }),
+      ]),
     onError: (error: Error) =>
       toast.error('Could not upload the document', {
         description: error.message,

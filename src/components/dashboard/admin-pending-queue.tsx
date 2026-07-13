@@ -32,6 +32,7 @@ export function AdminPendingQueue() {
         who: r.employeeName,
         what: leaveTypeLabels[r.type],
         detail: `${r.days} day(s) from ${formatDate(r.startDate)}`,
+        createdAt: r.createdAt,
       })),
     ...mockMedicalClaims
       .filter((c) => c.status === 'pending')
@@ -40,6 +41,7 @@ export function AdminPendingQueue() {
         who: c.employeeName,
         what: 'Medical claim',
         detail: formatCurrency(c.amount),
+        createdAt: c.createdAt,
       })),
     ...mockOvertimeLogs
       .filter((o) => o.status === 'pending')
@@ -48,8 +50,9 @@ export function AdminPendingQueue() {
         who: o.employeeName,
         what: 'Overtime',
         detail: `${o.hours}h · ${o.project}`,
+        createdAt: o.createdAt,
       })),
-  ];
+  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   return (
     <Card>
@@ -59,7 +62,7 @@ export function AdminPendingQueue() {
             Approvals Queue
           </CardTitle>
           <CardDescription>
-            Everything waiting on admin action, oldest first
+            Everything waiting on admin action, latest first
           </CardDescription>
         </div>
         <Link href={paths.admin.approvals}>

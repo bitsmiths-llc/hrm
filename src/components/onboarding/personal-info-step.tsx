@@ -4,20 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
 import { useForm } from 'react-hook-form';
 
+import { ControlledTextField } from '@/components/hrm/form-fields';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { ControlledDatePicker } from '@/components/ui/form/controlled-date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-import { cn } from '@/lib/utils';
 
 import { personalInfoFields } from '@/constants/onboarding';
 import {
@@ -52,26 +44,9 @@ export function PersonalInfoStep({
           <Label htmlFor='onboarding-email'>Email</Label>
           <Input id='onboarding-email' value={email} disabled readOnly />
         </div>
-        {personalInfoFields.map(({ name, label, placeholder }, index) => (
-          <React.Fragment key={name}>
-            <FormField
-              control={form.control}
-              name={name}
-              render={({ field }) => (
-                <FormItem
-                  className={cn(
-                    'flex flex-col',
-                    name === 'address' && 'sm:col-span-2',
-                  )}
-                >
-                  <FormLabel>{label}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={placeholder} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {personalInfoFields.map((config, index) => (
+          <React.Fragment key={config.name}>
+            <ControlledTextField control={form.control} config={config} />
             {index === 0 && (
               <ControlledDatePicker<PersonalInfoInput>
                 name='dateOfBirth'

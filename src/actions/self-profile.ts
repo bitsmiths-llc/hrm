@@ -2,7 +2,7 @@
 
 import { authActionClient } from '@/lib/server/safe-action';
 
-import { contactInfoSchema } from '@/schema/employee';
+import { contactInfoSchema, personalDetailsSchema } from '@/schema/employee';
 import { bankInfoSchema, socialAccountsSchema } from '@/schema/onboarding';
 
 // ---------------------------------------------------------------------------
@@ -29,6 +29,28 @@ export const updateMyProfile = authActionClient
         phone: parsedInput.phone,
         emergency_contact: parsedInput.emergencyContact,
         address: parsedInput.address,
+        city: parsedInput.city,
+        postal_code: parsedInput.postalCode,
+      })
+      .eq('id', userId); // RLS employees_update_self
+    if (error) throw new Error(error.message);
+  });
+
+/** Identity fields on the caller's own employees row (name / DOB / CNIC).
+ *  Same self-scoped path as `updateMyProfile` — none are protected columns, so
+ *  `employees_update_self` + `guard_employee_columns` allow the write. Surfaced
+ *  on the profile only for admins, who have no admin to maintain it for them. */
+export const updateMyPersonalInfo = authActionClient
+  .schema(personalDetailsSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    const userId = authUser.user?.id;
+    if (!userId) throw new Error('Unauthorized');
+    const { error } = await supabase
+      .from('employees')
+      .update({
+        full_name: parsedInput.fullName,
+        date_of_birth: parsedInput.dateOfBirth,
+        cnic: parsedInput.cnic,
       })
       .eq('id', userId); // RLS employees_update_self
     if (error) throw new Error(error.message);

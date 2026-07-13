@@ -45,6 +45,8 @@ export const leaveTypeLabels: Record<LeaveType, string> = {
 export const employmentTypeLabels: Record<EmploymentType, string> = {
   full_time: 'Full-time',
   part_time: 'Part-time',
+  contract: 'Contract',
+  internship: 'Internship',
 };
 
 export const employmentStageLabels: Record<EmploymentStage, string> = {

@@ -1,22 +1,24 @@
 'use client';
 
 import { type ColumnDef } from '@tanstack/react-table';
-import { ArrowRight } from 'lucide-react';
-import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { StatusBadge } from '@/components/hrm/status-badge';
-import { Button } from '@/components/ui/button';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
 
 import { formatDate } from '@/utils/date-functions';
 
 import { employmentTypeLabels } from '@/constants/hrm-labels';
-import { paths } from '@/constants/paths';
+
+import { EmployeesTableRowActions } from './employees-table-row-actions';
 
 import { Employee } from '@/types/hrm';
 
+// None of the directory's columns hold numeric/ordered data, so none carry a
+// sort control — the sort chevrons are dropped (`enableSorting: false`) and each
+// header renders as a plain label aligned to its cell (Name left, the rest
+// centered). Finding a row is search- and filter-driven instead.
 export function useEmployeesTableColumns() {
   return useMemo<ColumnDef<Employee>[]>(
     () => [
@@ -26,7 +28,11 @@ export function useEmployeesTableColumns() {
         // indexes column values) matches on either.
         accessorFn: (row) => `${row.fullName} ${row.email}`,
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Name' />
+          <DataTableColumnHeader
+            column={column}
+            title='Name'
+            className='text-left'
+          />
         ),
         cell: ({ row }) => (
           <div className='flex max-w-[220px] flex-col'>
@@ -38,6 +44,7 @@ export function useEmployeesTableColumns() {
             </span>
           </div>
         ),
+        enableSorting: false,
       },
       {
         accessorKey: 'designation',
@@ -54,6 +61,7 @@ export function useEmployeesTableColumns() {
             formatter={(value) => (value as string) || '—'}
           />
         ),
+        enableSorting: false,
       },
       {
         accessorKey: 'department',
@@ -66,6 +74,7 @@ export function useEmployeesTableColumns() {
             formatter={(value) => (value as string) || '—'}
           />
         ),
+        enableSorting: false,
         filterFn: (row, id, value: string[]) =>
           value.includes(row.getValue(id)),
       },
@@ -82,6 +91,7 @@ export function useEmployeesTableColumns() {
             }
           />
         ),
+        enableSorting: false,
         filterFn: (row, id, value: string[]) =>
           value.includes(row.getValue(id)),
       },
@@ -99,6 +109,7 @@ export function useEmployeesTableColumns() {
             <StatusBadge status={row.original.status} />
           </div>
         ),
+        enableSorting: false,
         filterFn: (row, id, value: string[]) =>
           value.includes(row.getValue(id)),
       },
@@ -118,19 +129,12 @@ export function useEmployeesTableColumns() {
             className='whitespace-nowrap'
           />
         ),
+        enableSorting: false,
       },
       {
         id: 'actions',
         header: () => null,
-        cell: ({ row }) => (
-          <div className='flex justify-end'>
-            <Link href={`${paths.admin.employees}/${row.original.id}`}>
-              <Button variant='ghost' size='sm' icon={ArrowRight}>
-                View
-              </Button>
-            </Link>
-          </div>
-        ),
+        cell: ({ row }) => <EmployeesTableRowActions employee={row.original} />,
         enableSorting: false,
       },
     ],

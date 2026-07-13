@@ -9,6 +9,7 @@ Page-level layout patterns that define content zones, grid structure, and handle
 The primary data overview and monitoring layout.
 
 **Page Grid:**
+
 ```
 ┌────────────────────────────────────────────────────────┐
 │ [Header]                                                │  ← organisms/Header
@@ -38,6 +39,7 @@ The primary data overview and monitoring layout.
 | Data Table | 12 columns | Recent activity or main data view |
 
 **Responsive Behavior:**
+
 - **Desktop (≥ lg):** Sidebar + 12-col content grid
 - **Tablet (md–lg):** Collapsed sidebar + 8-col grid; secondary panel moves below primary
 - **Mobile (< md):** No sidebar + single column; KPIs become 2×2 grid, charts stack
@@ -57,6 +59,7 @@ The primary data overview and monitoring layout.
 Authentication pages: login, register, forgot password, reset password.
 
 **Page Grid:**
+
 ```
 ┌──────────────────────────────────────────┐
 │                                          │
@@ -111,6 +114,7 @@ Alternative: Split layout
 | Verify Email | OTP input (6 digits) | "Verify" |
 
 **Layout:**
+
 - Card width: 400px (max)
 - Centered vertically and horizontally
 - Card padding: `spacing.card.padding` (24px)
@@ -127,6 +131,7 @@ Alternative: Split layout
 | Success | Redirect or success message |
 
 **Accessibility:**
+
 - `<main>` landmark contains the form
 - WCAG 3.3.8: allow password managers, no CAPTCHA as sole method
 - Social buttons: `aria-label="Sign in with Google"`
@@ -138,6 +143,7 @@ Alternative: Split layout
 User or application settings with grouped sections.
 
 **Page Grid:**
+
 ```
 ┌────────────────────────────────────────────────────────┐
 │ [Header]                                                │
@@ -165,6 +171,7 @@ User or application settings with grouped sections.
 | Settings Content | 9 columns | Form sections with save per section or global save |
 
 **Section Pattern:**
+
 ```
 ┌────────────────────────────────────┐
 │ Section Title                      │
@@ -189,6 +196,7 @@ User or application settings with grouped sections.
 | API | API keys table, create key, usage stats |
 
 **Responsive:**
+
 - **Desktop:** Side nav + content
 - **Tablet:** Top tabs + content
 - **Mobile:** Stack — nav list as full page, content as drill-down page with back button
@@ -209,6 +217,7 @@ User or application settings with grouped sections.
 A master-detail layout for browsing collections and viewing individual items.
 
 **Page Grid:**
+
 ```
 ┌────────────────────────────────────────────────────────┐
 │ [Header]                                                │
@@ -234,6 +243,7 @@ A master-detail layout for browsing collections and viewing individual items.
 | Detail Panel | 8 columns | Full item view with tabs or sections |
 
 **List Item Pattern:**
+
 ```
 ┌───────────────────────────┐
 │ [Avatar] Title     [Time] │
@@ -251,6 +261,7 @@ A master-detail layout for browsing collections and viewing individual items.
 | Documentation | Page tree + page content |
 
 **Responsive:**
+
 - **Desktop (≥ lg):** Side-by-side list + detail
 - **Tablet (md–lg):** List panel narrows (3-col); detail expands
 - **Mobile (< md):** Stack — list as page 1, detail as page 2 with back navigation
@@ -265,6 +276,7 @@ A master-detail layout for browsing collections and viewing individual items.
 | Error | Error alert + retry | Error alert + retry |
 
 **Accessibility:**
+
 - List: `role="listbox"` or semantic `<ul>` with `aria-current="true"` on selected
 - Detail: `<article>` with heading matching selected item
 - Mobile navigation: announce panel changes via live region

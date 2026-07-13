@@ -4,10 +4,7 @@ import { ShieldCheck, User } from 'lucide-react';
 
 import { useCurrentEmployee } from '@/hooks/queries/employees';
 
-import {
-  SidebarMenu,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar';
+import { SidebarMenu, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 /** Sidebar identity for the signed-in user. Purely informational — it replaced

@@ -4,6 +4,7 @@ import { UserX } from 'lucide-react';
 
 import { useMyProfile } from '@/hooks/queries/self-profile';
 
+import { EmployeeDocuments } from '@/components/employees/employee-documents';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { InfoCard } from '@/components/hrm/info-card';
 import { PageHeader } from '@/components/hrm/page-header';
@@ -11,6 +12,7 @@ import { StatusBadge } from '@/components/hrm/status-badge';
 import { BankInfoDialog } from '@/components/profile/bank-info-dialog';
 import { ContactInfoDialog } from '@/components/profile/contact-info-dialog';
 import { EmploymentReadonly } from '@/components/profile/employment-readonly';
+import { PersonalInfoDialog } from '@/components/profile/personal-info-dialog';
 import { SocialsInfoDialog } from '@/components/profile/socials-info-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -18,9 +20,29 @@ import { formatDate } from '@/utils/date-functions';
 
 import { employmentTypeLabels } from '@/constants/hrm-labels';
 
-/** Self-service profile: the signed-in employee views their own data and edits
- *  contact, bank, and socials. Employment stays read-only (admin-owned). */
-export function ProfileView() {
+type ProfileViewProps = {
+  /** Employment (salary/designation/type) is admin-owned and only meaningful
+   *  for employees. Admins have no employment record, so their own profile
+   *  hides that section and uses a role-neutral header. Defaults to the full
+   *  employee view. */
+  showEmployment?: boolean;
+  /** Personal identity fields (name / DOB / CNIC) are admin-managed, so an
+   *  employee's own profile shows them read-only. Admins have no admin above
+   *  them, so their profile enables self-editing. Defaults to read-only. */
+  canEditPersonal?: boolean;
+  /** Identity documents are collected during onboarding, which admins never go
+   *  through — so their profile omits the documents card. Defaults to shown. */
+  showDocuments?: boolean;
+};
+
+/** Self-service profile: the signed-in user views their own data and edits
+ *  contact, bank, and socials. Employment stays read-only (admin-owned), and
+ *  personal identity fields are editable only for admins (see props). */
+export function ProfileView({
+  showEmployment = true,
+  canEditPersonal = false,
+  showDocuments = true,
+}: ProfileViewProps) {
   const { data: employee, isLoading } = useMyProfile();
 
   if (isLoading) {
@@ -47,7 +69,11 @@ export function ProfileView() {
     <>
       <PageHeader
         title='My Profile'
-        description={`${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`}
+        description={
+          showEmployment
+            ? `${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`
+            : employee.email
+        }
       >
         <StatusBadge status={employee.status} />
       </PageHeader>
@@ -60,6 +86,8 @@ export function ProfileView() {
               phone: employee.phone,
               emergencyContact: employee.emergencyContact,
               address: employee.address,
+              city: employee.city,
+              postalCode: employee.postalCode,
             }}
           />
         }
@@ -68,11 +96,24 @@ export function ProfileView() {
           { label: 'Phone', value: employee.phone },
           { label: 'Emergency contact', value: employee.emergencyContact },
           { label: 'Address', value: employee.address },
+          { label: 'City', value: employee.city },
+          { label: 'Postal code', value: employee.postalCode },
         ]}
       />
 
       <InfoCard
         title='Personal Information'
+        action={
+          canEditPersonal ? (
+            <PersonalInfoDialog
+              defaultValues={{
+                fullName: employee.fullName,
+                dateOfBirth: employee.dateOfBirth,
+                cnic: employee.cnic,
+              }}
+            />
+          ) : undefined
+        }
         fields={[
           { label: 'Full name', value: employee.fullName },
           { label: 'Date of birth', value: formatDate(employee.dateOfBirth) },
@@ -121,7 +162,9 @@ export function ProfileView() {
         ]}
       />
 
-      <EmploymentReadonly employee={employee} />
+      {showDocuments && <EmployeeDocuments employeeId={employee.id} />}
+
+      {showEmployment && <EmploymentReadonly employee={employee} />}
     </>
   );
 }

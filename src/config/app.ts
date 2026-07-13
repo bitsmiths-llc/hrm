@@ -14,7 +14,12 @@ export const appConfig = {
   appName: env.NEXT_PUBLIC_APP_NAME,
   emails: {
     support: 'support@bitsmiths.studio',
-    sender: 'noreply@bitsmiths.studio',
+    // People-facing invites read better from a human-sounding, monitored
+    // address than from `noreply@`. Replies are routed to `support` above.
+    sender: 'Bitsmiths HR <hr@bitsmiths.studio>',
+    // Always notified of onboarding submissions, on top of whoever currently
+    // holds an admin role in the DB (deduped against them).
+    onboardingNotify: ['zaeemkhalid070@gmail.com'],
   },
 } as const;
 

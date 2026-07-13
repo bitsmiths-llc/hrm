@@ -21,11 +21,13 @@ import { paths } from '@/constants/paths';
 import { AdminBankDialog } from './admin-bank-dialog';
 import { AdminContactDialog } from './admin-contact-dialog';
 import { AdminSocialsDialog } from './admin-socials-dialog';
+import { EmployeeDocuments } from './employee-documents';
 import { EmployeeLeaveTab } from './employee-leave-tab';
 import { EmployeeMedicalTab } from './employee-medical-tab';
 import { EmployeeOvertimeTab } from './employee-overtime-tab';
 import { EmployeePayrollTab } from './employee-payroll-tab';
 import { EmploymentConfigForm } from './employment-config-form';
+import { EmployeeReviewActions } from './review-actions';
 
 type EmployeeDetailProps = {
   employeeId: string;
@@ -73,7 +75,12 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
         title={employee.fullName || employee.email}
         description={`${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`}
       >
-        <StatusBadge status={employee.status} />
+        <div className='flex items-center gap-3'>
+          <StatusBadge status={employee.status} />
+          {employee.status === 'submitted' && (
+            <EmployeeReviewActions employee={employee} />
+          )}
+        </div>
       </PageHeader>
 
       {!!employee.reviewNote && (
@@ -112,6 +119,8 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
                   phone: employee.phone,
                   emergencyContact: employee.emergencyContact,
                   address: employee.address,
+                  city: employee.city,
+                  postalCode: employee.postalCode,
                 }}
               />
             }
@@ -125,6 +134,8 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
               },
               { label: 'CNIC', value: employee.cnic },
               { label: 'Address', value: employee.address },
+              { label: 'City', value: employee.city },
+              { label: 'Postal code', value: employee.postalCode },
               { label: 'Invited', value: formatDate(employee.invitedAt) },
               { label: 'Joined', value: formatDate(employee.joinedAt) },
             ]}
@@ -174,6 +185,8 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
               { label: 'Twitter', value: employee.social?.twitter },
             ]}
           />
+
+          <EmployeeDocuments employeeId={employee.id} />
 
           <EmploymentConfigForm employee={employee} />
         </TabsContent>

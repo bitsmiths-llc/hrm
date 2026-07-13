@@ -49,7 +49,9 @@ export function ResetPasswordForm() {
         <CardTitle className='text-xl font-semibold'>
           Set a new password
         </CardTitle>
-        <CardDescription>Choose a new password for your account.</CardDescription>
+        <CardDescription>
+          Choose a new password for your account.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

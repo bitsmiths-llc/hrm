@@ -73,7 +73,7 @@ export function InviteEmployeeDialog() {
                   <FormLabel>Full name (optional)</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder='Ayesha Khan'
+                      placeholder='John Doe'
                       {...field}
                       value={field.value ?? ''}
                     />
@@ -91,7 +91,7 @@ export function InviteEmployeeDialog() {
                   <FormControl>
                     <Input
                       type='email'
-                      placeholder='ayesha@bitsmiths.studio'
+                      placeholder='john.doe@bitsmiths.studio'
                       {...field}
                     />
                   </FormControl>

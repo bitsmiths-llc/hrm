@@ -1,7 +1,12 @@
 'use server';
 
+import { sendOnboardingSubmittedEmail } from '@/lib/resend/send-onboarding-emails';
 import { authActionClient } from '@/lib/server/safe-action';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import Logger from '@/utils/logger';
 
+import { appConfig } from '@/config/app';
+import { paths } from '@/constants/paths';
 import { acceptInvitationSchema } from '@/schema/auth';
 import {
   bankInfoSchema,
@@ -9,6 +14,68 @@ import {
   personalInfoSchema,
   socialAccountsSchema,
 } from '@/schema/onboarding';
+
+/**
+ * Best-effort fan-out: email every admin that a submission is waiting. Runs
+ * service-role (`supabaseAdmin`) because the submitting employee can't read the
+ * admin roster under RLS. Callers swallow its errors — a bounced notification
+ * must never undo the already-committed `submitted` transition.
+ */
+async function notifyAdminsOfSubmission(employeeId: string) {
+  const [{ data: employee }, { data: admins }] = await Promise.all([
+    supabaseAdmin
+      .from('employees')
+      .select('full_name, email')
+      .eq('id', employeeId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from('employees')
+      .select('full_name, email')
+      .eq('role', 'admin'),
+  ]);
+
+  if (!employee) return;
+
+  // Recipients = every admin-role employee plus the always-notify address(es)
+  // from config, deduped by lowercased email so an address that also holds an
+  // admin role isn't emailed twice.
+  const seen = new Set<string>();
+  const recipients = [
+    ...(admins ?? []).map((admin) => ({
+      email: admin.email,
+      name: admin.full_name as string | null,
+    })),
+    ...appConfig.emails.onboardingNotify.map((email) => ({
+      email,
+      name: null,
+    })),
+  ].filter(({ email }) => {
+    const key = email.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  if (!recipients.length) return;
+
+  const employeeName = employee.full_name || employee.email;
+  const reviewUrl = new URL(
+    `${paths.admin.employees}/${employeeId}`,
+    appConfig.appUrl,
+  ).toString();
+
+  await Promise.all(
+    recipients.map((recipient) =>
+      sendOnboardingSubmittedEmail({
+        to: recipient.email,
+        adminName: recipient.name,
+        employeeName,
+        employeeEmail: employee.email,
+        reviewUrl,
+      }),
+    ),
+  );
+}
 
 /**
  * Invite-link landing. The invitee arrives already in a Supabase session
@@ -62,6 +129,8 @@ export const savePersonal = authActionClient
         phone: parsedInput.phone,
         emergency_contact: parsedInput.emergencyContact,
         address: parsedInput.address,
+        city: parsedInput.city,
+        postal_code: parsedInput.postalCode,
         cnic: parsedInput.cnic,
       })
       .eq('id', userId); // RLS employees_update_self
@@ -108,7 +177,21 @@ export const saveSocials = authActionClient
  */
 export const submitOnboarding = authActionClient
   .schema(consentSchema)
-  .action(async ({ ctx: { supabase } }) => {
+  .action(async ({ ctx: { supabase, authUser } }) => {
     const { error } = await supabase.rpc('submit_onboarding');
     if (error) throw new Error(error.message);
+
+    // Notify admins out-of-band. The transition has already committed, so any
+    // failure here is logged, not thrown — the employee's submit still succeeds.
+    const userId = authUser.user?.id;
+    if (userId) {
+      try {
+        await notifyAdminsOfSubmission(userId);
+      } catch (notifyError) {
+        Logger.error(
+          'Failed to notify admins of onboarding submission',
+          notifyError,
+        );
+      }
+    }
   });

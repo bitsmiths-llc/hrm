@@ -14,9 +14,9 @@ npm install react-hook-form@7.71.1 zod@4.3.6 @hookform/resolvers@5.2.2
 Always add `'use client'` at the top of form component files.
 
 ```tsx
-"use client";
+'use client';
 
-import { useForm } from "react-hook-form";
+import { useForm } from 'react-hook-form';
 // ... other imports
 
 export function MyForm() {
@@ -27,16 +27,16 @@ export function MyForm() {
 All forms must use the shadcn/ui Field component pattern with react-hook-form integration.
 
 ```tsx
-"use client";
+'use client';
 
-import { useForm } from "react-hook-form";
+import { useForm } from 'react-hook-form';
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field";
+} from '@/components/ui/field';
 
 export function MyForm() {
   const form = useForm();
@@ -45,7 +45,7 @@ export function MyForm() {
     <form onSubmit={form.handleSubmit(onSubmit)}>
       <FieldGroup>
         <Controller
-          name="title"
+          name='title'
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
@@ -53,8 +53,8 @@ export function MyForm() {
               <Input
                 {...field}
                 aria-invalid={fieldState.invalid}
-                placeholder="Login button not working on mobile"
-                autoComplete="off"
+                placeholder='Login button not working on mobile'
+                autoComplete='off'
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
@@ -93,10 +93,10 @@ export function MyForm() {
 Generate a **single** unique ID per form using React's `useId` hook. **DO NOT** generate a separate ID for every field. Generate once, reuse with field names.
 
 ```tsx
-"use client";
+'use client';
 
-import { useId } from "react";
-import { useForm } from "react-hook-form";
+import { useId } from 'react';
+import { useForm } from 'react-hook-form';
 
 export function MyForm() {
   const formId = useId(); // Generate once
@@ -106,7 +106,7 @@ export function MyForm() {
     <form id={formId} onSubmit={form.handleSubmit(handleSubmit)}>
       <FieldGroup>
         <Controller
-          name="title"
+          name='title'
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
@@ -115,8 +115,8 @@ export function MyForm() {
                 {...field}
                 id={`${formId}-title`} // Use it with template literals for each field.
                 aria-invalid={fieldState.invalid}
-                placeholder="Login button not working on mobile"
-                autoComplete="off"
+                placeholder='Login button not working on mobile'
+                autoComplete='off'
                 disabled={form.formState.isSubmitting}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -134,7 +134,7 @@ Always add `mode: "onChange"` to the useForm hook configuration for real-time va
 ```tsx
 const form = useForm<FormData>({
   resolver: standardSchemaResolver(formSchema),
-  mode: "onChange", // Validates on every change
+  mode: 'onChange', // Validates on every change
 });
 ```
 
@@ -143,10 +143,10 @@ Initialize form with `defaultValues` that match the schema's expected types.
 ```tsx
 const form = useForm<FormData>({
   resolver: standardSchemaResolver(formSchema),
-  mode: "onChange",
+  mode: 'onChange',
   defaultValues: {
-    username: "",
-    email: "",
+    username: '',
+    email: '',
   },
 });
 ```
@@ -154,11 +154,11 @@ const form = useForm<FormData>({
 **CRITICAL**: Due to an active issue, always import from `@hookform/resolvers/standard-schema` but use the standard-schema resolver pattern.
 
 ```tsx
-"use client";
+'use client';
 
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import * as z from 'zod';
+import { useForm } from 'react-hook-form';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 
 const formSchema = z.object({
   //...
@@ -169,7 +169,7 @@ type FormData = z.infer<typeof formSchema>;
 export function MyForm() {
   const form = useForm<FormData>({
     resolver: standardSchemaResolver(formSchema),
-    mode: "onChange",
+    mode: 'onChange',
   });
 }
 ```
@@ -181,7 +181,7 @@ return (
   <form id={formId} onSubmit={form.handleSubmit(handleSubmit)}>
     <FieldGroup>
       <Controller
-        name="email"
+        name='email'
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
@@ -190,8 +190,8 @@ return (
               {...field}
               id={`${formId}-email`}
               aria-invalid={fieldState.invalid}
-              placeholder="test@example.com"
-              autoComplete="off"
+              placeholder='test@example.com'
+              autoComplete='off'
               disabled={form.formState.isSubmitting}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -199,8 +199,8 @@ return (
         )}
       />
     </FieldGroup>
-    <Button type="submit" form={formId} disabled={form.formState.isSubmitting}>
-      {form.formState.isSubmitting ? "Submitting..." : "Submit"}
+    <Button type='submit' form={formId} disabled={form.formState.isSubmitting}>
+      {form.formState.isSubmitting ? 'Submitting...' : 'Submit'}
     </Button>
   </form>
 );
@@ -214,11 +214,11 @@ return (
     {/* Form fields */}
 
     <Button
-      type="submit"
+      type='submit'
       form={formId}
       disabled={!form.formState.isValid || form.formState.isSubmitting}
     >
-      {form.formState.isSubmitting ? "Submitting..." : "Submit"}
+      {form.formState.isSubmitting ? 'Submitting...' : 'Submit'}
     </Button>
   </form>
 );
@@ -227,11 +227,11 @@ return (
 **CRITICAL**: Always use `safeParse()` in the form submission handler to validate field values. If validation fails, call `form.trigger()` to display errors.
 
 ```tsx
-"use client";
+'use client';
 
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import * as z from 'zod';
+import { useForm } from 'react-hook-form';
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema';
 
 const formSchema = z.object({
   //...
@@ -242,7 +242,7 @@ type FormData = z.infer<typeof formSchema>;
 export function MyForm() {
   const form = useForm<FormData>({
     resolver: standardSchemaResolver(formSchema),
-    mode: "onChange",
+    mode: 'onChange',
   });
   const formId = useId(); // Generate once
 
@@ -259,7 +259,7 @@ export function MyForm() {
     try {
       // API call or other submission logic
     } catch (error) {
-      console.error("Submission error:", error);
+      console.error('Submission error:', error);
     }
   };
 

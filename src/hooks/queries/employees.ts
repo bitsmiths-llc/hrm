@@ -28,6 +28,8 @@ export function toEmployee(row: EmployeeRow): Employee {
     phone: row.phone ?? '',
     emergencyContact: row.emergency_contact ?? '',
     address: row.address ?? '',
+    city: row.city ?? '',
+    postalCode: row.postal_code ?? '',
     cnic: row.cnic ?? '',
     dateOfBirth: row.date_of_birth ?? '',
     bank: bank
@@ -62,10 +64,14 @@ export function toEmployee(row: EmployeeRow): Employee {
   };
 }
 
+// The directory lists employees only: admins manage their own profile from the
+// sidebar and are never surfaced here (an admin should see neither their own
+// row nor other admins), so the query is scoped to the `employee` role.
 const fetchEmployees = authQuery(async ({ supabase }) => {
   const { data, error } = await supabase
     .from('employees')
     .select('*, employment_details(*), bank_details(*), socials(*)')
+    .eq('role', 'employee')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
   return data.map(toEmployee);
@@ -84,19 +90,6 @@ const fetchEmployee = authQuery(
   { paramsSchema: z.object({ id: z.string() }) },
 );
 
-// The onboarding review queue: employees who submitted and are awaiting an
-// admin decision. Same join/shape as the directory, filtered to `submitted`
-// and oldest-first so the longest-waiting submission surfaces at the top.
-const fetchOnboardingQueue = authQuery(async ({ supabase }) => {
-  const { data, error } = await supabase
-    .from('employees')
-    .select('*, employment_details(*), bank_details(*), socials(*)')
-    .eq('account_status', 'submitted')
-    .order('consent_at', { ascending: true });
-  if (error) throw new Error(error.message);
-  return data.map(toEmployee);
-});
-
 export const useEmployees = () => {
   return useQuery({
     queryKey: [QueryKeys.EMPLOYEES],
@@ -108,14 +101,6 @@ export const useEmployee = (id: string) => {
   return useQuery({
     queryKey: [QueryKeys.EMPLOYEES, id],
     queryFn: () => fetchEmployee({ id }),
-  });
-};
-
-/** Employees awaiting onboarding review (admin, via RLS employees_select_admin). */
-export const useOnboardingQueue = () => {
-  return useQuery({
-    queryKey: [QueryKeys.ONBOARDING_QUEUE],
-    queryFn: () => fetchOnboardingQueue(),
   });
 };
 

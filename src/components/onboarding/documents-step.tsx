@@ -1,15 +1,25 @@
 'use client';
 
-import { Check, Loader2 } from 'lucide-react';
+import { Check, FileText, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { useUploadIdentityDoc } from '@/hooks/mutations/use-upload-identity-doc';
-import { useEmployeeDocuments } from '@/hooks/queries/onboarding';
+import {
+  useEmployeeDocuments,
+  useIdentityDocFiles,
+} from '@/hooks/queries/onboarding';
 
+import { DocumentPreview } from '@/components/hrm/document-preview';
 import { FileUpload } from '@/components/hrm/file-upload';
 import { Button } from '@/components/ui/button';
 
-import { identityDocuments } from '@/constants/onboarding';
+import {
+  IDENTITY_DOC_ACCEPT,
+  IDENTITY_DOC_HINT,
+  IDENTITY_DOC_MAX_SIZE_MB,
+  IDENTITY_DOC_MIME_TYPES,
+  identityDocuments,
+} from '@/constants/onboarding';
 import { type DocType } from '@/schema/onboarding';
 
 type DocumentsStepProps = {
@@ -21,17 +31,20 @@ type DocumentsStepProps = {
 /**
  * Section 4 · Identity documents. Each file uploads immediately to
  * `identity-docs` at `<uid>/<doc_type>` and upserts one `employee_documents`
- * row — re-selecting a file replaces it. Continue unlocks once all three types
- * are present.
+ * row — re-selecting a file replaces it. Only PNG or PDF up to
+ * {@link IDENTITY_DOC_MAX_SIZE_MB}MB are accepted, and each uploaded file shows
+ * a preview. Continue unlocks once all three types are present.
  */
 export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
   const { data: documents } = useEmployeeDocuments(userId);
+  const { data: docFiles, isLoading: filesLoading } =
+    useIdentityDocFiles(userId);
   const upload = useUploadIdentityDoc(userId);
   const [uploading, setUploading] = useState<DocType | null>(null);
 
-  const uploadedTypes = new Set(documents?.map((doc) => doc.doc_type));
+  const docByType = new Map((documents ?? []).map((doc) => [doc.doc_type, doc]));
   const allUploaded = identityDocuments.every(({ docType }) =>
-    uploadedTypes.has(docType),
+    docByType.has(docType),
   );
 
   const handleFile = (docType: DocType, files: File[]) => {
@@ -44,7 +57,8 @@ export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
   return (
     <div className='flex flex-col gap-6'>
       {identityDocuments.map(({ docType, label }) => {
-        const isUploaded = uploadedTypes.has(docType);
+        const record = docByType.get(docType);
+        const isUploaded = !!record;
         const isUploading = uploading === docType;
         return (
           <div key={docType} className='flex flex-col gap-2'>
@@ -64,11 +78,29 @@ export function DocumentsStep({ userId, onNext, onBack }: DocumentsStepProps) {
                 )
               )}
             </div>
+            {isUploaded && (
+              <div className='flex max-w-sm flex-col gap-1.5'>
+                <DocumentPreview
+                  file={docFiles?.[docType]}
+                  label={label}
+                  isLoading={filesLoading}
+                />
+                {record?.file_name && (
+                  <p className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                    <FileText className='size-3.5 shrink-0' aria-hidden />
+                    <span className='truncate'>{record.file_name}</span>
+                  </p>
+                )}
+              </div>
+            )}
             <FileUpload
               value={[]}
               onChange={(files) => handleFile(docType, files)}
               maxFiles={1}
-              accept='image/*,.pdf'
+              maxSizeMb={IDENTITY_DOC_MAX_SIZE_MB}
+              accept={IDENTITY_DOC_ACCEPT}
+              allowedMimeTypes={IDENTITY_DOC_MIME_TYPES}
+              hint={IDENTITY_DOC_HINT}
               label={isUploaded ? 'Replace file' : 'Upload file'}
             />
           </div>

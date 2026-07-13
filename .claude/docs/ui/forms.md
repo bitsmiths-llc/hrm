@@ -24,10 +24,10 @@ const form = useForm<CreateEmployeeInput>({
 });
 
 <Form {...form}>
-  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+  <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
     <FormField
       control={form.control}
-      name="name"
+      name='name'
       render={({ field }) => (
         <FormItem>
           <FormLabel>Name</FormLabel>
@@ -38,7 +38,7 @@ const form = useForm<CreateEmployeeInput>({
         </FormItem>
       )}
     />
-    <Button type="submit" isLoading={form.formState.isSubmitting}>
+    <Button type='submit' isLoading={form.formState.isSubmitting}>
       Save
     </Button>
   </form>

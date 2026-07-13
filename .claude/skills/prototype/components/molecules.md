@@ -11,6 +11,7 @@ A complete form input unit: label + input + help text + error message.
 **Composition:** `Label` + `Input` + (optional) help text + (optional) error text
 
 **Anatomy:**
+
 ```
 ┌─────────────────────────────┐
 │ Label *                     │  ← Label atom + required indicator
@@ -22,6 +23,7 @@ A complete form input unit: label + input + help text + error message.
 ```
 
 **Layout:**
+
 - Stack: vertical (default) — label on top
 - Inline: horizontal — label left, input right (forms with short labels)
 - Label-input gap: `spacing.stack.xs` (4px)
@@ -29,15 +31,18 @@ A complete form input unit: label + input + help text + error message.
 - Field-to-field gap: `spacing.stack.lg` (16px)
 
 **States:**
+
 - Default → Hover → Focus → Filled → Error → Disabled
 - Error replaces help text, uses `feedback.error-text` color + error icon
 - Required: asterisk on label + `aria-required="true"` on input
 
 **Responsive:**
+
 - Inline layout collapses to stacked below `md` breakpoint
 - In multi-column forms, fields span full width below `sm`
 
 **Accessibility:**
+
 - `<label for>` associates label with input
 - Help text: `aria-describedby` on input
 - Error: `aria-invalid="true"` + `aria-describedby` pointing to error message
@@ -52,6 +57,7 @@ A text input optimized for search with clear functionality and optional suggesti
 **Composition:** `Icon` (search) + `Input` (type="search") + `Button` (clear) + optional dropdown
 
 **Anatomy:**
+
 ```
 ┌─────────────────────────────────────┐
 │ Search products...          [×] │
@@ -71,10 +77,12 @@ A text input optimized for search with clear functionality and optional suggesti
 **States:** Empty, Typing (show clear button), Has value, Loading (spinner replaces search icon), No results
 
 **Responsive:**
+
 - Desktop: full width in toolbar or constrained by container
 - Mobile: collapses to icon button → expands to full-width overlay on tap
 
 **Accessibility:**
+
 - `role="search"` on container or use `<search>` element
 - `type="search"` provides native clear on some browsers
 - Clear button: `aria-label="Clear search"`
@@ -90,6 +98,7 @@ A contained surface grouping related content and actions.
 **Composition:** `[image?]` + `[header: Badge? + Title + Subtitle?]` + `[body]` + `[footer: Button*]`
 
 **Anatomy:**
+
 ```
 ┌──────────────────────────────┐
 │         [Image/Media]         │  ← Optional media slot
@@ -115,15 +124,18 @@ A contained surface grouping related content and actions.
 **Token Mapping:** `component.card.*`, `spacing.card.*`, `radius.card`
 
 **Layout:**
+
 - Padding: `spacing.card.padding` (24px), compact: `spacing.card.padding-sm` (16px)
 - Internal gap: `spacing.card.gap` (16px)
 - Image: full-bleed (no padding) with `border-radius` top corners only
 
 **Responsive:**
+
 - Grid: 3 columns (desktop) → 2 (tablet) → 1 (mobile)
 - Card min-width: 280px; max-width: none (fills grid cell)
 
 **Accessibility:**
+
 - Interactive card: wrap in `<a>` or `<button>` with full-card click area
 - If card has multiple links, use "stretched link" pattern with one primary `<a>`
 - Card title should be a heading level appropriate to page hierarchy
@@ -138,6 +150,7 @@ A single item within a navigation structure (sidebar, tabs, breadcrumbs).
 **Composition:** `Icon` + `Label` + `Badge?` + `Chevron?` (for nested)
 
 **Anatomy:**
+
 ```
 ┌──────────────────────────────┐
 │ [icon]  Label          [3]  │  ← Icon + text + count badge
@@ -155,16 +168,19 @@ A single item within a navigation structure (sidebar, tabs, breadcrumbs).
 **States:** Default, Hover, Active/Current, Focus, Disabled
 
 **Active Indicator:**
+
 - Sidebar: left border 3px `action.primary` + `interactive.selected-bg`
 - Tab: bottom border 2px `action.primary`
 - Breadcrumb: bold text, no link
 
 **Token Mapping:**
+
 - Text: `text.secondary` (default), `text.primary` (active)
 - Background: transparent (default), `interactive.selected-bg` (active)
 - Icon: matches text color
 
 **Accessibility:**
+
 - Use `<nav aria-label="Main navigation">` wrapper
 - Current item: `aria-current="page"` (sidebar/breadcrumb) or `aria-selected="true"` (tabs)
 - Collapsible groups: `aria-expanded` on parent
@@ -179,6 +195,7 @@ A contextual message communicating feedback, status, or important information.
 **Composition:** `Icon` + `[Title?]` + `Message` + `[Action?]` + `[Close?]`
 
 **Anatomy:**
+
 ```
 ┌──────────────────────────────────────┐
 │ ⓘ  Alert Title                  [×] │
@@ -196,6 +213,7 @@ A contextual message communicating feedback, status, or important information.
 | Error | (x) | `feedback.error-*` | Failures, blocking issues |
 
 **Layout:**
+
 - Full-width within container (not page-width)
 - Padding: `spacing.card.padding-sm` (16px)
 - Icon-text gap: `spacing.inline.md` (12px)
@@ -203,11 +221,13 @@ A contextual message communicating feedback, status, or important information.
 - Radius: `radius.card` (8px)
 
 **Behavior:**
+
 - Inline alerts: persistent, dismissed by user or resolved condition
 - Toast alerts: auto-dismiss after 5s (non-critical) or persistent (errors)
 - Stacking: newest on top, max 3 visible
 
 **Accessibility:**
+
 - Use `role="alert"` for dynamic errors/warnings (assertive)
 - Use `role="status"` for success messages (polite)
 - Inline informational alerts: no ARIA role needed (static content)
@@ -224,6 +244,7 @@ A button-triggered floating panel with a list of options or actions.
 **Composition:** `Button` (trigger) + floating `[list of items]`
 
 **Anatomy:**
+
 ```
 [Trigger Button ▾]
 ┌────────────────────────┐
@@ -243,6 +264,7 @@ A button-triggered floating panel with a list of options or actions.
 | Context menu | Right-click | Action items |
 
 **Layout:**
+
 - Min-width: trigger width; Max-width: 320px
 - Item height: 36px (md), 32px (sm)
 - Padding: `spacing.component.input-padding-*`
@@ -253,12 +275,14 @@ A button-triggered floating panel with a list of options or actions.
 **States (items):** Default, Hover, Focus, Active, Selected (checkmark), Disabled (gray, skip in keyboard nav)
 
 **Behavior:**
+
 - Opens on click (not hover)
 - Closes on: selection, Escape, click outside
 - Scroll: max-height with overflow if > 8 items visible
 - Type-ahead: typing characters focuses matching item
 
 **Accessibility:**
+
 - Menu variant: see `aria-patterns.md` → Menu
 - Select variant: see `aria-patterns.md` → Listbox
 - Trigger: `aria-haspopup="true"`, `aria-expanded="true/false"`

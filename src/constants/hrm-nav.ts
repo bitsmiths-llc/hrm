@@ -8,7 +8,6 @@ import {
   Palmtree,
   Receipt,
   Settings,
-  UserCheck,
   UserCircle,
   Users,
 } from 'lucide-react';
@@ -42,11 +41,6 @@ export const adminNav: NavConfig = {
   roleLabel: 'Admin',
   items: [
     { label: 'Dashboard', href: paths.admin.dashboard, icon: LayoutDashboard },
-    {
-      label: 'Onboarding queue',
-      href: paths.admin.onboarding,
-      icon: UserCheck,
-    },
     { label: 'Approvals', href: paths.admin.approvals, icon: CheckSquare },
     { label: 'Employees', href: paths.admin.employees, icon: Users },
     { label: 'Payroll', href: paths.admin.payroll, icon: Banknote },
@@ -56,5 +50,6 @@ export const adminNav: NavConfig = {
       icon: FileText,
     },
     { label: 'Settings', href: paths.admin.settings, icon: Settings },
+    { label: 'Profile', href: paths.admin.profile, icon: UserCircle },
   ],
 };
