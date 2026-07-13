@@ -5,7 +5,6 @@ import { CheckCircle2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { useReviewLeave } from '@/hooks/actions/use-review-leave';
 import {
   useAllLeaveRequests,
   useAllMedicalClaims,
@@ -22,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { mockOvertimeLogs } from '@/constants/mock/requests';
 import { QueryKeys } from '@/constants/query-keys';
 
 import {
@@ -33,6 +33,7 @@ import {
   overtimeToItem,
 } from './approval-items';
 import { LeaveReviewActions } from './leave-review-actions';
+import { MedicalReviewActions } from './medical-review-actions';
 
 import { RequestStatus } from '@/types/hrm';
 
@@ -60,11 +61,6 @@ export function ApprovalsQueue() {
 
   const [tab, setTab] = useState<'all' | ApprovalKind>('all');
   const [selected, setSelected] = useState<ApprovalItem | null>(null);
-  // Leave rows currently being quick-approved. A Set (not a single id) keeps the
-  // spinner scoped correctly when several are approved concurrently — the single
-  // mutation hook drives them all.
-  const [approvingIds, setApprovingIds] = useState<Set<string>>(new Set());
-  const reviewLeave = useReviewLeave();
 
   const isLoading = leave.isLoading || medical.isLoading || overtime.isLoading;
 
@@ -82,49 +78,39 @@ export function ApprovalsQueue() {
   const visible =
     tab === 'all' ? pending : pending.filter((item) => item.kind === tab);
 
-  // Medical/overtime are still mock: a decision is an optimistic cache write.
-  // Partial-key match updates the admin's all-records cache entry and each
-  // employee's per-employee entry in one pass. Leave is NOT handled here — it's
-  // backed by the real reviewLeaveRequest action, whose invalidation refreshes
-  // the queue (see approveLeave / LeaveReviewActions).
+  // Overtime is still mock, so a decision writes to the in-memory mock "backend"
+  // and then refetches — mirroring how the real leave/medical tabs invalidate on
+  // a decision, so every tab pulls fresh data the moment a row is reviewed.
+  // (Leave and medical are NOT handled here — their review actions invalidate
+  // LEAVE_REQUESTS / MEDICAL_CLAIMS, which drives this queue's refetch.)
   const decide = (item: ApprovalItem, decision: Decision, reason?: string) => {
+    const rejectionReason = decision === 'rejected' ? (reason ?? null) : null;
+
+    // Persist to the mock source so the refetch (and any later navigation) keeps
+    // the decision instead of reverting to the seed data — the real tabs persist
+    // to the DB. `decide` is only wired to the overtime footer.
+    const log = mockOvertimeLogs.find((entry) => entry.id === item.id);
+    if (log) {
+      log.status = decision;
+      log.rejectionReason = rejectionReason;
+    }
+
+    // Optimistic write for instant feedback, then invalidate so the row refetches
+    // from the (now-updated) mock — consistent with the leave/medical tabs.
     queryClient.setQueriesData<RejectableRecord[]>(
       { queryKey: [queryKeyByKind[item.kind]] },
       (old) =>
         old?.map((record) =>
           record.id === item.id
-            ? {
-                ...record,
-                status: decision,
-                rejectionReason:
-                  decision === 'rejected' ? (reason ?? null) : null,
-              }
+            ? { ...record, status: decision, rejectionReason }
             : record,
         ),
     );
+    queryClient.invalidateQueries({ queryKey: [queryKeyByKind[item.kind]] });
     setSelected(null);
     toast.success(
       `${item.title} from ${item.employeeName} ${decision === 'approved' ? 'approved' : 'rejected'}`,
     );
-  };
-
-  // Quick-approve straight from the row (leave only — the one kind backed by
-  // the real reviewLeaveRequest action). Its invalidation drops the row from
-  // the queue. Rejection still goes through Review so the admin gives a reason.
-  const approveLeave = async (item: ApprovalItem) => {
-    setApprovingIds((prev) => new Set(prev).add(item.id));
-    const result = await reviewLeave.executeAsync({
-      id: item.id,
-      decision: 'approved',
-    });
-    setApprovingIds((prev) => {
-      const next = new Set(prev);
-      next.delete(item.id);
-      return next;
-    });
-    if (result?.data) {
-      toast.success(`Leave for ${item.employeeName} approved`);
-    }
   };
 
   if (isLoading) {
@@ -180,24 +166,13 @@ export function ApprovalsQueue() {
                   {item.summary}
                 </p>
               </div>
-              <div className='flex items-center gap-2'>
-                {item.kind === 'leave' && (
-                  <Button
-                    size='sm'
-                    isLoading={approvingIds.has(item.id)}
-                    onClick={() => approveLeave(item)}
-                  >
-                    Approve Leave
-                  </Button>
-                )}
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => setSelected(item)}
-                >
-                  Review
-                </Button>
-              </div>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setSelected(item)}
+              >
+                Review
+              </Button>
             </li>
           ))}
         </ul>
@@ -222,6 +197,15 @@ export function ApprovalsQueue() {
               // reason on reject + employee email); its invalidation refreshes
               // the queue.
               <LeaveReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={() => setSelected(null)}
+              />
+            ) : selected.kind === 'medical' ? (
+              // Medical is backed by the real reviewMedicalClaim action
+              // (server-side balance bound on approve, required reason + email
+              // on reject); its invalidation refreshes the queue.
+              <MedicalReviewActions
                 itemId={selected.id}
                 employeeName={selected.employeeName}
                 onReviewed={() => setSelected(null)}

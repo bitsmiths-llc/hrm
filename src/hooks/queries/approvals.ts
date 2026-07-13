@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { toLeaveRequest } from '@/hooks/queries/leave';
+import { toMedicalClaim } from '@/hooks/queries/medical';
 
 import { authQuery } from '@/lib/client/auth-query';
 
-import { mockMedicalClaims, mockOvertimeLogs } from '@/constants/mock/requests';
+import { mockOvertimeLogs } from '@/constants/mock/requests';
 import { QueryKeys } from '@/constants/query-keys';
 
-import { MedicalClaim, OvertimeLog } from '@/types/hrm';
+import { OvertimeLog } from '@/types/hrm';
 
 const mockDelay = (ms = 500) =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -31,24 +32,35 @@ export const useAllLeaveRequests = () =>
     queryFn: () => fetchAllLeaveRequests(),
   });
 
-// Medical / overtime approvals are still mock-backed — wiring them to real
-// tables is out of scope for BIT-12 (leave only).
-export const useAllMedicalClaims = () => {
-  return useQuery({
-    queryKey: [QueryKeys.MEDICAL_CLAIMS],
-    queryFn: async (): Promise<MedicalClaim[]> => {
-      await mockDelay();
-      return mockMedicalClaims;
-    },
-  });
-};
+// Admin view: every medical claim across employees, newest first, with the
+// requester's name + proof paths joined (RLS medical_admin_all). Disambiguate
+// the embed — medical_claims has two FKs to employees (employee_id,
+// reviewed_by).
+const fetchAllMedicalClaims = authQuery(async ({ supabase }) => {
+  const { data, error } = await supabase
+    .from('medical_claims')
+    .select(
+      '*, medical_claim_files(storage_path, file_name), employees!medical_claims_employee_id_fkey(full_name)',
+    )
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data.map((row) => toMedicalClaim(row, row.employees?.full_name ?? ''));
+});
 
-export const useAllOvertimeLogs = () => {
-  return useQuery({
+/** Admin view: every medical claim across employees, newest first. */
+export const useAllMedicalClaims = () =>
+  useQuery({
+    queryKey: [QueryKeys.MEDICAL_CLAIMS],
+    queryFn: () => fetchAllMedicalClaims(),
+  });
+
+// Overtime approvals are still mock-backed — wiring them to real tables is out
+// of scope for this ticket (medical + leave only).
+export const useAllOvertimeLogs = () =>
+  useQuery({
     queryKey: [QueryKeys.OVERTIME_LOGS],
     queryFn: async (): Promise<OvertimeLog[]> => {
       await mockDelay();
       return mockOvertimeLogs;
     },
   });
-};

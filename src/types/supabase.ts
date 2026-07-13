@@ -266,6 +266,104 @@ export type Database = {
           },
         ];
       };
+      medical_claim_files: {
+        Row: {
+          claim_id: string;
+          file_name: string | null;
+          id: string;
+          storage_path: string;
+          uploaded_at: string;
+        };
+        Insert: {
+          claim_id: string;
+          file_name?: string | null;
+          id?: string;
+          storage_path: string;
+          uploaded_at?: string;
+        };
+        Update: {
+          claim_id?: string;
+          file_name?: string | null;
+          id?: string;
+          storage_path?: string;
+          uploaded_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'medical_claim_files_claim_id_fkey';
+            columns: ['claim_id'];
+            isOneToOne: false;
+            referencedRelation: 'medical_claims';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      medical_claims: {
+        Row: {
+          amount: number;
+          claim_for: Database['public']['Enums']['medical_for'];
+          created_at: string;
+          description: string;
+          employee_id: string;
+          expense_date: string;
+          id: string;
+          payroll_run_id: string | null;
+          rejection_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          service_type: Database['public']['Enums']['service_type'];
+          status: Database['public']['Enums']['request_status'];
+          updated_at: string;
+        };
+        Insert: {
+          amount: number;
+          claim_for: Database['public']['Enums']['medical_for'];
+          created_at?: string;
+          description: string;
+          employee_id: string;
+          expense_date: string;
+          id?: string;
+          payroll_run_id?: string | null;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          service_type: Database['public']['Enums']['service_type'];
+          status?: Database['public']['Enums']['request_status'];
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number;
+          claim_for?: Database['public']['Enums']['medical_for'];
+          created_at?: string;
+          description?: string;
+          employee_id?: string;
+          expense_date?: string;
+          id?: string;
+          payroll_run_id?: string | null;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          service_type?: Database['public']['Enums']['service_type'];
+          status?: Database['public']['Enums']['request_status'];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'medical_claims_employee_id_fkey';
+            columns: ['employee_id'];
+            isOneToOne: false;
+            referencedRelation: 'employees';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'medical_claims_reviewed_by_fkey';
+            columns: ['reviewed_by'];
+            isOneToOne: false;
+            referencedRelation: 'employees';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       socials: {
         Row: {
           created_at: string;
@@ -316,13 +414,30 @@ export type Database = {
           used: number;
         }[];
       };
+      medical_balance: {
+        Args: { p_employee: string };
+        Returns: {
+          accrued: number;
+          available: number;
+          spent: number;
+        }[];
+      };
       submit_onboarding: { Args: never; Returns: undefined };
     };
     Enums: {
       account_status: 'invited' | 'onboarding' | 'submitted' | 'active';
       employment_type: 'full_time' | 'part_time' | 'contract' | 'internship';
       leave_type: 'paid' | 'sick' | 'unpaid' | 'half_day';
+      medical_for: 'self' | 'parent' | 'spouse' | 'child';
       request_status: 'pending' | 'approved' | 'rejected';
+      service_type:
+        | 'consultation'
+        | 'hospitalization'
+        | 'medication'
+        | 'lab_diagnostics'
+        | 'emergency'
+        | 'dental'
+        | 'vision';
       user_role: 'admin' | 'employee';
     };
     CompositeTypes: {

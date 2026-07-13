@@ -4,6 +4,7 @@ import { Inbox } from 'lucide-react';
 
 import { useCurrentEmployee } from '@/hooks/queries/employees';
 import { useLeaveRequests } from '@/hooks/queries/leave';
+import { useMedicalClaims } from '@/hooks/queries/medical';
 
 import { EmptyState } from '@/components/hrm/empty-state';
 import { StatusBadge } from '@/components/hrm/status-badge';
@@ -20,13 +21,14 @@ import { formatCurrency } from '@/utils/number-functions';
 
 import { leaveTypeLabels } from '@/constants/hrm-labels';
 import { mockCurrentEmployee } from '@/constants/mock/employees';
-import { mockMedicalClaims, mockOvertimeLogs } from '@/constants/mock/requests';
+import { mockOvertimeLogs } from '@/constants/mock/requests';
 
 export function EmployeePendingRequests() {
-  // Leave is real (BIT-12), scoped to the signed-in employee; medical/overtime
-  // are still mock (keyed by the mock employee).
+  // Leave and medical are real, scoped to the signed-in employee; overtime is
+  // still mock (keyed by the mock employee).
   const { data: me } = useCurrentEmployee();
   const { data: leaveRequests } = useLeaveRequests(me?.id);
+  const { data: medicalClaims } = useMedicalClaims(me?.id);
   const mockEmployeeId = mockCurrentEmployee.id;
 
   const rows = [
@@ -38,8 +40,8 @@ export function EmployeePendingRequests() {
         detail: `${r.days} day(s) from ${formatDate(r.startDate)}`,
         status: r.status,
       })),
-    ...mockMedicalClaims
-      .filter((c) => c.employeeId === mockEmployeeId && c.status === 'pending')
+    ...(medicalClaims ?? [])
+      .filter((c) => c.status === 'pending')
       .map((c) => ({
         id: c.id,
         title: 'Medical Claim',

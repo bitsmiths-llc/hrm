@@ -1,84 +1,29 @@
 'use client';
 
-import { CalendarClock, Receipt } from 'lucide-react';
-import { useMemo } from 'react';
-
-import { useMedicalBalance, useMedicalClaims } from '@/hooks/queries/medical';
+import { useMedicalBalance } from '@/hooks/queries/medical';
 
 import { BalanceCard } from '@/components/hrm/balance-card';
-import { StatCard } from '@/components/hrm/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { formatCurrency } from '@/utils/number-functions';
 
 type MedicalBalanceCardsProps = {
-  employeeId: string;
-  /** 'all' | 'YYYY' | 'YYYY-MM' — the period selected by the page-level
-   *  month filter. */
-  month: string;
+  /** Whose balance to show. Undefined on the self page until the signed-in
+   *  identity resolves — the cards render a skeleton until it does. */
+  employeeId?: string;
 };
 
-/** The current year shows the live accrued balance (forward-looking — how
- *  much is left to claim). A past year is closed, so "balance remaining"
- *  no longer applies — it shows what was actually claimed instead. */
-export function MedicalBalanceCards({
-  employeeId,
-  month,
-}: MedicalBalanceCardsProps) {
-  const currentYear = new Date().getFullYear();
-  const year = month === 'all' ? currentYear : Number(month.slice(0, 4));
-  const isCurrentYear = year === currentYear;
+const fmt = (amount: number) => formatCurrency(amount) || 'PKR 0';
 
-  const { data: balance, isLoading: balanceLoading } =
-    useMedicalBalance(employeeId);
-  const { data: claims, isLoading: claimsLoading } =
-    useMedicalClaims(employeeId);
+/** The medical allowance is a rolling accrual (not an annual pool), so the
+ *  balance is always the live figure from `medical_balance()`. The hero card is
+ *  what's claimable right now (available = accrued − approved spend, with a bar
+ *  that fills as it's spent); the second shows how the allowance is accruing
+ *  toward the cap. The page's month filter narrows the history table, not this. */
+export function MedicalBalanceCards({ employeeId }: MedicalBalanceCardsProps) {
+  const { data: balance, isLoading } = useMedicalBalance(employeeId);
 
-  const { totalClaimed, claimCount } = useMemo(() => {
-    const approvedInYear = (claims ?? []).filter(
-      (claim) =>
-        claim.expenseDate.startsWith(String(year)) &&
-        claim.status === 'approved',
-    );
-    return {
-      totalClaimed: approvedInYear.reduce(
-        (sum, claim) => sum + claim.amount,
-        0,
-      ),
-      claimCount: approvedInYear.length,
-    };
-  }, [claims, year]);
-
-  if (isCurrentYear) {
-    if (balanceLoading || !balance) {
-      return (
-        <div className='grid gap-4 md:grid-cols-2'>
-          <Skeleton className='h-40 rounded-xl' />
-          <Skeleton className='h-40 rounded-xl' />
-        </div>
-      );
-    }
-    return (
-      <div className='grid gap-4 md:grid-cols-2'>
-        <BalanceCard
-          title='Medical Allowance'
-          mode='accrued'
-          used={balance.accrued}
-          total={balance.cap}
-          format={(amount) => formatCurrency(amount) || '0'}
-          hint={`Accrues ${formatCurrency(balance.monthlyAccrual)}/month`}
-        />
-        <StatCard
-          label='Monthly Accrual'
-          value={formatCurrency(balance.monthlyAccrual)}
-          icon={CalendarClock}
-          hint='Adds to your balance each month, up to the cap'
-        />
-      </div>
-    );
-  }
-
-  if (claimsLoading) {
+  if (isLoading || !balance) {
     return (
       <div className='grid gap-4 md:grid-cols-2'>
         <Skeleton className='h-40 rounded-xl' />
@@ -89,17 +34,20 @@ export function MedicalBalanceCards({
 
   return (
     <div className='grid gap-4 md:grid-cols-2'>
-      <StatCard
-        label={`Total Claimed · ${year}`}
-        value={formatCurrency(totalClaimed) || '0'}
-        icon={Receipt}
-        hint='Sum of approved claims for the selected year'
+      <BalanceCard
+        title='Available to Claim'
+        mode='consumed'
+        used={balance.spent}
+        total={balance.accrued}
+        format={fmt}
+        hint={`accrues ${fmt(balance.monthlyAccrual)}/month`}
       />
-      <StatCard
-        label={`Claims Approved · ${year}`}
-        value={`${claimCount}`}
-        icon={CalendarClock}
-        hint='A closed year shows totals, not a live balance'
+      <BalanceCard
+        title='Allowance Accrued'
+        mode='accrued'
+        used={balance.accrued}
+        total={balance.cap}
+        format={fmt}
       />
     </div>
   );
