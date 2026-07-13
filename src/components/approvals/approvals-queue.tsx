@@ -136,24 +136,29 @@ export function ApprovalsQueue() {
               className='flex flex-wrap items-center justify-between gap-3 px-4 py-3'
             >
               <div className='flex min-w-0 flex-col gap-0.5'>
-                <p className='truncate text-sm font-medium'>
-                  {item.employeeName}
-                  <span className='text-muted-foreground'> · {item.title}</span>
-                </p>
+                <div className='flex items-center gap-2'>
+                  <p className='truncate text-sm font-medium'>
+                    {item.employeeName}
+                    <span className='text-muted-foreground'>
+                      {' '}
+                      · {item.title}
+                    </span>
+                  </p>
+                  <Badge variant='outline' className='shrink-0'>
+                    {approvalKindLabels[item.kind]}
+                  </Badge>
+                </div>
                 <p className='truncate text-xs text-muted-foreground'>
                   {item.summary}
                 </p>
               </div>
-              <div className='flex items-center gap-2'>
-                <Badge variant='outline'>{approvalKindLabels[item.kind]}</Badge>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => setSelected(item)}
-                >
-                  Review
-                </Button>
-              </div>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setSelected(item)}
+              >
+                Review
+              </Button>
             </li>
           ))}
         </ul>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Info } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 import { StatusBadge } from '@/components/hrm/status-badge';
 import {
@@ -29,7 +29,7 @@ export function StatusCell({ status, rejectionReason }: StatusCellProps) {
             className='inline-flex items-center gap-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
             <StatusBadge status={status} />
-            <Info className='size-3.5 text-muted-foreground' aria-hidden />
+            <Eye className='size-3.5 text-muted-foreground' aria-hidden />
           </button>
         </PopoverTrigger>
         <PopoverContent className='w-72' align='start'>
