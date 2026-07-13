@@ -21,4 +21,5 @@ export enum QueryKeys {
   PAYROLL_CYCLES = 'payroll-cycles',
   POLICIES = 'policies',
   HRM_SETTINGS = 'hrm-settings',
+  PROJECTS = 'projects',
 }

@@ -18,6 +18,8 @@ import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { PageHeader } from '@/components/hrm/page-header';
 import { StatusBadge } from '@/components/hrm/status-badge';
+import { BulkAdjustmentPopover } from '@/components/payroll/bulk-adjustment-popover';
+import { BulkOtRatePopover } from '@/components/payroll/bulk-ot-rate-popover';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -33,7 +35,7 @@ import { paths } from '@/constants/paths';
 import { QueryKeys } from '@/constants/query-keys';
 
 import { CurrentCycleTable } from './current-cycle-table';
-import { ExportPayoneerDialog } from './export-payoneer-dialog';
+import { ExportPayoneerSheet } from './export-payoneer-sheet';
 
 import { PayrollCycle, Payslip } from '@/types/hrm';
 
@@ -53,6 +55,10 @@ export function PayrollCyclePageContent({
   const [multiplierOverrides, setMultiplierOverrides] = useState<
     Record<string, number>
   >({});
+  const [customFieldOverrides, setCustomFieldOverrides] = useState<
+    Record<string, { label: string; amount: number }[]>
+  >({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const cycle = (cycles ?? []).find((c) => c.month === month);
   const locked = cycle?.status === 'locked';
@@ -80,13 +86,22 @@ export function PayrollCyclePageContent({
         )
       : row.overtimePay;
 
+    const customFields = customFieldOverrides[row.employeeId] ?? [];
+    const customFieldsTotal = customFields.reduce(
+      (sum, field) => sum + field.amount,
+      0,
+    );
+
     return {
       ...row,
       daysWorked,
       totalBase,
       overtimeMultiplier,
       overtimePay,
-      total: calcPayslipTotal(totalBase, row.medical, overtimePay),
+      customFields,
+      total:
+        calcPayslipTotal(totalBase, row.medical, overtimePay) +
+        customFieldsTotal,
     };
   });
 
@@ -95,6 +110,63 @@ export function PayrollCyclePageContent({
     : editedLiveRows;
 
   const totalPayroll = rows.reduce((sum, row) => sum + row.total, 0);
+
+  const toggleRow = (employeeId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(employeeId)) next.delete(employeeId);
+      else next.add(employeeId);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    setSelectedIds((prev) =>
+      prev.size === rows.length
+        ? new Set()
+        : new Set(rows.map((r) => r.employeeId)),
+    );
+  };
+
+  const handleBulkSendInvoice = async () => {
+    const names = rows
+      .filter((row) => selectedIds.has(row.employeeId))
+      .map((row) => row.employeeName);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    toast.success(
+      `Invoice sent to ${names.length} ${names.length === 1 ? 'employee' : 'employees'}`,
+    );
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkOtRate = (multiplier: number) => {
+    setMultiplierOverrides((prev) => {
+      const next = { ...prev };
+      selectedIds.forEach((employeeId) => {
+        next[employeeId] = multiplier;
+      });
+      return next;
+    });
+    toast.success(
+      `Overtime multiplier set to ${multiplier}x for ${selectedIds.size} ${selectedIds.size === 1 ? 'employee' : 'employees'}`,
+    );
+  };
+
+  const handleBulkAddCustomField = (field: {
+    label: string;
+    amount: number;
+  }) => {
+    setCustomFieldOverrides((prev) => {
+      const next = { ...prev };
+      selectedIds.forEach((employeeId) => {
+        next[employeeId] = [...(next[employeeId] ?? []), field];
+      });
+      return next;
+    });
+    toast.success(
+      `Added "${field.label}" to ${selectedIds.size} ${selectedIds.size === 1 ? 'employee' : 'employees'}`,
+    );
+  };
 
   const handleLock = () => {
     if (!cycle) return;
@@ -150,24 +222,58 @@ export function PayrollCyclePageContent({
             <StatusBadge status={cycle.status} />
           </PageHeader>
 
-          <div className='flex flex-wrap items-center justify-end gap-2'>
-            <ConfirmDialog
-              trigger={
-                <Button variant='outline' disabled={locked}>
-                  Lock cycle
-                </Button>
-              }
-              title='Lock this payroll cycle?'
-              description='Figures become read-only once locked. You can still export for Payoneer afterward.'
-              confirmLabel='Lock cycle'
-              onConfirm={handleLock}
-            />
-            <ExportPayoneerDialog rows={rows} disabled={!locked} />
+          <div className='flex flex-wrap items-center justify-between gap-2'>
+            <div className='flex flex-wrap items-center gap-2'>
+              {selectedIds.size > 0 && (
+                <>
+                  <span className='text-sm text-muted-foreground'>
+                    {selectedIds.size} selected
+                  </span>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={handleBulkSendInvoice}
+                  >
+                    Send Invoice
+                  </Button>
+                  {!locked && (
+                    <>
+                      <BulkOtRatePopover
+                        selectedCount={selectedIds.size}
+                        onApply={handleBulkOtRate}
+                      />
+                      <BulkAdjustmentPopover
+                        selectedCount={selectedIds.size}
+                        onApply={handleBulkAddCustomField}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+            <div className='flex flex-wrap items-center gap-2'>
+              <ConfirmDialog
+                trigger={
+                  <Button variant='outline' disabled={locked}>
+                    Lock cycle
+                  </Button>
+                }
+                title='Lock this payroll cycle?'
+                description='Figures become read-only once locked. You can still export for Payoneer afterward.'
+                confirmLabel='Lock cycle'
+                onConfirm={handleLock}
+              />
+              <ExportPayoneerSheet rows={rows} disabled={!locked} />
+            </div>
           </div>
 
           <CurrentCycleTable
             rows={rows}
             locked={locked}
+            selectedIds={selectedIds}
+            onToggleRow={toggleRow}
+            onToggleAll={toggleAll}
             onDaysWorkedChange={
               locked
                 ? undefined
@@ -185,6 +291,12 @@ export function PayrollCyclePageContent({
                       ...prev,
                       [employeeId]: overtimeMultiplier,
                     }))
+            }
+            onAddCustomField={(employeeId, field) =>
+              setCustomFieldOverrides((prev) => ({
+                ...prev,
+                [employeeId]: [...(prev[employeeId] ?? []), field],
+              }))
             }
           />
           <p className='text-sm text-muted-foreground'>

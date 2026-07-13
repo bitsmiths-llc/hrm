@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -11,15 +12,17 @@ import {
   useAllOvertimeLogs,
 } from '@/hooks/queries/approvals';
 
-import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { DetailSheet } from '@/components/hrm/detail-sheet';
 import { EmptyState } from '@/components/hrm/empty-state';
+import { RejectRequestDialog } from '@/components/hrm/reject-request-dialog';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { ProofFilesList } from '@/components/medical/proof-files-list';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+import { QueryKeys } from '@/constants/query-keys';
 
 import {
   type ApprovalItem,
@@ -31,15 +34,31 @@ import {
 } from './approval-items';
 import { LeaveReviewActions } from './leave-review-actions';
 
+import { RequestStatus } from '@/types/hrm';
+
 type Decision = 'approved' | 'rejected';
 
+/** Just the fields every rejectable record shares — enough to update status
+ *  and reason without needing a kind-specific type per query key family. */
+type RejectableRecord = {
+  id: string;
+  status: RequestStatus;
+  rejectionReason: string | null;
+};
+
+const queryKeyByKind: Record<ApprovalKind, QueryKeys> = {
+  leave: QueryKeys.LEAVE_REQUESTS,
+  medical: QueryKeys.MEDICAL_CLAIMS,
+  overtime: QueryKeys.OVERTIME_LOGS,
+};
+
 export function ApprovalsQueue() {
+  const queryClient = useQueryClient();
   const leave = useAllLeaveRequests();
   const medical = useAllMedicalClaims();
   const overtime = useAllOvertimeLogs();
 
   const [tab, setTab] = useState<'all' | ApprovalKind>('all');
-  const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [selected, setSelected] = useState<ApprovalItem | null>(null);
   // Which leave row is currently being quick-approved (scopes the button's
   // loading state to that row — a single mutation hook drives them all).
@@ -55,24 +74,42 @@ export function ApprovalsQueue() {
       ...(overtime.data ?? []).map(overtimeToItem),
     ];
     return all
-      .filter((item) => item.status === 'pending' && !decisions[item.id])
+      .filter((item) => item.status === 'pending')
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  }, [leave.data, medical.data, overtime.data, decisions]);
+  }, [leave.data, medical.data, overtime.data]);
 
   const visible =
     tab === 'all' ? pending : pending.filter((item) => item.kind === tab);
 
-  const decide = (item: ApprovalItem, decision: Decision) => {
-    setDecisions((prev) => ({ ...prev, [item.id]: decision }));
+  // Medical/overtime are still mock: a decision is an optimistic cache write.
+  // Partial-key match updates the admin's all-records cache entry and each
+  // employee's per-employee entry in one pass. Leave is NOT handled here — it's
+  // backed by the real reviewLeaveRequest action, whose invalidation refreshes
+  // the queue (see approveLeave / LeaveReviewActions).
+  const decide = (item: ApprovalItem, decision: Decision, reason?: string) => {
+    queryClient.setQueriesData<RejectableRecord[]>(
+      { queryKey: [queryKeyByKind[item.kind]] },
+      (old) =>
+        old?.map((record) =>
+          record.id === item.id
+            ? {
+                ...record,
+                status: decision,
+                rejectionReason:
+                  decision === 'rejected' ? (reason ?? null) : null,
+              }
+            : record,
+        ),
+    );
     setSelected(null);
     toast.success(
       `${item.title} from ${item.employeeName} ${decision === 'approved' ? 'approved' : 'rejected'}`,
     );
   };
 
-  // Quick-approve straight from the row (leave only — it's the one kind backed
-  // by the real reviewLeaveRequest action). Rejection still goes through Review
-  // so the admin can supply the required reason.
+  // Quick-approve straight from the row (leave only — the one kind backed by
+  // the real reviewLeaveRequest action). Its invalidation drops the row from
+  // the queue. Rejection still goes through Review so the admin gives a reason.
   const approveLeave = async (item: ApprovalItem) => {
     setApprovingId(item.id);
     const result = await reviewLeave.executeAsync({
@@ -81,7 +118,6 @@ export function ApprovalsQueue() {
     });
     setApprovingId(null);
     if (result?.data) {
-      setDecisions((prev) => ({ ...prev, [item.id]: 'approved' }));
       toast.success(`Leave for ${item.employeeName} approved`);
     }
   };
@@ -123,16 +159,24 @@ export function ApprovalsQueue() {
               className='flex flex-wrap items-center justify-between gap-3 px-4 py-3'
             >
               <div className='flex min-w-0 flex-col gap-0.5'>
-                <p className='truncate text-sm font-medium'>
-                  {item.employeeName}
-                  <span className='text-muted-foreground'> · {item.title}</span>
-                </p>
+                <div className='flex items-center gap-2'>
+                  <p className='truncate text-sm font-medium'>
+                    {item.employeeName}
+                    <span className='text-muted-foreground'>
+                      {' '}
+                      · {item.title}
+                    </span>
+                  </p>
+                  <Badge variant='outline' className='shrink-0'>
+                    {approvalKindLabels[item.kind]}
+                  </Badge>
+                </div>
                 <p className='truncate text-xs text-muted-foreground'>
                   {item.summary}
                 </p>
               </div>
               <div className='flex items-center gap-2'>
-                {item.kind === 'leave' ? (
+                {item.kind === 'leave' && (
                   <Button
                     size='sm'
                     isLoading={approvingId === item.id}
@@ -140,10 +184,6 @@ export function ApprovalsQueue() {
                   >
                     Approve Leave
                   </Button>
-                ) : (
-                  <Badge variant='outline'>
-                    {approvalKindLabels[item.kind]}
-                  </Badge>
                 )}
                 <Button
                   variant='outline'
@@ -173,33 +213,25 @@ export function ApprovalsQueue() {
           ]}
           footer={
             selected.kind === 'leave' ? (
-              // Leave is backed by the real `reviewLeaveRequest` action (with a
-              // required reason on reject + employee email). Medical/overtime
-              // are still mock and use the local-state `decide` below.
+              // Leave is backed by the real reviewLeaveRequest action (required
+              // reason on reject + employee email); its invalidation refreshes
+              // the queue.
               <LeaveReviewActions
                 itemId={selected.id}
                 employeeName={selected.employeeName}
-                onReviewed={(decision) => {
-                  setDecisions((prev) => ({
-                    ...prev,
-                    [selected.id]: decision,
-                  }));
-                  setSelected(null);
-                }}
+                onReviewed={() => setSelected(null)}
               />
             ) : (
               <div className='flex w-full gap-2'>
-                <ConfirmDialog
+                <RejectRequestDialog
                   trigger={
                     <Button variant='destructive' className='flex-1'>
                       Reject
                     </Button>
                   }
                   title={`Reject this ${approvalKindLabels[selected.kind].toLowerCase()} request?`}
-                  description={`${selected.employeeName} will see the request as rejected.`}
-                  confirmLabel='Reject request'
-                  destructive
-                  onConfirm={() => decide(selected, 'rejected')}
+                  description={`${selected.employeeName} will see the request as rejected, along with your reason.`}
+                  onConfirm={(reason) => decide(selected, 'rejected', reason)}
                 />
                 <Button
                   className='flex-1'

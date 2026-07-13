@@ -58,7 +58,8 @@ export const mockLeaveRequests: LeaveRequest[] = [
     startDate: '2026-04-02',
     days: 2,
     status: 'rejected',
-    rejectionReason: 'Pool exhausted for the year — please resubmit as unpaid.',
+    rejectionReason:
+      'Team was already short-staffed that week — please resubmit for a later date.',
     createdAt: '2026-03-25',
   },
   {
@@ -111,6 +112,7 @@ export const mockMedicalClaims: MedicalClaim[] = [
     expenseDate: '2026-07-01',
     proofFiles: ['receipt-ent.pdf'],
     status: 'pending',
+    rejectionReason: null,
     createdAt: '2026-07-02',
   },
   {
@@ -124,6 +126,7 @@ export const mockMedicalClaims: MedicalClaim[] = [
     expenseDate: '2026-06-18',
     proofFiles: ['prescription.jpg', 'pharmacy-receipt.jpg'],
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2026-06-19',
   },
   {
@@ -137,6 +140,7 @@ export const mockMedicalClaims: MedicalClaim[] = [
     expenseDate: '2026-05-10',
     proofFiles: ['optometrist-receipt.pdf'],
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2026-05-11',
   },
   {
@@ -150,6 +154,7 @@ export const mockMedicalClaims: MedicalClaim[] = [
     expenseDate: '2026-06-28',
     proofFiles: ['hospital-bill.pdf'],
     status: 'pending',
+    rejectionReason: null,
     createdAt: '2026-06-30',
   },
   {
@@ -163,6 +168,7 @@ export const mockMedicalClaims: MedicalClaim[] = [
     expenseDate: '2025-09-14',
     proofFiles: ['receipt-derm.pdf'],
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2025-09-15',
   },
   {
@@ -176,7 +182,23 @@ export const mockMedicalClaims: MedicalClaim[] = [
     expenseDate: '2025-04-22',
     proofFiles: ['dental-invoice.pdf'],
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2025-04-23',
+  },
+  {
+    id: 'md-7',
+    employeeId: 'emp-2',
+    employeeName: 'Hamza Raza',
+    claimFor: 'self',
+    serviceType: 'medication',
+    description: 'Over-the-counter vitamins.',
+    amount: 1_500,
+    expenseDate: '2026-06-05',
+    proofFiles: ['receipt-vitamins.jpg'],
+    status: 'rejected',
+    rejectionReason:
+      'Over-the-counter supplements without a prescription aren’t covered under the Medical Allowance Policy.',
+    createdAt: '2026-06-06',
   },
 ];
 
@@ -190,6 +212,7 @@ export const mockOvertimeLogs: OvertimeLog[] = [
     project: 'HRM Frontend',
     task: 'Payroll table release crunch',
     status: 'pending',
+    rejectionReason: null,
     createdAt: '2026-07-04',
   },
   {
@@ -201,6 +224,7 @@ export const mockOvertimeLogs: OvertimeLog[] = [
     project: 'Client API',
     task: 'Production incident on payment webhooks',
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2026-06-26',
   },
   {
@@ -212,6 +236,8 @@ export const mockOvertimeLogs: OvertimeLog[] = [
     project: 'Design System',
     task: 'Storybook migration',
     status: 'rejected',
+    rejectionReason:
+      'This was scoped as part of regular sprint work, not overtime — please check with your lead before logging next time.',
     createdAt: '2026-06-11',
   },
   {
@@ -223,6 +249,7 @@ export const mockOvertimeLogs: OvertimeLog[] = [
     project: 'Client Website Redesign',
     task: 'Launch-week support and hotfixes',
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2025-10-21',
   },
   {
@@ -234,6 +261,7 @@ export const mockOvertimeLogs: OvertimeLog[] = [
     project: 'Client API',
     task: 'Weekend migration to new payment provider',
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2025-03-16',
   },
   {
@@ -245,6 +273,7 @@ export const mockOvertimeLogs: OvertimeLog[] = [
     project: 'HRM Frontend',
     task: 'Payroll module launch support',
     status: 'approved',
+    rejectionReason: null,
     createdAt: '2026-07-06',
   },
 ];

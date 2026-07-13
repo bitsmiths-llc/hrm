@@ -1,64 +1,34 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useReviewLeave } from '@/hooks/actions/use-review-leave';
 
+import { RejectRequestDialog } from '@/components/hrm/reject-request-dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-
-import {
-  type RejectLeaveReasonInput,
-  rejectLeaveReasonSchema,
-} from '@/schema/leave';
 
 type Decision = 'approved' | 'rejected';
 
 type LeaveReviewActionsProps = {
   itemId: string;
   employeeName: string;
-  /** Called after a committed decision so the parent can hide the row + close
-   *  the review sheet. */
+  /** Called after a committed decision so the parent can close the review
+   *  sheet. The queue refreshes via the mutation's own invalidation. */
   onReviewed: (decision: Decision) => void;
 };
 
 /**
  * Approve / reject controls for a single leave request in the admin queue.
- * Rejection opens a dialog for the required reason (stored on the row, emailed
- * to the employee, and shown in their history). Owns the `reviewLeaveRequest`
- * mutation so the queue itself stays presentational.
+ * Backed by the real `reviewLeaveRequest` action (stamps status/reviewer,
+ * updates the balance, emails the employee). Rejection reuses the shared
+ * `RejectRequestDialog` for the required reason.
  */
 export function LeaveReviewActions({
   itemId,
   employeeName,
   onReviewed,
 }: LeaveReviewActionsProps) {
-  const [rejectOpen, setRejectOpen] = useState(false);
   const { executeAsync, isPending } = useReviewLeave();
-
-  const form = useForm<RejectLeaveReasonInput>({
-    resolver: zodResolver(rejectLeaveReasonSchema),
-    defaultValues: { rejectionReason: '' },
-  });
 
   const approve = async () => {
     const result = await executeAsync({ id: itemId, decision: 'approved' });
@@ -68,85 +38,33 @@ export function LeaveReviewActions({
     }
   };
 
-  const reject = async ({ rejectionReason }: RejectLeaveReasonInput) => {
+  const reject = async (reason: string) => {
     const result = await executeAsync({
       id: itemId,
       decision: 'rejected',
-      rejectionReason,
+      rejectionReason: reason,
     });
     if (result?.data) {
       toast.success(`Leave for ${employeeName} rejected`);
-      setRejectOpen(false);
-      form.reset();
       onReviewed('rejected');
     }
   };
 
   return (
     <div className='flex w-full gap-2'>
-      <Button
-        variant='destructive'
-        className='flex-1'
-        disabled={isPending}
-        onClick={() => setRejectOpen(true)}
-      >
-        Reject
-      </Button>
+      <RejectRequestDialog
+        trigger={
+          <Button variant='destructive' className='flex-1' disabled={isPending}>
+            Reject
+          </Button>
+        }
+        title='Reject leave request'
+        description={`${employeeName} will see this reason on their leave history and by email.`}
+        onConfirm={reject}
+      />
       <Button className='flex-1' isLoading={isPending} onClick={approve}>
         Approve
       </Button>
-
-      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <DialogContent className='sm:max-w-md'>
-          <DialogHeader>
-            <DialogTitle>Reject leave request</DialogTitle>
-            <DialogDescription>
-              {employeeName} will see this reason on their leave history and by
-              email.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(reject)}
-              className='flex flex-col gap-4'
-            >
-              <FormField
-                control={form.control}
-                name='rejectionReason'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reason for rejection</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        rows={4}
-                        placeholder='e.g. Pool exhausted for the year — please resubmit as unpaid.'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => setRejectOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type='submit'
-                  variant='destructive'
-                  isLoading={isPending}
-                >
-                  Reject request
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

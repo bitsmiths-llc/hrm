@@ -77,14 +77,3 @@ export const reviewLeaveSchema = z
   });
 
 export type ReviewLeaveInput = z.infer<typeof reviewLeaveSchema>;
-
-/** Just the reason field, for the admin reject dialog (the id + decision are
- *  supplied by the action call, not the form). */
-export const rejectLeaveReasonSchema = z.object({
-  rejectionReason: z
-    .string()
-    .trim()
-    .min(3, 'Add a reason so the employee knows why (at least 3 characters)'),
-});
-
-export type RejectLeaveReasonInput = z.infer<typeof rejectLeaveReasonSchema>;
