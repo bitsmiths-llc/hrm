@@ -15,10 +15,14 @@ export default function SettingsPage() {
         title='Settings'
         description='Module-wide configuration for leave, medical allowance, and payroll.'
       />
-      <div className='flex flex-wrap gap-6'>
+      {/* Ordered shortest → tallest so each row pairs cards of similar height:
+          the two single-field cards (Leave, Payroll) sit on top, the two taller
+          cards (Medical, Overtime Projects) below — keeps side-by-side pairs
+          aligned instead of a short card leaving a gap next to a tall one. */}
+      <div className='grid max-w-4xl grid-cols-1 items-start gap-6 md:grid-cols-2'>
         <LeaveSettingsForm />
-        <MedicalSettingsForm />
         <OvertimeSettingsForm />
+        <MedicalSettingsForm />
         <ProjectsSettingsCard />
       </div>
     </>

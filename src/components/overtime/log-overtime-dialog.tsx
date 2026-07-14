@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useLogOvertime } from '@/hooks/actions/use-log-overtime';
 import { useProjects } from '@/hooks/queries/projects';
 
 import { Button } from '@/components/ui/button';
@@ -36,26 +37,30 @@ import { type OvertimeLogInput, overtimeLogSchema } from '@/schema/overtime';
 export function LogOvertimeDialog() {
   const [open, setOpen] = useState(false);
   const { data: projects } = useProjects();
-  const projectOptions = (projects ?? []).map((project) => project.name);
+  const projectOptions = (projects ?? []).map((project) => ({
+    label: project.name,
+    value: project.id,
+  }));
 
   const form = useForm<OvertimeLogInput>({
     resolver: zodResolver(overtimeLogSchema),
     defaultValues: {
       date: '',
       hours: 1,
-      project: '',
+      projectId: '',
       task: '',
     },
   });
 
-  const onSubmit = async (values: OvertimeLogInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(
-      `${values.hours}h logged for ${values.project} — awaiting approval`,
-    );
+  const { execute, isPending } = useLogOvertime(() => {
+    const { hours, projectId } = form.getValues();
+    const projectName =
+      projects?.find((project) => project.id === projectId)?.name ??
+      'the project';
+    toast.success(`${hours}h logged for ${projectName} — awaiting approval`);
     form.reset();
     setOpen(false);
-  };
+  });
 
   return (
     <Dialog
@@ -72,13 +77,13 @@ export function LogOvertimeDialog() {
         <DialogHeader>
           <DialogTitle>Log overtime</DialogTitle>
           <DialogDescription>
-            Only approved hours are paid out, at the configured overtime rate
-            for the pay period they fall in.
+            Only approved hours are paid out, at the configured overtime rate for
+            the pay period they fall in — pay is computed during the payroll run.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit((values) => execute(values))}
             className='flex flex-col gap-4'
           >
             <div className='grid grid-cols-2 gap-4'>
@@ -102,7 +107,7 @@ export function LogOvertimeDialog() {
               />
             </div>
             <ControlledSelect<OvertimeLogInput>
-              name='project'
+              name='projectId'
               label='Project'
               options={projectOptions}
               placeholder='Select a project'
@@ -132,7 +137,7 @@ export function LogOvertimeDialog() {
               >
                 Cancel
               </Button>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Submit log
               </Button>
             </DialogFooter>

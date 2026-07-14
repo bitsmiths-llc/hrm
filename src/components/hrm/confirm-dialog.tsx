@@ -21,8 +21,11 @@ type ConfirmDialogProps = {
   confirmLabel?: string;
   /** Style the confirm button as destructive (reject, delete, lock). */
   destructive?: boolean;
+  /** Extra loading flag from the caller (OR-ed with the internal await state). */
   isLoading?: boolean;
-  onConfirm: () => void;
+  /** May be async — the dialog awaits it, keeping itself open with the confirm
+   *  button in its loading state until the action settles. */
+  onConfirm: () => void | Promise<unknown>;
 };
 
 export function ConfirmDialog({
@@ -35,14 +38,25 @@ export function ConfirmDialog({
   onConfirm,
 }: ConfirmDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const busy = isLoading || isConfirming;
 
-  const handleConfirm = () => {
-    onConfirm();
-    setOpen(false);
+  const handleConfirm = async () => {
+    try {
+      setIsConfirming(true);
+      await onConfirm();
+    } finally {
+      setIsConfirming(false);
+      setOpen(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      // Don't let an Esc / outside-click close the dialog mid-action.
+      onOpenChange={(next) => !busy && setOpen(next)}
+    >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
@@ -50,12 +64,16 @@ export function ConfirmDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant='outline' onClick={() => setOpen(false)}>
+          <Button
+            variant='outline'
+            disabled={busy}
+            onClick={() => setOpen(false)}
+          >
             Cancel
           </Button>
           <Button
             variant={destructive ? 'destructive' : 'default'}
-            isLoading={isLoading}
+            isLoading={busy}
             onClick={handleConfirm}
           >
             {confirmLabel}

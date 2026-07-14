@@ -364,6 +364,100 @@ export type Database = {
           },
         ];
       };
+      overtime_logs: {
+        Row: {
+          created_at: string;
+          employee_id: string;
+          hours: number;
+          id: string;
+          payroll_run_id: string | null;
+          project_id: string;
+          rejection_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          status: Database['public']['Enums']['request_status'];
+          task: string;
+          updated_at: string;
+          work_date: string;
+        };
+        Insert: {
+          created_at?: string;
+          employee_id: string;
+          hours: number;
+          id?: string;
+          payroll_run_id?: string | null;
+          project_id: string;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: Database['public']['Enums']['request_status'];
+          task: string;
+          updated_at?: string;
+          work_date: string;
+        };
+        Update: {
+          created_at?: string;
+          employee_id?: string;
+          hours?: number;
+          id?: string;
+          payroll_run_id?: string | null;
+          project_id?: string;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          status?: Database['public']['Enums']['request_status'];
+          task?: string;
+          updated_at?: string;
+          work_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'overtime_logs_employee_id_fkey';
+            columns: ['employee_id'];
+            isOneToOne: false;
+            referencedRelation: 'employees';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'overtime_logs_project_id_fkey';
+            columns: ['project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'overtime_logs_reviewed_by_fkey';
+            columns: ['reviewed_by'];
+            isOneToOne: false;
+            referencedRelation: 'employees';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      projects: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       socials: {
         Row: {
           created_at: string;

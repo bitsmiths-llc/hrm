@@ -6,6 +6,7 @@ import Link from 'next/link';
 import {
   useAllLeaveRequests,
   useAllMedicalClaims,
+  useAllOvertimeLogs,
 } from '@/hooks/queries/approvals';
 
 import { EmptyState } from '@/components/hrm/empty-state';
@@ -23,13 +24,12 @@ import { formatDate } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
 import { leaveTypeLabels } from '@/constants/hrm-labels';
-import { mockOvertimeLogs } from '@/constants/mock/requests';
 import { paths } from '@/constants/paths';
 
 export function AdminPendingQueue() {
-  // Leave and medical are real; overtime is still mock until wired.
   const { data: leaveRequests } = useAllLeaveRequests();
   const { data: medicalClaims } = useAllMedicalClaims();
+  const { data: overtimeLogs } = useAllOvertimeLogs();
   const rows = [
     ...(leaveRequests ?? [])
       .filter((r) => r.status === 'pending')
@@ -49,7 +49,7 @@ export function AdminPendingQueue() {
         detail: formatCurrency(c.amount),
         createdAt: c.createdAt,
       })),
-    ...mockOvertimeLogs
+    ...(overtimeLogs ?? [])
       .filter((o) => o.status === 'pending')
       .map((o) => ({
         id: o.id,

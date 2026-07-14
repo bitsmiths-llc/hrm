@@ -9,7 +9,9 @@ import { StatCard } from '@/components/hrm/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type OvertimeSummaryCardsProps = {
-  employeeId: string;
+  /** Undefined while the signed-in employee's identity is still loading — the
+   *  underlying query stays disabled until it resolves. */
+  employeeId?: string;
   /** 'all' | 'YYYY' | 'YYYY-MM' — the period selected by the page-level
    *  month filter. 'all' defaults to the current month. */
   month: string;
