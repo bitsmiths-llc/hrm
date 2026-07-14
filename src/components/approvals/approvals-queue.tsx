@@ -72,7 +72,7 @@ export function ApprovalsQueue() {
     ];
     return all
       .filter((item) => item.status === 'pending')
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [leave.data, medical.data, overtime.data]);
 
   const visible =

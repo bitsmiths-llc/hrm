@@ -134,14 +134,17 @@ export function MedicalClaimsTable({
   month,
 }: MedicalClaimsTableProps) {
   const columns = useMedicalClaimsColumns();
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'expenseDate', desc: true },
-  ]);
+  // Default to newest-submitted first (createdAt), not a data column, so a claim
+  // keeps its place regardless of status — approved/rejected rows stay
+  // latest-first. Empty initial sorting preserves this order until the user
+  // clicks a column header.
+  const [sorting, setSorting] = useState<SortingState>([]);
   const filtered = useMemo(() => {
-    if (month === 'all') return claims ?? [];
-    return (claims ?? []).filter((claim) =>
-      claim.expenseDate.startsWith(month),
-    );
+    const scoped =
+      month === 'all'
+        ? (claims ?? [])
+        : (claims ?? []).filter((claim) => claim.expenseDate.startsWith(month));
+    return [...scoped].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [claims, month]);
 
   const table = useReactTable({
