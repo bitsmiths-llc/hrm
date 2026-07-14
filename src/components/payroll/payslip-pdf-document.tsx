@@ -251,19 +251,13 @@ export function PayslipPdfDocument({ payslip }: PayslipPdfDocumentProps) {
             <Text style={styles.gridCellLabel}>Pay Period</Text>
             <Text style={styles.gridCellValueLast}>{cycleLabel}</Text>
           </View>
-          <View style={styles.gridRow}>
+          <View style={styles.gridRowLast}>
             <Text style={styles.gridCellLabel}>Company</Text>
             <Text style={styles.gridCellValue}>Bitsmith Studio</Text>
             <Text style={styles.gridCellLabel}>Days Worked</Text>
             <Text style={styles.gridCellValueLast}>
               {payslip.daysWorked} of {payslip.daysInMonth} days
             </Text>
-          </View>
-          <View style={styles.gridRowLast}>
-            <Text style={styles.gridCellLabel}>Salary Type</Text>
-            <Text style={styles.gridCellValue}>Monthly</Text>
-            <Text style={styles.gridCellLabel}>Cycle</Text>
-            <Text style={styles.gridCellValueLast}>{payslip.cycleMonth}</Text>
           </View>
         </View>
 
@@ -274,14 +268,6 @@ export function PayslipPdfDocument({ payslip }: PayslipPdfDocumentProps) {
           </View>
           <View style={styles.lineRow}>
             <Text style={styles.lineLabel}>Base Salary</Text>
-            <Text style={styles.lineValue}>
-              {formatCurrency(payslip.baseSalary)}
-            </Text>
-          </View>
-          <View style={styles.lineRow}>
-            <Text style={styles.lineLabel}>
-              Prorated Base ({payslip.daysWorked}/{payslip.daysInMonth} days)
-            </Text>
             <Text style={styles.lineValue}>
               {formatCurrency(payslip.totalBase)}
             </Text>
@@ -301,6 +287,29 @@ export function PayslipPdfDocument({ payslip }: PayslipPdfDocumentProps) {
             </Text>
           </View>
         </View>
+
+        {payslip.customFields.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>ADJUSTMENTS</Text>
+              <Text style={styles.sectionHeaderRight}>AMOUNT (PKR)</Text>
+            </View>
+            {payslip.customFields.map((field, index) => {
+              const isLast = index === payslip.customFields.length - 1;
+              return (
+                <View
+                  key={`${field.label}-${index}`}
+                  style={isLast ? styles.lineRowLast : styles.lineRow}
+                >
+                  <Text style={styles.lineLabel}>{field.label}</Text>
+                  <Text style={styles.lineValue}>
+                    {formatCurrency(field.amount)}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>

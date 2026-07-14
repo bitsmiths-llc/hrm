@@ -1,8 +1,10 @@
 'use client';
 
+import { Receipt, Wallet } from 'lucide-react';
+
 import { useMedicalBalance } from '@/hooks/queries/medical';
 
-import { BalanceCard } from '@/components/hrm/balance-card';
+import { StatCard } from '@/components/hrm/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { formatCurrency } from '@/utils/number-functions';
@@ -13,13 +15,13 @@ type MedicalBalanceCardsProps = {
   employeeId?: string;
 };
 
-const fmt = (amount: number) => formatCurrency(amount) || 'PKR 0';
-
 /** The medical allowance is a rolling accrual (not an annual pool), so the
- *  balance is always the live figure from `medical_balance()`. The hero card is
- *  what's claimable right now (available = accrued − approved spend, with a bar
- *  that fills as it's spent); the second shows how the allowance is accruing
- *  toward the cap. The page's month filter narrows the history table, not this. */
+ *  balance is always the live figure from `medical_balance()`. "Available"
+ *  is what's claimable right now (accrued − spent, already floored at 0 by
+ *  the RPC); "Used" is the lifetime total of approved claims. The cap is
+ *  informational only — folded into the Available card's hint instead of a
+ *  headline "of cap" stat. The page's month filter narrows the history
+ *  table, not this. */
 export function MedicalBalanceCards({ employeeId }: MedicalBalanceCardsProps) {
   const { data: balance, isLoading } = useMedicalBalance(employeeId);
 
@@ -34,20 +36,17 @@ export function MedicalBalanceCards({ employeeId }: MedicalBalanceCardsProps) {
 
   return (
     <div className='grid gap-4 md:grid-cols-2'>
-      <BalanceCard
-        title='Available to Claim'
-        mode='consumed'
-        used={balance.spent}
-        total={balance.accrued}
-        format={fmt}
-        hint={`accrues ${fmt(balance.monthlyAccrual)}/month`}
+      <StatCard
+        label='Available Balance'
+        value={formatCurrency(balance.available) || '0'}
+        icon={Wallet}
+        hint={`Cap ${formatCurrency(balance.cap)} · Accrues ${formatCurrency(balance.monthlyAccrual)}/month`}
       />
-      <BalanceCard
-        title='Allowance Accrued'
-        mode='accrued'
-        used={balance.accrued}
-        total={balance.cap}
-        format={fmt}
+      <StatCard
+        label='Used'
+        value={formatCurrency(balance.spent) || '0'}
+        icon={Receipt}
+        hint='Total approved claims to date'
       />
     </div>
   );
