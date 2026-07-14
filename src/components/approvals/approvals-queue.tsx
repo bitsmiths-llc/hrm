@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { mockOvertimeLogs } from '@/constants/mock/requests';
 import { QueryKeys } from '@/constants/query-keys';
 
 import {
@@ -31,6 +32,8 @@ import {
   medicalToItem,
   overtimeToItem,
 } from './approval-items';
+import { LeaveReviewActions } from './leave-review-actions';
+import { MedicalReviewActions } from './medical-review-actions';
 
 import { RequestStatus } from '@/types/hrm';
 
@@ -75,24 +78,35 @@ export function ApprovalsQueue() {
   const visible =
     tab === 'all' ? pending : pending.filter((item) => item.kind === tab);
 
+  // Overtime is still mock, so a decision writes to the in-memory mock "backend"
+  // and then refetches — mirroring how the real leave/medical tabs invalidate on
+  // a decision, so every tab pulls fresh data the moment a row is reviewed.
+  // (Leave and medical are NOT handled here — their review actions invalidate
+  // LEAVE_REQUESTS / MEDICAL_CLAIMS, which drives this queue's refetch.)
   const decide = (item: ApprovalItem, decision: Decision, reason?: string) => {
-    // Partial-key match updates both the admin's all-records cache entry
-    // and each employee's own per-employee cache entry in one pass — see
-    // the equivalent reasoning in hooks/queries/settings.ts.
+    const rejectionReason = decision === 'rejected' ? (reason ?? null) : null;
+
+    // Persist to the mock source so the refetch (and any later navigation) keeps
+    // the decision instead of reverting to the seed data — the real tabs persist
+    // to the DB. `decide` is only wired to the overtime footer.
+    const log = mockOvertimeLogs.find((entry) => entry.id === item.id);
+    if (log) {
+      log.status = decision;
+      log.rejectionReason = rejectionReason;
+    }
+
+    // Optimistic write for instant feedback, then invalidate so the row refetches
+    // from the (now-updated) mock — consistent with the leave/medical tabs.
     queryClient.setQueriesData<RejectableRecord[]>(
       { queryKey: [queryKeyByKind[item.kind]] },
       (old) =>
         old?.map((record) =>
           record.id === item.id
-            ? {
-                ...record,
-                status: decision,
-                rejectionReason:
-                  decision === 'rejected' ? (reason ?? null) : null,
-              }
+            ? { ...record, status: decision, rejectionReason }
             : record,
         ),
     );
+    queryClient.invalidateQueries({ queryKey: [queryKeyByKind[item.kind]] });
     setSelected(null);
     toast.success(
       `${item.title} from ${item.employeeName} ${decision === 'approved' ? 'approved' : 'rejected'}`,
@@ -178,24 +192,44 @@ export function ApprovalsQueue() {
             },
           ]}
           footer={
-            <div className='flex w-full gap-2'>
-              <RejectRequestDialog
-                trigger={
-                  <Button variant='destructive' className='flex-1'>
-                    Reject
-                  </Button>
-                }
-                title={`Reject this ${approvalKindLabels[selected.kind].toLowerCase()} request?`}
-                description={`${selected.employeeName} will see the request as rejected, along with your reason.`}
-                onConfirm={(reason) => decide(selected, 'rejected', reason)}
+            selected.kind === 'leave' ? (
+              // Leave is backed by the real reviewLeaveRequest action (required
+              // reason on reject + employee email); its invalidation refreshes
+              // the queue.
+              <LeaveReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={() => setSelected(null)}
               />
-              <Button
-                className='flex-1'
-                onClick={() => decide(selected, 'approved')}
-              >
-                Approve
-              </Button>
-            </div>
+            ) : selected.kind === 'medical' ? (
+              // Medical is backed by the real reviewMedicalClaim action
+              // (server-side balance bound on approve, required reason + email
+              // on reject); its invalidation refreshes the queue.
+              <MedicalReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={() => setSelected(null)}
+              />
+            ) : (
+              <div className='flex w-full gap-2'>
+                <RejectRequestDialog
+                  trigger={
+                    <Button variant='destructive' className='flex-1'>
+                      Reject
+                    </Button>
+                  }
+                  title={`Reject this ${approvalKindLabels[selected.kind].toLowerCase()} request?`}
+                  description={`${selected.employeeName} will see the request as rejected, along with your reason.`}
+                  onConfirm={(reason) => decide(selected, 'rejected', reason)}
+                />
+                <Button
+                  className='flex-1'
+                  onClick={() => decide(selected, 'approved')}
+                >
+                  Approve
+                </Button>
+              </div>
+            )
           }
         >
           {selected.kind === 'medical' && (

@@ -2,11 +2,12 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useMyMedicalBalance } from '@/hooks/queries/medical';
+import { useCreateMedicalClaim } from '@/hooks/actions/use-create-medical-claim';
+import { useMedicalBalance } from '@/hooks/queries/medical';
 
 import { FileUpload } from '@/components/hrm/file-upload';
 import { Button } from '@/components/ui/button';
@@ -41,8 +42,11 @@ import {
 } from '@/constants/hrm-labels';
 import {
   createMedicalClaimSchema,
+  expenseDateBounds,
   type MedicalClaimInput,
 } from '@/schema/medical';
+
+const PROOF_ACCEPT = hrmConfig.proofMimeTypes.join(',');
 
 const claimForOptions = Object.entries(medicalClaimForLabels).map(
   ([value, label]) => ({ value, label }),
@@ -53,13 +57,27 @@ const serviceTypeOptions = Object.entries(medicalServiceTypeLabels).map(
 );
 
 type SubmitClaimDialogProps = {
+  /** The signed-in employee's id. The claim files upload under this uid and the
+   *  available-balance bound is read for it; the trigger is disabled until it
+   *  resolves. */
+  employeeId?: string;
   disabled?: boolean;
 };
 
-export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
+export function SubmitClaimDialog({
+  employeeId,
+  disabled,
+}: SubmitClaimDialogProps) {
   const [open, setOpen] = useState(false);
-  const { data: balance } = useMyMedicalBalance();
-  const maxAmount = balance?.accrued ?? 0;
+  const { data: balance } = useMedicalBalance(employeeId);
+  const maxAmount = balance?.available ?? 0;
+
+  // Restrict the calendar to the same [today - 30 days, today] window the schema
+  // enforces, so a picked date can never fail validation on submit.
+  const disabledExpenseDates = useMemo(() => {
+    const { earliest, today } = expenseDateBounds();
+    return [{ before: earliest }, { after: today }];
+  }, []);
 
   const form = useForm<MedicalClaimInput>({
     resolver: zodResolver(createMedicalClaimSchema(maxAmount)),
@@ -73,14 +91,11 @@ export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
     },
   });
 
-  const onSubmit = async (values: MedicalClaimInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(
-      `${medicalServiceTypeLabels[values.serviceType]} claim submitted for approval`,
-    );
+  const { mutate, isPending } = useCreateMedicalClaim(() => {
+    toast.success('Medical claim submitted for approval');
     form.reset();
     setOpen(false);
-  };
+  });
 
   return (
     <Dialog
@@ -91,7 +106,7 @@ export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
       }}
     >
       <DialogTrigger asChild>
-        <Button iconLeft={Plus} disabled={disabled}>
+        <Button iconLeft={Plus} disabled={disabled || !employeeId}>
           Submit claim
         </Button>
       </DialogTrigger>
@@ -99,14 +114,15 @@ export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
         <DialogHeader>
           <DialogTitle>Submit a medical claim</DialogTitle>
           <DialogDescription>
-            Attach receipts, prescriptions, and proof of payment. Claims must be
-            submitted within 30 days of the expense date and can&apos;t exceed
-            your accrued balance of {formatCurrency(maxAmount) || 'PKR 0'}.
+            Attach receipts, prescriptions, and proof of payment. The expense
+            date must be within the last 30 days, and the amount can&apos;t
+            exceed your available balance of{' '}
+            {formatCurrency(maxAmount) || 'PKR 0'}.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit((values) => mutate(values))}
             className='flex flex-col gap-4'
           >
             <div className='grid grid-cols-2 gap-4'>
@@ -127,7 +143,7 @@ export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
               <ControlledDatePicker<MedicalClaimInput>
                 name='expenseDate'
                 label='Expense date'
-                disabledDates={{ after: new Date() }}
+                disabledDates={disabledExpenseDates}
               />
               <FormField
                 control={form.control}
@@ -136,7 +152,7 @@ export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
                   <FormItem>
                     <FormLabel>Amount (PKR)</FormLabel>
                     <FormControl>
-                      <Input type='number' min={0} {...field} />
+                      <Input type='number' min={0} step={1} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -172,7 +188,8 @@ export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
                       onChange={field.onChange}
                       maxFiles={hrmConfig.maxProofFiles}
                       maxSizeMb={hrmConfig.maxProofFileSizeMb}
-                      accept='image/*,.pdf'
+                      accept={PROOF_ACCEPT}
+                      allowedMimeTypes={hrmConfig.proofMimeTypes}
                       label='Upload receipt / prescription'
                     />
                   </FormControl>
@@ -188,7 +205,7 @@ export function SubmitClaimDialog({ disabled }: SubmitClaimDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Submit claim
               </Button>
             </DialogFooter>

@@ -16,6 +16,7 @@ export enum QueryKeys {
   LEAVE_BALANCE = 'leave-balance',
   MEDICAL_CLAIMS = 'medical-claims',
   MEDICAL_BALANCE = 'medical-balance',
+  MEDICAL_PROOF_URLS = 'medical-proof-urls',
   OVERTIME_LOGS = 'overtime-logs',
   PAYSLIPS = 'payslips',
   PAYROLL_CYCLES = 'payroll-cycles',

@@ -1,4 +1,10 @@
+'use client';
+
 import { Inbox } from 'lucide-react';
+
+import { useCurrentEmployee } from '@/hooks/queries/employees';
+import { useLeaveRequests } from '@/hooks/queries/leave';
+import { useMedicalClaims } from '@/hooks/queries/medical';
 
 import { EmptyState } from '@/components/hrm/empty-state';
 import { StatusBadge } from '@/components/hrm/status-badge';
@@ -15,26 +21,27 @@ import { formatCurrency } from '@/utils/number-functions';
 
 import { leaveTypeLabels } from '@/constants/hrm-labels';
 import { mockCurrentEmployee } from '@/constants/mock/employees';
-import {
-  mockLeaveRequests,
-  mockMedicalClaims,
-  mockOvertimeLogs,
-} from '@/constants/mock/requests';
+import { mockOvertimeLogs } from '@/constants/mock/requests';
 
 export function EmployeePendingRequests() {
-  const employeeId = mockCurrentEmployee.id;
+  // Leave and medical are real, scoped to the signed-in employee; overtime is
+  // still mock (keyed by the mock employee).
+  const { data: me } = useCurrentEmployee();
+  const { data: leaveRequests } = useLeaveRequests(me?.id);
+  const { data: medicalClaims } = useMedicalClaims(me?.id);
+  const mockEmployeeId = mockCurrentEmployee.id;
 
   const rows = [
-    ...mockLeaveRequests
-      .filter((r) => r.employeeId === employeeId && r.status === 'pending')
+    ...(leaveRequests ?? [])
+      .filter((r) => r.status === 'pending')
       .map((r) => ({
         id: r.id,
         title: leaveTypeLabels[r.type],
         detail: `${r.days} day(s) from ${formatDate(r.startDate)}`,
         status: r.status,
       })),
-    ...mockMedicalClaims
-      .filter((c) => c.employeeId === employeeId && c.status === 'pending')
+    ...(medicalClaims ?? [])
+      .filter((c) => c.status === 'pending')
       .map((c) => ({
         id: c.id,
         title: 'Medical Claim',
@@ -42,7 +49,7 @@ export function EmployeePendingRequests() {
         status: c.status,
       })),
     ...mockOvertimeLogs
-      .filter((o) => o.employeeId === employeeId && o.status === 'pending')
+      .filter((o) => o.employeeId === mockEmployeeId && o.status === 'pending')
       .map((o) => ({
         id: o.id,
         title: 'Overtime',

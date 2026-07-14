@@ -72,4 +72,13 @@ export function OnboardingApprovedEmail({
   );
 }
 
+// Sample data the React Email preview server (`pnpm email`) renders with.
+OnboardingApprovedEmail.PreviewProps = {
+  fullName: 'Ayesha Khan',
+  dashboardUrl: 'http://localhost:3000/dashboard',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies OnboardingApprovedEmailProps;
+
 export default OnboardingApprovedEmail;

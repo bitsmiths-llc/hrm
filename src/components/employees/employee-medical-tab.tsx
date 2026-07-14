@@ -32,7 +32,7 @@ export function EmployeeMedicalTab({ employeeId }: EmployeeMedicalTabProps) {
       <div className='flex justify-end'>
         <MonthFilter value={month} onChange={setMonth} />
       </div>
-      <MedicalBalanceCards employeeId={employeeId} month={month} />
+      <MedicalBalanceCards employeeId={employeeId} />
       <MedicalClaimsTable
         claims={claims}
         isLoading={claimsLoading}

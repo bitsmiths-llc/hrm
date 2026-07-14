@@ -3,14 +3,16 @@ import { Button, Heading, Section, Text } from '@react-email/components';
 import { EmailLayout } from '@/emails/components/email-layout';
 import { brand, emailStyles } from '@/emails/theme';
 
-export type OnboardingSubmittedEmailProps = {
+export type MedicalSubmittedEmailProps = {
   /** Full name of the admin recipient, when known. */
   adminName?: string | null;
   /** Name of the employee who submitted (falls back to their email). */
   employeeName: string;
-  /** Email of the employee who submitted. */
-  employeeEmail: string;
-  /** Deep link to the employee's profile / review surface in the admin app. */
+  /** Human-readable one-liner, e.g. "Doctor Consultation · PKR 3,000 · Self". */
+  summary: string;
+  /** The employee's description of the expense. */
+  description: string;
+  /** Deep link to the admin approvals queue. */
   reviewUrl: string;
   /** Product name, e.g. "Bitsmiths HRM". */
   appName: string;
@@ -21,19 +23,20 @@ export type OnboardingSubmittedEmailProps = {
 };
 
 /**
- * Sent to every admin when an employee submits their onboarding form. The
- * submission now sits in the review queue awaiting an approve-or-return
- * decision, so the CTA drops the admin straight onto that person's record.
+ * Sent to every active admin when an employee submits a medical claim. Mirrors
+ * `LeaveSubmittedEmail` — the CTA drops the admin onto the approvals queue where
+ * they can approve or reject (subject to the server-side balance bound).
  */
-export function OnboardingSubmittedEmail({
+export function MedicalSubmittedEmail({
   adminName,
   employeeName,
-  employeeEmail,
+  summary,
+  description,
   reviewUrl,
   appName,
   baseUrl,
   supportEmail,
-}: OnboardingSubmittedEmailProps) {
+}: MedicalSubmittedEmailProps) {
   const greeting = adminName ? `Hi ${adminName},` : 'Hi,';
 
   return (
@@ -41,15 +44,14 @@ export function OnboardingSubmittedEmail({
       appName={appName}
       baseUrl={baseUrl}
       supportEmail={supportEmail}
-      preview={`${employeeName} submitted their onboarding for review`}
+      preview={`${employeeName} submitted a medical claim`}
     >
       <Section style={emailStyles.card}>
-        <Heading style={emailStyles.heading}>New onboarding submission</Heading>
+        <Heading style={emailStyles.heading}>New medical claim</Heading>
         <Text style={emailStyles.paragraph}>{greeting}</Text>
         <Text style={emailStyles.paragraph}>
-          <strong>{employeeName}</strong> has completed and submitted their
-          onboarding form. It&apos;s now waiting in your review queue for
-          approval.
+          <strong>{employeeName}</strong> submitted a medical claim. It&apos;s
+          now waiting in your approvals queue.
         </Text>
 
         <Section
@@ -60,23 +62,23 @@ export function OnboardingSubmittedEmail({
           }}
         >
           <Text style={emailStyles.detailRow}>
-            <span style={emailStyles.detailLabel}>Employee: </span>
-            {employeeName}
+            <span style={emailStyles.detailLabel}>Claim: </span>
+            {summary}
           </Text>
           <Text style={{ ...emailStyles.detailRow, margin: 0 }}>
-            <span style={emailStyles.detailLabel}>Email: </span>
-            {employeeEmail}
+            <span style={emailStyles.detailLabel}>Details: </span>
+            {description}
           </Text>
         </Section>
 
         <Text style={emailStyles.paragraph}>
-          Review their details, then approve to activate their account or return
-          the form with a note if something needs changing.
+          Review the claim and its proof files, then approve or reject it from
+          the queue.
         </Text>
 
         <Section style={emailStyles.buttonWrap}>
           <Button href={reviewUrl} style={emailStyles.button}>
-            Review submission
+            Review in approvals
           </Button>
         </Section>
       </Section>
@@ -85,14 +87,15 @@ export function OnboardingSubmittedEmail({
 }
 
 // Sample data the React Email preview server (`pnpm email`) renders with.
-OnboardingSubmittedEmail.PreviewProps = {
+MedicalSubmittedEmail.PreviewProps = {
   adminName: 'Bilal Ahmed',
   employeeName: 'Ayesha Khan',
-  employeeEmail: 'ayesha.khan@example.com',
-  reviewUrl: 'http://localhost:3000/admin/employees/preview',
+  summary: 'Doctor Consultation · PKR 3,000 · Self',
+  description: 'Follow-up consultation and prescribed medication.',
+  reviewUrl: 'http://localhost:3000/admin/approvals',
   appName: 'Bitsmiths HRM',
   baseUrl: 'http://localhost:3000',
   supportEmail: 'support@bitsmiths.studio',
-} satisfies OnboardingSubmittedEmailProps;
+} satisfies MedicalSubmittedEmailProps;
 
-export default OnboardingSubmittedEmail;
+export default MedicalSubmittedEmail;

@@ -1,4 +1,4 @@
-import { Employee, LeaveBalance, MedicalBalance } from '@/types/hrm';
+import { Employee } from '@/types/hrm';
 
 export const mockEmployees: Employee[] = [
   {
@@ -117,25 +117,6 @@ export const mockEmployees: Employee[] = [
   },
 ];
 
-/** Per-employee balances, keyed by employee id — admins need to see any
- *  employee's balance, not just the signed-in one. */
-export const mockLeaveBalances: Record<string, LeaveBalance> = {
-  'emp-1': { poolTotal: 22, poolUsed: 7.5, unpaidTaken: 2 },
-  'emp-2': { poolTotal: 22, poolUsed: 12, unpaidTaken: 4 },
-  'emp-3': { poolTotal: 22, poolUsed: 0, unpaidTaken: 0 },
-  'emp-4': { poolTotal: 22, poolUsed: 0, unpaidTaken: 0 },
-};
-
-export const mockMedicalBalances: Record<string, MedicalBalance> = {
-  'emp-1': { accrued: 27_500, cap: 50_000, monthlyAccrual: 5_000 },
-  'emp-2': { accrued: 45_000, cap: 50_000, monthlyAccrual: 5_000 },
-  'emp-3': { accrued: 0, cap: 50_000, monthlyAccrual: 5_000 },
-  'emp-4': { accrued: 0, cap: 50_000, monthlyAccrual: 5_000 },
-};
-
-/** The employee the mock "employee role" is signed in as. */
+/** The employee the mock "employee role" is signed in as. Still used by the
+ *  not-yet-wired surfaces (overtime, payslips) to key their mock data. */
 export const mockCurrentEmployee = mockEmployees[0];
-
-/** Balances for the signed-in mock employee (emp-1). */
-export const mockLeaveBalance = mockLeaveBalances[mockCurrentEmployee.id];
-export const mockMedicalBalance = mockMedicalBalances[mockCurrentEmployee.id];

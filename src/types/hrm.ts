@@ -77,18 +77,6 @@ export type Employee = {
   joinedAt: string | null;
 };
 
-export type LeaveBalance = {
-  poolTotal: number; // 22
-  poolUsed: number; // paid + sick + 0.5 * half days, approved only
-  unpaidTaken: number; // outside the pool
-};
-
-export type MedicalBalance = {
-  accrued: number; // current claimable balance, PKR
-  cap: number; // 50,000
-  monthlyAccrual: number; // 5,000
-};
-
 export type LeaveRequest = {
   id: string;
   employeeId: string;
@@ -98,7 +86,8 @@ export type LeaveRequest = {
   startDate: string;
   days: number; // 0.5 for half day
   status: RequestStatus;
-  /** Set by admin when status is 'rejected' — shown to the employee. */
+  /** Set by admin when status is 'rejected' — shown to the employee (in the
+   *  decision email and their leave history). */
   rejectionReason: string | null;
   createdAt: string;
 };

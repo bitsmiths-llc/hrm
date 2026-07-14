@@ -1,5 +1,12 @@
+'use client';
+
 import { Inbox } from 'lucide-react';
 import Link from 'next/link';
+
+import {
+  useAllLeaveRequests,
+  useAllMedicalClaims,
+} from '@/hooks/queries/approvals';
 
 import { EmptyState } from '@/components/hrm/empty-state';
 import { StatusBadge } from '@/components/hrm/status-badge';
@@ -16,16 +23,15 @@ import { formatDate } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
 import { leaveTypeLabels } from '@/constants/hrm-labels';
-import {
-  mockLeaveRequests,
-  mockMedicalClaims,
-  mockOvertimeLogs,
-} from '@/constants/mock/requests';
+import { mockOvertimeLogs } from '@/constants/mock/requests';
 import { paths } from '@/constants/paths';
 
 export function AdminPendingQueue() {
+  // Leave and medical are real; overtime is still mock until wired.
+  const { data: leaveRequests } = useAllLeaveRequests();
+  const { data: medicalClaims } = useAllMedicalClaims();
   const rows = [
-    ...mockLeaveRequests
+    ...(leaveRequests ?? [])
       .filter((r) => r.status === 'pending')
       .map((r) => ({
         id: r.id,
@@ -34,7 +40,7 @@ export function AdminPendingQueue() {
         detail: `${r.days} day(s) from ${formatDate(r.startDate)}`,
         createdAt: r.createdAt,
       })),
-    ...mockMedicalClaims
+    ...(medicalClaims ?? [])
       .filter((c) => c.status === 'pending')
       .map((c) => ({
         id: c.id,
