@@ -1,6 +1,6 @@
 'use client';
 
-import { Mail } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -27,14 +27,14 @@ export function SendInvoiceButton({ employeeName }: SendInvoiceButtonProps) {
   return (
     <Button
       type='button'
-      variant='ghost'
+      variant='outline'
       size='icon'
       isLoading={isSending}
       onClick={handleSend}
       title='Send invoice'
       aria-label='Send invoice'
     >
-      <Mail className='size-4' />
+      <Send className='size-4' />
     </Button>
   );
 }

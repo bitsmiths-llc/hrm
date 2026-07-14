@@ -30,7 +30,7 @@ export function ViewInvoiceButton({ payslip }: ViewInvoiceButtonProps) {
   return (
     <Button
       type='button'
-      variant='ghost'
+      variant='outline'
       size='icon'
       isLoading={isGenerating}
       onClick={handleView}

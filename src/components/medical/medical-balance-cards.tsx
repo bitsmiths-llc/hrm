@@ -1,11 +1,10 @@
 'use client';
 
-import { CalendarClock, Receipt } from 'lucide-react';
+import { CalendarClock, Receipt, Wallet } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { useMedicalBalance, useMedicalClaims } from '@/hooks/queries/medical';
 
-import { BalanceCard } from '@/components/hrm/balance-card';
 import { StatCard } from '@/components/hrm/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -18,9 +17,9 @@ type MedicalBalanceCardsProps = {
   month: string;
 };
 
-/** The current year shows the live accrued balance (forward-looking — how
- *  much is left to claim). A past year is closed, so "balance remaining"
- *  no longer applies — it shows what was actually claimed instead. */
+/** The current year shows the live available balance and lifetime used total
+ *  (forward-looking). A past year is closed, so "balance remaining" no
+ *  longer applies — it shows what was actually claimed that year instead. */
 export function MedicalBalanceCards({
   employeeId,
   month,
@@ -49,8 +48,16 @@ export function MedicalBalanceCards({
     };
   }, [claims, year]);
 
+  const totalUsedAllTime = useMemo(
+    () =>
+      (claims ?? [])
+        .filter((claim) => claim.status === 'approved')
+        .reduce((sum, claim) => sum + claim.amount, 0),
+    [claims],
+  );
+
   if (isCurrentYear) {
-    if (balanceLoading || !balance) {
+    if (balanceLoading || claimsLoading || !balance) {
       return (
         <div className='grid gap-4 md:grid-cols-2'>
           <Skeleton className='h-40 rounded-xl' />
@@ -60,19 +67,17 @@ export function MedicalBalanceCards({
     }
     return (
       <div className='grid gap-4 md:grid-cols-2'>
-        <BalanceCard
-          title='Medical Allowance'
-          mode='accrued'
-          used={balance.accrued}
-          total={balance.cap}
-          format={(amount) => formatCurrency(amount) || '0'}
-          hint={`Accrues ${formatCurrency(balance.monthlyAccrual)}/month`}
+        <StatCard
+          label='Available Balance'
+          value={formatCurrency(balance.accrued) || '0'}
+          icon={Wallet}
+          hint={`Cap ${formatCurrency(balance.cap)} · Accrues ${formatCurrency(balance.monthlyAccrual)}/month`}
         />
         <StatCard
-          label='Monthly Accrual'
-          value={formatCurrency(balance.monthlyAccrual)}
-          icon={CalendarClock}
-          hint='Adds to your balance each month, up to the cap'
+          label='Used'
+          value={formatCurrency(totalUsedAllTime) || '0'}
+          icon={Receipt}
+          hint='Total approved claims to date'
         />
       </div>
     );
