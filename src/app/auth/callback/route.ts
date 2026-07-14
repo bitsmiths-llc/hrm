@@ -6,13 +6,15 @@ import { appConfig } from '@/config/app';
 import { paths } from '@/constants/paths';
 
 /**
- * Code-exchange endpoint for the password-recovery link. `resetPasswordForEmail`
- * routes here with `?next=/auth/reset-password`; we exchange the PKCE code to
- * establish the recovery session, then forward to the reset form.
+ * PKCE code-exchange endpoint: exchanges a `?code=` for a session, then forwards
+ * to an internal `?next=` path.
  *
- * Google OAuth is deferred (invite-only app). When it's added, this is also
- * where the OAuth invite-only gate belongs — exchange the code, then require a
- * matching `employees` row before letting the session stand.
+ * Password recovery no longer routes through here — it's delivered via Resend
+ * with a `token_hash` that `RecoveryTokenVerifier` exchanges directly (mirroring
+ * the invite flow), so no PKCE hop is involved. This route is now reserved for
+ * the deferred Google OAuth flow: when it's added, this is where the OAuth
+ * invite-only gate belongs — exchange the code, then require a matching
+ * `employees` row before letting the session stand.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

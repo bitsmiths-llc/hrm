@@ -1,10 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { MailCheck, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { useAction } from 'next-safe-action/hooks';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 import { requestPasswordReset } from '@/actions/auth';
 
@@ -31,22 +32,92 @@ import { onError } from '@/lib/show-error-toast';
 import { paths } from '@/constants/paths';
 import { type ForgotPasswordInput, forgotPasswordSchema } from '@/schema/auth';
 
+type Screen = 'form' | 'sent' | 'not_found';
+
 export function ForgotPasswordForm() {
+  // Which of the three screens is showing, and the address to echo back on the
+  // result cards. `screen` is driven by the action's returned status.
+  const [screen, setScreen] = useState<Screen>('form');
+  const [email, setEmail] = useState('');
+
   const form = useForm<ForgotPasswordInput>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: '' },
   });
 
   const { execute, isPending } = useAction(requestPasswordReset, {
-    onSuccess: () => {
-      // Uniform response regardless of whether the email exists.
-      toast.success(
-        'If an account exists for that email, a reset link is on its way.',
-      );
-      form.reset();
+    onSuccess: ({ data }) => {
+      setScreen(data?.status === 'not_found' ? 'not_found' : 'sent');
     },
     onError,
   });
+
+  const onSubmit = (values: ForgotPasswordInput) => {
+    setEmail(values.email);
+    execute(values);
+  };
+
+  const backToForm = () => {
+    form.reset();
+    setScreen('form');
+  };
+
+  // Reset link sent.
+  if (screen === 'sent') {
+    return (
+      <Card>
+        <CardHeader className='items-center text-center'>
+          <MailCheck className='size-8 text-primary' aria-hidden />
+          <CardTitle className='text-xl font-semibold'>
+            Reset link sent
+          </CardTitle>
+          <CardDescription>
+            We&apos;ve sent a password reset link to{' '}
+            <span className='font-medium text-foreground'>{email}</span>. It can
+            take a minute to arrive — remember to check your spam folder.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='flex flex-col gap-3'>
+          <Link href={paths.auth.login} className='w-full'>
+            <Button className='w-full'>Back to sign in</Button>
+          </Link>
+          <Button type='button' variant='ghost' onClick={backToForm}>
+            Use a different email
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // No account for that address.
+  if (screen === 'not_found') {
+    return (
+      <Card>
+        <CardHeader className='items-center text-center'>
+          <UserX className='size-8 text-muted-foreground' aria-hidden />
+          <CardTitle className='text-xl font-semibold'>
+            No account found
+          </CardTitle>
+          <CardDescription>
+            We couldn&apos;t find an account for{' '}
+            <span className='font-medium text-foreground'>{email}</span>.
+            Double-check the address, or contact your admin if you think this is
+            a mistake.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='flex flex-col gap-3'>
+          <Button type='button' onClick={backToForm}>
+            Try a different email
+          </Button>
+          <Link href={paths.auth.login} className='w-full'>
+            <Button variant='ghost' className='w-full'>
+              Back to sign in
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -59,7 +130,7 @@ export function ForgotPasswordForm() {
       <CardContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(execute)}
+            onSubmit={form.handleSubmit(onSubmit)}
             className='flex flex-col gap-4'
           >
             <FormField
