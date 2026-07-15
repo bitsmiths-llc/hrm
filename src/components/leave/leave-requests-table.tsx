@@ -108,14 +108,19 @@ export function LeaveRequestsTable({
   month,
 }: LeaveRequestsTableProps) {
   const columns = useLeaveHistoryColumns();
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'startDate', desc: true },
-  ]);
+  // Default to newest-submitted first (createdAt), not a data column, so a
+  // request keeps its place regardless of status — approved/rejected rows stay
+  // latest-first. Empty initial sorting preserves this order until the user
+  // clicks a column header.
+  const [sorting, setSorting] = useState<SortingState>([]);
   const filtered = useMemo(() => {
-    if (month === 'all') return requests ?? [];
-    return (requests ?? []).filter((request) =>
-      request.startDate.startsWith(month),
-    );
+    const scoped =
+      month === 'all'
+        ? (requests ?? [])
+        : (requests ?? []).filter((request) =>
+            request.startDate.startsWith(month),
+          );
+    return [...scoped].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [requests, month]);
 
   const table = useReactTable({

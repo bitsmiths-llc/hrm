@@ -24,9 +24,9 @@ import { onError } from '@/lib/show-error-toast';
 import { paths } from '@/constants/paths';
 import { type ResetPasswordInput, resetPasswordSchema } from '@/schema/auth';
 
-/** Reached from the emailed recovery link (via /auth/callback, which exchanges
- *  the code first). The user is in a recovery session here and sets a new
- *  password. */
+/** Reached from the emailed recovery link once the reset page has established a
+ *  recovery session (the `token_hash` is exchanged by `RecoveryTokenVerifier`).
+ *  The user is in a recovery session here and sets a new password. */
 export function ResetPasswordForm() {
   const router = useRouter();
 

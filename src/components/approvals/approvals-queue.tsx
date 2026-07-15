@@ -1,9 +1,7 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 
 import {
   useAllLeaveRequests,
@@ -13,16 +11,12 @@ import {
 
 import { DetailSheet } from '@/components/hrm/detail-sheet';
 import { EmptyState } from '@/components/hrm/empty-state';
-import { RejectRequestDialog } from '@/components/hrm/reject-request-dialog';
 import { StatusBadge } from '@/components/hrm/status-badge';
 import { ProofFilesList } from '@/components/medical/proof-files-list';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-import { mockOvertimeLogs } from '@/constants/mock/requests';
-import { QueryKeys } from '@/constants/query-keys';
 
 import {
   type ApprovalItem,
@@ -34,27 +28,9 @@ import {
 } from './approval-items';
 import { LeaveReviewActions } from './leave-review-actions';
 import { MedicalReviewActions } from './medical-review-actions';
-
-import { RequestStatus } from '@/types/hrm';
-
-type Decision = 'approved' | 'rejected';
-
-/** Just the fields every rejectable record shares — enough to update status
- *  and reason without needing a kind-specific type per query key family. */
-type RejectableRecord = {
-  id: string;
-  status: RequestStatus;
-  rejectionReason: string | null;
-};
-
-const queryKeyByKind: Record<ApprovalKind, QueryKeys> = {
-  leave: QueryKeys.LEAVE_REQUESTS,
-  medical: QueryKeys.MEDICAL_CLAIMS,
-  overtime: QueryKeys.OVERTIME_LOGS,
-};
+import { OvertimeReviewActions } from './overtime-review-actions';
 
 export function ApprovalsQueue() {
-  const queryClient = useQueryClient();
   const leave = useAllLeaveRequests();
   const medical = useAllMedicalClaims();
   const overtime = useAllOvertimeLogs();
@@ -72,46 +48,11 @@ export function ApprovalsQueue() {
     ];
     return all
       .filter((item) => item.status === 'pending')
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [leave.data, medical.data, overtime.data]);
 
   const visible =
     tab === 'all' ? pending : pending.filter((item) => item.kind === tab);
-
-  // Overtime is still mock, so a decision writes to the in-memory mock "backend"
-  // and then refetches — mirroring how the real leave/medical tabs invalidate on
-  // a decision, so every tab pulls fresh data the moment a row is reviewed.
-  // (Leave and medical are NOT handled here — their review actions invalidate
-  // LEAVE_REQUESTS / MEDICAL_CLAIMS, which drives this queue's refetch.)
-  const decide = (item: ApprovalItem, decision: Decision, reason?: string) => {
-    const rejectionReason = decision === 'rejected' ? (reason ?? null) : null;
-
-    // Persist to the mock source so the refetch (and any later navigation) keeps
-    // the decision instead of reverting to the seed data — the real tabs persist
-    // to the DB. `decide` is only wired to the overtime footer.
-    const log = mockOvertimeLogs.find((entry) => entry.id === item.id);
-    if (log) {
-      log.status = decision;
-      log.rejectionReason = rejectionReason;
-    }
-
-    // Optimistic write for instant feedback, then invalidate so the row refetches
-    // from the (now-updated) mock — consistent with the leave/medical tabs.
-    queryClient.setQueriesData<RejectableRecord[]>(
-      { queryKey: [queryKeyByKind[item.kind]] },
-      (old) =>
-        old?.map((record) =>
-          record.id === item.id
-            ? { ...record, status: decision, rejectionReason }
-            : record,
-        ),
-    );
-    queryClient.invalidateQueries({ queryKey: [queryKeyByKind[item.kind]] });
-    setSelected(null);
-    toast.success(
-      `${item.title} from ${item.employeeName} ${decision === 'approved' ? 'approved' : 'rejected'}`,
-    );
-  };
 
   if (isLoading) {
     return (
@@ -211,24 +152,14 @@ export function ApprovalsQueue() {
                 onReviewed={() => setSelected(null)}
               />
             ) : (
-              <div className='flex w-full gap-2'>
-                <RejectRequestDialog
-                  trigger={
-                    <Button variant='destructive' className='flex-1'>
-                      Reject
-                    </Button>
-                  }
-                  title={`Reject this ${approvalKindLabels[selected.kind].toLowerCase()} request?`}
-                  description={`${selected.employeeName} will see the request as rejected, along with your reason.`}
-                  onConfirm={(reason) => decide(selected, 'rejected', reason)}
-                />
-                <Button
-                  className='flex-1'
-                  onClick={() => decide(selected, 'approved')}
-                >
-                  Approve
-                </Button>
-              </div>
+              // Overtime is backed by the real reviewOvertimeLog action (required
+              // reason on reject + employee email); its invalidation refreshes
+              // the queue.
+              <OvertimeReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={() => setSelected(null)}
+              />
             )
           }
         >

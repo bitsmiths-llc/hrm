@@ -2,16 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 
 import { toLeaveRequest } from '@/hooks/queries/leave';
 import { toMedicalClaim } from '@/hooks/queries/medical';
+import { toOvertimeLog } from '@/hooks/queries/overtime';
 
 import { authQuery } from '@/lib/client/auth-query';
 
-import { mockOvertimeLogs } from '@/constants/mock/requests';
 import { QueryKeys } from '@/constants/query-keys';
-
-import { OvertimeLog } from '@/types/hrm';
-
-const mockDelay = (ms = 500) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
 
 // Admin view: every leave request across employees, newest first, with the
 // requester's name joined for the queue (RLS leave_admin_all). Disambiguate the
@@ -54,13 +49,23 @@ export const useAllMedicalClaims = () =>
     queryFn: () => fetchAllMedicalClaims(),
   });
 
-// Overtime approvals are still mock-backed — wiring them to real tables is out
-// of scope for this ticket (medical + leave only).
+// Admin view: every overtime log across employees, newest first, with the
+// requester's name + project name joined (RLS overtime_admin_all). Disambiguate
+// the embed — overtime_logs has two FKs to employees (employee_id, reviewed_by).
+const fetchAllOvertimeLogs = authQuery(async ({ supabase }) => {
+  const { data, error } = await supabase
+    .from('overtime_logs')
+    .select(
+      '*, projects(name), employees!overtime_logs_employee_id_fkey(full_name)',
+    )
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data.map((row) => toOvertimeLog(row, row.employees?.full_name ?? ''));
+});
+
+/** Admin view: every overtime log across employees, newest first. */
 export const useAllOvertimeLogs = () =>
   useQuery({
     queryKey: [QueryKeys.OVERTIME_LOGS],
-    queryFn: async (): Promise<OvertimeLog[]> => {
-      await mockDelay();
-      return mockOvertimeLogs;
-    },
+    queryFn: () => fetchAllOvertimeLogs(),
   });

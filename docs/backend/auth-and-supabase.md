@@ -67,10 +67,20 @@ OAuth is **deferred** — see below.
 
 - Actions in `src/actions/auth.ts`, Zod schemas in `src/schema/auth.ts`:
   `signInWithPassword`, `requestPasswordReset`, `updatePassword`, `signOut`.
-- Password reset round-trips through `src/app/auth/callback/route.ts`:
-  `resetPasswordForEmail` sends the link to `/auth/callback?next=/auth/reset-password`;
-  the route exchanges the PKCE code (establishing the recovery session), then forwards
-  to the reset form. Recovery/reset responses are uniform to avoid email enumeration.
+- Password reset is delivered through **Resend**, mirroring the invite flow (not
+  Supabase's own mailer). `requestPasswordReset` mints a one-time recovery link with
+  the service-role admin API (`generateLink({ type: 'recovery' })`) and sends the
+  branded `@/emails/reset-password-email` template pointing at
+  `/auth/reset-password?token_hash=…&type=recovery`. The reset page
+  (`src/app/auth/reset-password/page.tsx`) gates like accept-invitation: with a
+  session it shows the form; with only the token it renders `RecoveryTokenVerifier`,
+  which exchanges the `token_hash` via `verifyOtp` (browser client) to establish the
+  recovery session, strips the token from the URL, and re-renders into the form.
+  `requestPasswordReset` first looks the address up in `employees` and returns a
+  discriminated `{ status: 'not_found' | 'sent' }` the form renders as two distinct
+  cards. This intentionally reveals whether an email is registered (an
+  account-enumeration surface) — a deliberate product choice for clearer UX over the
+  anti-enumeration "if an account exists" phrasing.
 - The session guard lives in `src/lib/supabase/middleware.ts`: no session on a
   protected route → `/auth/login`. Public routes: `/` and everything under `/auth`.
 
@@ -150,13 +160,18 @@ app by their `employees` row rather than showing the error. The `employees`-row
 gate in step 4 is the backstop — a reused link can never re-open the password
 form for an already-`onboarding`/`active` account.
 
-**Recovery/OAuth code exchange (the other token path).** Password recovery (and,
-later, OAuth) round-trips through `src/app/auth/callback/route.ts`, which exchanges
-a **PKCE `code`** (not a `token_hash`) via `exchangeCodeForSession`. It now fails
-closed: a missing code, or a code that won't exchange (expired/reused), redirects
-to `/auth/login` instead of forwarding to the reset form with no recovery session.
-The `next` redirect target is restricted to internal relative paths to prevent an
-open redirect.
+**Recovery token exchange.** Password recovery uses the same `token_hash` +
+`verifyOtp` mechanism as the invite flow (see above), delivered via Resend — it does
+**not** go through `/auth/callback`. `RecoveryTokenVerifier` exchanges the one-time
+`token_hash` on the browser client to establish the recovery session, then strips the
+token from the URL; expired/reused/malformed tokens surface an explicit "link no
+longer valid" state pointing back to "Forgot password?".
+
+**PKCE code exchange (`/auth/callback`).** `src/app/auth/callback/route.ts` exchanges
+a **PKCE `code`** (not a `token_hash`) via `exchangeCodeForSession` and is now reserved
+for the deferred Google OAuth flow. It fails closed: a missing code, or a code that
+won't exchange (expired/reused), redirects to `/auth/login`. The `next` redirect target
+is restricted to internal relative paths to prevent an open redirect.
 
 **Why not honor the token over an existing session?** Deliberately: trusting the
 URL token over a live session would let a link decide identity, which is exactly

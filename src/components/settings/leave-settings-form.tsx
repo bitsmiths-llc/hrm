@@ -47,11 +47,11 @@ export function LeaveSettingsForm() {
   };
 
   if (isLoading || !settings) {
-    return <Skeleton className='h-56 w-full max-w-md rounded-xl' />;
+    return <Skeleton className='h-64 w-full rounded-xl' />;
   }
 
   return (
-    <Card className='max-w-md'>
+    <Card className='w-full'>
       <CardHeader className='pb-4'>
         <CardTitle className='text-lg font-medium'>Leave</CardTitle>
       </CardHeader>
