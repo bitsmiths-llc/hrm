@@ -1,10 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useUpdatePayrollSettings } from '@/hooks/actions/use-update-payroll-settings';
 import { useHrmSettings } from '@/hooks/queries/settings';
 
 import { Button } from '@/components/ui/button';
@@ -21,16 +21,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { QueryKeys } from '@/constants/query-keys';
 import {
   type OvertimeSettingsInput,
   overtimeSettingsSchema,
 } from '@/schema/settings';
 
-import { HrmSettings } from '@/types/hrm';
-
 export function OvertimeSettingsForm() {
-  const queryClient = useQueryClient();
   const { data: settings, isLoading } = useHrmSettings();
 
   const form = useForm<OvertimeSettingsInput>({
@@ -39,12 +35,13 @@ export function OvertimeSettingsForm() {
     values: settings && { overtimeMultiplier: settings.overtimeMultiplier },
   });
 
-  const onSubmit = (values: OvertimeSettingsInput) => {
-    queryClient.setQueryData<HrmSettings>([QueryKeys.HRM_SETTINGS], (old) =>
-      old ? { ...old, ...values } : old,
-    );
-    toast.success(`Overtime multiplier set to ${values.overtimeMultiplier}x`);
-  };
+  const { execute, isPending } = useUpdatePayrollSettings(() =>
+    toast.success(
+      `Overtime multiplier set to ${form.getValues('overtimeMultiplier')}x`,
+    ),
+  );
+
+  const onSubmit = (values: OvertimeSettingsInput) => execute(values);
 
   if (isLoading || !settings) {
     return <Skeleton className='h-64 w-full rounded-xl' />;
@@ -79,7 +76,7 @@ export function OvertimeSettingsForm() {
               )}
             />
             <div>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Save
               </Button>
             </div>

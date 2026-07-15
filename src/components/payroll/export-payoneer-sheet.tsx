@@ -33,8 +33,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { Payslip } from '@/types/hrm';
-
 const BALANCE_CURRENCIES = ['USD', 'GBP', 'EUR'] as const;
 type BalanceCurrency = (typeof BALANCE_CURRENCIES)[number];
 const DEFAULT_CURRENCY: BalanceCurrency = 'USD';
@@ -46,8 +44,18 @@ const formatAmount = (amount: number, currency: BalanceCurrency) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
+/** The only payslip fields the export needs — decoupled from the full `Payslip`
+ *  domain type so the admin run grid (which holds richer DB rows) can pass its
+ *  own mapped rows. */
+export type PayoneerExportRow = {
+  employeeId: string;
+  employeeName: string;
+  total: number;
+  cycleMonth: string;
+};
+
 type ExportPayoneerSheetProps = {
-  rows: Payslip[];
+  rows: PayoneerExportRow[];
   disabled?: boolean;
 };
 

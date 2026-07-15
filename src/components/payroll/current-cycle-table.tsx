@@ -1,5 +1,5 @@
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
+import { type RunPayslipRow } from '@/hooks/queries/payroll';
+
 import {
   Table,
   TableBody,
@@ -11,97 +11,56 @@ import {
 
 import { formatCurrency } from '@/utils/number-functions';
 
-import { CustomFieldsCell } from './custom-fields-cell';
-import { SendInvoiceButton } from './send-invoice-button';
-import { ViewInvoiceButton } from './view-invoice-button';
+import { DaysWorkedCell } from './days-worked-cell';
 
-import { Payslip } from '@/types/hrm';
-
-type CurrentCycleTableProps = {
-  rows: Payslip[];
+type PayslipGridProps = {
+  rows: RunPayslipRow[];
   locked: boolean;
-  /** Only used (and only rendered as an input) when the cycle isn't locked. */
-  onDaysWorkedChange?: (employeeId: string, daysWorked: number) => void;
-  /** Per-employee override of the global overtime multiplier. Only used
-   *  (and only rendered as an input) when the cycle isn't locked. */
-  onOvertimeMultiplierChange?: (
-    employeeId: string,
-    overtimeMultiplier: number,
-  ) => void;
-  onAddCustomField: (
-    employeeId: string,
-    field: { label: string; amount: number },
-  ) => void;
-  selectedIds: Set<string>;
-  onToggleRow: (employeeId: string) => void;
-  onToggleAll: () => void;
+  /** True while a recalc/lock is in flight — freezes the days-worked inputs. */
+  isBusy?: boolean;
+  onDaysWorkedCommit: (payslipId: string, daysWorked: number) => void;
 };
 
+/** The draft (or, once locked, frozen) payslip grid for one run. Days worked is
+ *  the only editable column and only while the run is open; everything else is
+ *  computed by the engine and shown read-only. */
 export function CurrentCycleTable({
   rows,
   locked,
-  onDaysWorkedChange,
-  onOvertimeMultiplierChange,
-  onAddCustomField,
-  selectedIds,
-  onToggleRow,
-  onToggleAll,
-}: CurrentCycleTableProps) {
-  const allSelected = rows.length > 0 && selectedIds.size === rows.length;
-
+  isBusy,
+  onDaysWorkedCommit,
+}: PayslipGridProps) {
   return (
-    <div className='rounded-lg border border-border'>
+    <div className='overflow-x-auto rounded-lg border border-border'>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className='w-10'>
-              <Checkbox
-                checked={allSelected}
-                onCheckedChange={onToggleAll}
-                aria-label='Select all rows'
-              />
-            </TableHead>
             <TableHead>Employee</TableHead>
             <TableHead className='text-center'>Days Worked</TableHead>
             <TableHead className='text-center'>Total Base</TableHead>
             <TableHead className='text-center'>Medical</TableHead>
+            <TableHead className='text-center'>OT Hours</TableHead>
             <TableHead className='text-center'>OT Rate</TableHead>
-            <TableHead className='text-center'>Overtime</TableHead>
-            <TableHead className='text-center'>Adjustments</TableHead>
-            <TableHead className='text-center'>Total</TableHead>
-            <TableHead className='text-center'>Invoice</TableHead>
+            <TableHead className='text-center'>OT Pay</TableHead>
+            <TableHead className='text-center'>Total Pay</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.employeeId}>
-              <TableCell>
-                <Checkbox
-                  checked={selectedIds.has(row.employeeId)}
-                  onCheckedChange={() => onToggleRow(row.employeeId)}
-                  aria-label={`Select ${row.employeeName}`}
-                />
+            <TableRow key={row.id}>
+              <TableCell className='font-medium'>
+                {row.employeeName || '—'}
               </TableCell>
-              <TableCell className='font-medium'>{row.employeeName}</TableCell>
               <TableCell className='text-center'>
-                {locked || !onDaysWorkedChange ? (
+                {locked ? (
                   `${row.daysWorked} of ${row.daysInMonth}`
                 ) : (
-                  <Input
-                    type='number'
-                    min={0}
-                    max={row.daysInMonth}
-                    value={row.daysWorked}
-                    onChange={(e) =>
-                      onDaysWorkedChange(
-                        row.employeeId,
-                        Math.min(
-                          row.daysInMonth,
-                          Math.max(0, Number(e.target.value)),
-                        ),
-                      )
-                    }
-                    className='mx-auto h-8 w-20 text-center'
+                  <DaysWorkedCell
+                    payslipId={row.id}
+                    daysWorked={row.daysWorked}
+                    daysInMonth={row.daysInMonth}
+                    disabled={isBusy}
+                    onCommit={onDaysWorkedCommit}
                   />
                 )}
               </TableCell>
@@ -112,45 +71,16 @@ export function CurrentCycleTable({
                 {formatCurrency(row.medical) || '—'}
               </TableCell>
               <TableCell className='text-center'>
-                {locked || !onOvertimeMultiplierChange ? (
-                  `${row.overtimeMultiplier}x`
-                ) : (
-                  <Input
-                    type='number'
-                    step={0.1}
-                    min={0}
-                    max={5}
-                    value={row.overtimeMultiplier}
-                    onChange={(e) =>
-                      onOvertimeMultiplierChange(
-                        row.employeeId,
-                        Math.max(0, Number(e.target.value)),
-                      )
-                    }
-                    className='mx-auto h-8 w-20 text-center'
-                  />
-                )}
+                {row.overtimeHours || '—'}
               </TableCell>
               <TableCell className='text-center'>
-                {row.overtimeHours}h · {formatCurrency(row.overtimePay) || '—'}
+                {row.overtimeRate ? formatCurrency(row.overtimeRate, 2) : '—'}
               </TableCell>
               <TableCell className='text-center'>
-                <div className='flex justify-center'>
-                  <CustomFieldsCell
-                    fields={row.customFields}
-                    disabled={locked}
-                    onAdd={(field) => onAddCustomField(row.employeeId, field)}
-                  />
-                </div>
+                {formatCurrency(row.overtimePay) || '—'}
               </TableCell>
               <TableCell className='text-center font-semibold'>
-                {formatCurrency(row.total)}
-              </TableCell>
-              <TableCell className='text-center'>
-                <div className='flex items-center justify-center gap-1'>
-                  <ViewInvoiceButton payslip={row} />
-                  <SendInvoiceButton employeeName={row.employeeName} />
-                </div>
+                {formatCurrency(row.totalPay)}
               </TableCell>
             </TableRow>
           ))}

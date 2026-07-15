@@ -1,24 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { mockHrmSettings } from '@/constants/mock/settings';
+import { authQuery } from '@/lib/client/auth-query';
+
 import { QueryKeys } from '@/constants/query-keys';
 
 import { HrmSettings } from '@/types/hrm';
 
-const mockDelay = (ms = 300) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+// The single `payroll_settings` row (RLS `settings_read`: any authenticated
+// user can read it). Mapped onto the camelCase `HrmSettings` domain type so the
+// settings forms, medical-balance display, and leave page consume it unchanged.
+const fetchHrmSettings = authQuery(async ({ supabase }) => {
+  const { data, error } = await supabase
+    .from('payroll_settings')
+    .select(
+      'ot_multiplier_default, leave_pool_days, medical_accrual_monthly, medical_cap',
+    )
+    .eq('id', true)
+    .single();
+  if (error) throw new Error(error.message);
+  return {
+    overtimeMultiplier: Number(data.ot_multiplier_default),
+    leavePoolDays: data.leave_pool_days,
+    medicalMonthlyAccrual: data.medical_accrual_monthly,
+    medicalBalanceCap: data.medical_cap,
+  } satisfies HrmSettings;
+});
 
-/** Module-wide config admins can change — e.g. the overtime multiplier used
- *  during payroll runs. Saving mutates this cache directly (see
- *  settings-form.tsx), so staleTime is Infinity to survive remounts without
- *  an overwriting refetch. */
-export const useHrmSettings = () => {
-  return useQuery({
+/** Module-wide payroll config admins can change (overtime multiplier, leave
+ *  pool, medical accrual/cap). Backed by the `payroll_settings` singleton;
+ *  saving invalidates this key (see `use-update-payroll-settings`). */
+export const useHrmSettings = () =>
+  useQuery({
     queryKey: [QueryKeys.HRM_SETTINGS],
-    queryFn: async (): Promise<HrmSettings> => {
-      await mockDelay();
-      return mockHrmSettings;
-    },
-    staleTime: Infinity,
+    queryFn: () => fetchHrmSettings(),
   });
-};

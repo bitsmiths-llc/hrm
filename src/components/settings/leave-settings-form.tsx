@@ -1,10 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useUpdatePayrollSettings } from '@/hooks/actions/use-update-payroll-settings';
 import { useHrmSettings } from '@/hooks/queries/settings';
 
 import { Button } from '@/components/ui/button';
@@ -21,16 +21,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { QueryKeys } from '@/constants/query-keys';
 import {
   type LeaveSettingsInput,
   leaveSettingsSchema,
 } from '@/schema/settings';
 
-import { HrmSettings } from '@/types/hrm';
-
 export function LeaveSettingsForm() {
-  const queryClient = useQueryClient();
   const { data: settings, isLoading } = useHrmSettings();
 
   const form = useForm<LeaveSettingsInput>({
@@ -39,12 +35,11 @@ export function LeaveSettingsForm() {
     values: settings && { leavePoolDays: settings.leavePoolDays },
   });
 
-  const onSubmit = (values: LeaveSettingsInput) => {
-    queryClient.setQueryData<HrmSettings>([QueryKeys.HRM_SETTINGS], (old) =>
-      old ? { ...old, ...values } : old,
-    );
-    toast.success(`Leave pool set to ${values.leavePoolDays} days`);
-  };
+  const { execute, isPending } = useUpdatePayrollSettings(() =>
+    toast.success(`Leave pool set to ${form.getValues('leavePoolDays')} days`),
+  );
+
+  const onSubmit = (values: LeaveSettingsInput) => execute(values);
 
   if (isLoading || !settings) {
     return <Skeleton className='h-64 w-full rounded-xl' />;
@@ -79,7 +74,7 @@ export function LeaveSettingsForm() {
               )}
             />
             <div>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Save
               </Button>
             </div>

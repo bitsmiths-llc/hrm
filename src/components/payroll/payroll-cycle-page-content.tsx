@@ -1,199 +1,57 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { ArrowLeft, CalendarX2 } from 'lucide-react';
+import { ArrowLeft, Calculator, CalendarX2 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
-import { toast } from 'sonner';
 
-import { useEmployees } from '@/hooks/queries/employees';
-import {
-  useAllPayslips,
-  useCurrentCycleRows,
-  usePayrollCycles,
-} from '@/hooks/queries/payroll';
+import { useCalculatePayroll } from '@/hooks/actions/use-calculate-payroll';
+import { useCreateRun } from '@/hooks/actions/use-create-run';
+import { useLockPayroll } from '@/hooks/actions/use-lock-payroll';
+import { useOverrideDaysWorked } from '@/hooks/actions/use-override-days-worked';
+import { useRunByMonth, useRunPayslips } from '@/hooks/queries/payroll';
 
 import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { PageHeader } from '@/components/hrm/page-header';
 import { StatusBadge } from '@/components/hrm/status-badge';
-import { BulkAdjustmentPopover } from '@/components/payroll/bulk-adjustment-popover';
-import { BulkOtRatePopover } from '@/components/payroll/bulk-ot-rate-popover';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { formatCurrency } from '@/utils/number-functions';
-import {
-  calcOvertimePay,
-  calcPayslipTotal,
-  calcTotalBase,
-} from '@/utils/payroll-functions';
 
-import { mockPayslips } from '@/constants/mock/payroll';
 import { paths } from '@/constants/paths';
-import { QueryKeys } from '@/constants/query-keys';
 
 import { CurrentCycleTable } from './current-cycle-table';
 import { ExportPayoneerSheet } from './export-payoneer-sheet';
 
-import { PayrollCycle, Payslip } from '@/types/hrm';
-
 type PayrollCyclePageContentProps = {
-  month: string;
+  month: string; // 'YYYY-MM'
 };
 
 export function PayrollCyclePageContent({
   month,
 }: PayrollCyclePageContentProps) {
-  const queryClient = useQueryClient();
-  const { rows: liveRows, isLoading: liveLoading } = useCurrentCycleRows();
-  const { data: cycles, isLoading: cyclesLoading } = usePayrollCycles();
-  const { data: allPayslips, isLoading: payslipsLoading } = useAllPayslips();
-  const { data: employees } = useEmployees();
-  const [overrides, setOverrides] = useState<Record<string, number>>({});
-  const [multiplierOverrides, setMultiplierOverrides] = useState<
-    Record<string, number>
-  >({});
-  const [customFieldOverrides, setCustomFieldOverrides] = useState<
-    Record<string, { label: string; amount: number }[]>
-  >({});
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const { data: run, isLoading: runLoading } = useRunByMonth(month);
+  const { data: rows, isLoading: rowsLoading } = useRunPayslips(run?.id);
 
-  const cycle = (cycles ?? []).find((c) => c.month === month);
-  const locked = cycle?.status === 'locked';
-  const isLoading = cyclesLoading || (locked ? payslipsLoading : liveLoading);
+  const calc = useCalculatePayroll();
+  const lock = useLockPayroll();
+  const override = useOverrideDaysWorked();
+  const create = useCreateRun();
 
-  // The edited live rows are also what get frozen into `mockPayslips` at lock
-  // time, so they must be computed unconditionally (not only pre-lock).
-  const editedLiveRows: Payslip[] = liveRows.map((row) => {
-    const daysWorked = overrides[row.employeeId] ?? row.daysWorked;
-    const totalBase = calcTotalBase(
-      row.baseSalary,
-      daysWorked,
-      row.daysInMonth,
-    );
+  const monthLabel = format(`${month}-01`, 'MMMM yyyy');
+  const locked = run?.status === 'locked';
+  const busy = calc.isPending || override.isPending || lock.isPending;
+  const gridRows = rows ?? [];
+  const draftTotal = gridRows.reduce((sum, row) => sum + row.totalPay, 0);
+  const totalPayroll = locked ? (run?.totalPayroll ?? 0) : draftTotal;
 
-    const overtimeMultiplier =
-      multiplierOverrides[row.employeeId] ?? row.overtimeMultiplier;
-    const employee = employees?.find((e) => e.id === row.employeeId);
-    const overtimePay = employee
-      ? calcOvertimePay(
-          row.baseSalary,
-          employee.workingHours,
-          row.overtimeHours,
-          overtimeMultiplier,
-        )
-      : row.overtimePay;
-
-    const customFields = customFieldOverrides[row.employeeId] ?? [];
-    const customFieldsTotal = customFields.reduce(
-      (sum, field) => sum + field.amount,
-      0,
-    );
-
-    return {
-      ...row,
-      daysWorked,
-      totalBase,
-      overtimeMultiplier,
-      overtimePay,
-      customFields,
-      total:
-        calcPayslipTotal(totalBase, row.medical, overtimePay) +
-        customFieldsTotal,
-    };
-  });
-
-  const rows: Payslip[] = locked
-    ? (allPayslips ?? []).filter((payslip) => payslip.cycleMonth === month)
-    : editedLiveRows;
-
-  const totalPayroll = rows.reduce((sum, row) => sum + row.total, 0);
-
-  const toggleRow = (employeeId: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(employeeId)) next.delete(employeeId);
-      else next.add(employeeId);
-      return next;
-    });
-  };
-
-  const toggleAll = () => {
-    setSelectedIds((prev) =>
-      prev.size === rows.length
-        ? new Set()
-        : new Set(rows.map((r) => r.employeeId)),
-    );
-  };
-
-  const handleBulkSendInvoice = async () => {
-    const names = rows
-      .filter((row) => selectedIds.has(row.employeeId))
-      .map((row) => row.employeeName);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast.success(
-      `Invoice sent to ${names.length} ${names.length === 1 ? 'employee' : 'employees'}`,
-    );
-    setSelectedIds(new Set());
-  };
-
-  const handleBulkOtRate = (multiplier: number) => {
-    setMultiplierOverrides((prev) => {
-      const next = { ...prev };
-      selectedIds.forEach((employeeId) => {
-        next[employeeId] = multiplier;
-      });
-      return next;
-    });
-    toast.success(
-      `Overtime multiplier set to ${multiplier}x for ${selectedIds.size} ${selectedIds.size === 1 ? 'employee' : 'employees'}`,
-    );
-  };
-
-  const handleBulkAddCustomField = (field: {
-    label: string;
-    amount: number;
-  }) => {
-    setCustomFieldOverrides((prev) => {
-      const next = { ...prev };
-      selectedIds.forEach((employeeId) => {
-        next[employeeId] = [...(next[employeeId] ?? []), field];
-      });
-      return next;
-    });
-    toast.success(
-      `Added "${field.label}" to ${selectedIds.size} ${selectedIds.size === 1 ? 'employee' : 'employees'}`,
-    );
-  };
-
-  const handleLock = () => {
-    if (!cycle) return;
-    queryClient.setQueryData<PayrollCycle[]>(
-      [QueryKeys.PAYROLL_CYCLES],
-      (old) =>
-        old?.map((c) =>
-          c.id === cycle.id
-            ? {
-                ...c,
-                status: 'locked',
-                lockedAt: format(new Date(), 'yyyy-MM-dd'),
-                totalPayroll,
-                employeeCount: editedLiveRows.length,
-              }
-            : c,
-        ),
-    );
-    queryClient.setQueryData<Payslip[]>([QueryKeys.PAYSLIPS], (old) => {
-      const base = old ?? mockPayslips;
-      return [
-        ...base.filter((payslip) => payslip.cycleMonth !== month),
-        ...editedLiveRows,
-      ];
-    });
-    toast.success(`${format(`${month}-01`, 'MMMM yyyy')} cycle locked`);
-  };
+  const exportRows = gridRows.map((row) => ({
+    employeeId: row.employeeId,
+    employeeName: row.employeeName,
+    total: row.totalPay,
+    cycleMonth: month,
+  }));
 
   return (
     <>
@@ -205,104 +63,86 @@ export function PayrollCyclePageContent({
         </Link>
       </div>
 
-      {isLoading ? (
+      {runLoading ? (
         <Skeleton className='h-48 rounded-xl' />
-      ) : !cycle ? (
+      ) : !run ? (
         <EmptyState
           icon={CalendarX2}
-          title='Cycle not found'
-          description='This payroll cycle may not exist yet.'
-        />
+          title={`No payroll run for ${monthLabel}`}
+          description='Create the run to generate its draft payslips.'
+        >
+          <Button
+            isLoading={create.isPending}
+            onClick={() => create.execute({ period_month: `${month}-01` })}
+          >
+            Create {monthLabel} run
+          </Button>
+        </EmptyState>
       ) : (
         <>
           <PageHeader
-            title={format(`${month}-01`, 'MMMM yyyy')}
-            description='Review this cycle, lock it, then export for Payoneer.'
+            title={monthLabel}
+            description='Review this run, lock it, then export for Payoneer.'
           >
-            <StatusBadge status={cycle.status} />
+            <StatusBadge status={run.status} />
           </PageHeader>
 
-          <div className='flex flex-wrap items-center justify-between gap-2'>
-            <div className='flex flex-wrap items-center gap-2'>
-              {selectedIds.size > 0 && (
-                <>
-                  <span className='text-sm text-muted-foreground'>
-                    {selectedIds.size} selected
-                  </span>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    size='sm'
-                    onClick={handleBulkSendInvoice}
-                  >
-                    Send Invoice
-                  </Button>
-                  {!locked && (
-                    <>
-                      <BulkOtRatePopover
-                        selectedCount={selectedIds.size}
-                        onApply={handleBulkOtRate}
-                      />
-                      <BulkAdjustmentPopover
-                        selectedCount={selectedIds.size}
-                        onApply={handleBulkAddCustomField}
-                      />
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-            <div className='flex flex-wrap items-center gap-2'>
-              <ConfirmDialog
-                trigger={
-                  <Button variant='outline' disabled={locked}>
-                    Lock cycle
-                  </Button>
-                }
-                title='Lock this payroll cycle?'
-                description='Figures become read-only once locked. You can still export for Payoneer afterward.'
-                confirmLabel='Lock cycle'
-                onConfirm={handleLock}
-              />
-              <ExportPayoneerSheet rows={rows} disabled={!locked} />
-            </div>
+          <div className='flex flex-wrap items-center justify-end gap-2'>
+            <Button
+              variant='outline'
+              isLoading={calc.isPending}
+              disabled={locked || busy}
+              onClick={() => calc.execute({ run_id: run.id })}
+            >
+              Recalculate
+            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button disabled={locked || busy || gridRows.length === 0}>
+                  Lock run
+                </Button>
+              }
+              title='Lock this payroll run?'
+              description='Figures become read-only once locked, approved medical and overtime for the month are swept into this run, and employees can see their payslips. You can still export for Payoneer afterward.'
+              confirmLabel='Lock run'
+              destructive
+              isLoading={lock.isPending}
+              onConfirm={() => lock.execute({ run_id: run.id })}
+            />
+            <ExportPayoneerSheet rows={exportRows} disabled={!locked} />
           </div>
 
-          <CurrentCycleTable
-            rows={rows}
-            locked={locked}
-            selectedIds={selectedIds}
-            onToggleRow={toggleRow}
-            onToggleAll={toggleAll}
-            onDaysWorkedChange={
-              locked
-                ? undefined
-                : (employeeId, daysWorked) =>
-                    setOverrides((prev) => ({
-                      ...prev,
-                      [employeeId]: daysWorked,
-                    }))
-            }
-            onOvertimeMultiplierChange={
-              locked
-                ? undefined
-                : (employeeId, overtimeMultiplier) =>
-                    setMultiplierOverrides((prev) => ({
-                      ...prev,
-                      [employeeId]: overtimeMultiplier,
-                    }))
-            }
-            onAddCustomField={(employeeId, field) =>
-              setCustomFieldOverrides((prev) => ({
-                ...prev,
-                [employeeId]: [...(prev[employeeId] ?? []), field],
-              }))
-            }
-          />
-          <p className='text-sm text-muted-foreground'>
-            Total payroll this cycle: {formatCurrency(totalPayroll)} ·{' '}
-            {rows.length} employees
-          </p>
+          {rowsLoading ? (
+            <Skeleton className='h-48 rounded-xl' />
+          ) : gridRows.length === 0 ? (
+            <EmptyState
+              icon={Calculator}
+              title='No payslips yet'
+              description='Calculate payroll to generate the draft for every active employee.'
+            >
+              <Button
+                isLoading={calc.isPending}
+                onClick={() => calc.execute({ run_id: run.id })}
+              >
+                Calculate payroll
+              </Button>
+            </EmptyState>
+          ) : (
+            <>
+              <CurrentCycleTable
+                rows={gridRows}
+                locked={locked}
+                isBusy={busy}
+                onDaysWorkedCommit={(payslipId, daysWorked) =>
+                  override.execute({ payslip_id: payslipId, days_worked: daysWorked })
+                }
+              />
+              <p className='text-sm text-muted-foreground'>
+                {locked ? 'Total payroll' : 'Draft total'}:{' '}
+                {formatCurrency(totalPayroll)} · {gridRows.length} employees
+              </p>
+            </>
+          )}
         </>
       )}
     </>

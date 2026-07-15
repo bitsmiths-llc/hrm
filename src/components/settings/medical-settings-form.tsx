@@ -1,10 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useUpdatePayrollSettings } from '@/hooks/actions/use-update-payroll-settings';
 import { useHrmSettings } from '@/hooks/queries/settings';
 
 import { Button } from '@/components/ui/button';
@@ -21,16 +21,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { QueryKeys } from '@/constants/query-keys';
 import {
   type MedicalSettingsInput,
   medicalSettingsSchema,
 } from '@/schema/settings';
 
-import { HrmSettings } from '@/types/hrm';
-
 export function MedicalSettingsForm() {
-  const queryClient = useQueryClient();
   const { data: settings, isLoading } = useHrmSettings();
 
   const form = useForm<MedicalSettingsInput>({
@@ -45,12 +41,11 @@ export function MedicalSettingsForm() {
     },
   });
 
-  const onSubmit = (values: MedicalSettingsInput) => {
-    queryClient.setQueryData<HrmSettings>([QueryKeys.HRM_SETTINGS], (old) =>
-      old ? { ...old, ...values } : old,
-    );
-    toast.success('Medical allowance settings saved');
-  };
+  const { execute, isPending } = useUpdatePayrollSettings(() =>
+    toast.success('Medical allowance settings saved'),
+  );
+
+  const onSubmit = (values: MedicalSettingsInput) => execute(values);
 
   if (isLoading || !settings) {
     return <Skeleton className='h-64 w-full rounded-xl' />;
@@ -100,7 +95,7 @@ export function MedicalSettingsForm() {
               )}
             />
             <div>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Save
               </Button>
             </div>
