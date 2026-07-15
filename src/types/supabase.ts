@@ -497,6 +497,7 @@ export type Database = {
           medical_accrual_monthly: number
           medical_cap: number
           ot_multiplier_default: number
+          tax_rate_percent: number
           updated_at: string
         }
         Insert: {
@@ -505,6 +506,7 @@ export type Database = {
           medical_accrual_monthly?: number
           medical_cap?: number
           ot_multiplier_default?: number
+          tax_rate_percent?: number
           updated_at?: string
         }
         Update: {
@@ -513,6 +515,7 @@ export type Database = {
           medical_accrual_monthly?: number
           medical_cap?: number
           ot_multiplier_default?: number
+          tax_rate_percent?: number
           updated_at?: string
         }
         Relationships: []
@@ -522,15 +525,19 @@ export type Database = {
           base_salary: number
           created_at: string
           currency_balance: string | null
+          custom_fields: Json
           days_in_month: number
           days_worked: number
+          designation: string | null
           employee_id: string
           id: string
           medical: number
           overtime_hours: number
+          overtime_multiplier: number | null
           overtime_pay: number
           overtime_rate: number
           payroll_run_id: string
+          tax_deduction: number
           total_base: number
           total_pay: number
           unpaid_leave_days: number
@@ -539,15 +546,19 @@ export type Database = {
           base_salary: number
           created_at?: string
           currency_balance?: string | null
+          custom_fields?: Json
           days_in_month: number
           days_worked: number
+          designation?: string | null
           employee_id: string
           id?: string
           medical?: number
           overtime_hours?: number
+          overtime_multiplier?: number | null
           overtime_pay?: number
           overtime_rate?: number
           payroll_run_id: string
+          tax_deduction?: number
           total_base: number
           total_pay: number
           unpaid_leave_days?: number
@@ -556,15 +567,19 @@ export type Database = {
           base_salary?: number
           created_at?: string
           currency_balance?: string | null
+          custom_fields?: Json
           days_in_month?: number
           days_worked?: number
+          designation?: string | null
           employee_id?: string
           id?: string
           medical?: number
           overtime_hours?: number
+          overtime_multiplier?: number | null
           overtime_pay?: number
           overtime_rate?: number
           payroll_run_id?: string
+          tax_deduction?: number
           total_base?: number
           total_pay?: number
           unpaid_leave_days?: number

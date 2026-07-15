@@ -31,14 +31,18 @@ export function OvertimeSettingsForm() {
 
   const form = useForm<OvertimeSettingsInput>({
     resolver: zodResolver(overtimeSettingsSchema),
-    defaultValues: { overtimeMultiplier: settings?.overtimeMultiplier ?? 0 },
-    values: settings && { overtimeMultiplier: settings.overtimeMultiplier },
+    defaultValues: {
+      overtimeMultiplier: settings?.overtimeMultiplier ?? 0,
+      taxRatePercent: settings?.taxRatePercent ?? 0,
+    },
+    values: settings && {
+      overtimeMultiplier: settings.overtimeMultiplier,
+      taxRatePercent: settings.taxRatePercent,
+    },
   });
 
   const { execute, isPending } = useUpdatePayrollSettings(() =>
-    toast.success(
-      `Overtime multiplier set to ${form.getValues('overtimeMultiplier')}x`,
-    ),
+    toast.success('Payroll settings saved'),
   );
 
   const onSubmit = (values: OvertimeSettingsInput) => execute(values);
@@ -70,6 +74,29 @@ export function OvertimeSettingsForm() {
                   <FormDescription>
                     Applied to the hourly rate when a payroll cycle is
                     calculated. Never shown to employees.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='taxRatePercent'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tax deduction rate (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      step={0.5}
+                      min={0}
+                      max={100}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Percentage of gross earnings withheld as tax each cycle. Set
+                    to 0 to disable tax withholding.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

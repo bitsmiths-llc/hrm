@@ -3,11 +3,21 @@
 import { authActionClient } from '@/lib/server/safe-action';
 
 import {
+  addCustomFieldSchema,
   createRunSchema,
   overrideDaysWorkedSchema,
+  overrideOtMultiplierSchema,
+  removeCustomFieldSchema,
   runIdSchema,
   updatePayrollSettingsSchema,
 } from '@/schema/payroll';
+
+/** One ad-hoc payslip line item (positive = earning, negative = deduction). */
+type CustomField = { label: string; amount: number };
+
+/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array. */
+const toCustomFields = (value: unknown): CustomField[] =>
+  Array.isArray(value) ? (value as CustomField[]) : [];
 
 /** Admin gate. The role check is server-side even though RLS / the RPC's own
  *  `is_admin()` guard also enforce it (mirrors `actions/overtime.ts`). */
@@ -41,6 +51,8 @@ export const updatePayrollSettings = authActionClient
       patch.medical_accrual_monthly = parsedInput.medicalMonthlyAccrual;
     if (parsedInput.medicalBalanceCap !== undefined)
       patch.medical_cap = parsedInput.medicalBalanceCap;
+    if (parsedInput.taxRatePercent !== undefined)
+      patch.tax_rate_percent = parsedInput.taxRatePercent;
 
     const { error } = await supabase
       .from('payroll_settings')
@@ -144,6 +156,126 @@ export const overrideDaysWorked = authActionClient
     const { error: updateError } = await supabase
       .from('payslips')
       .update({ days_worked: parsedInput.days_worked })
+      .eq('id', parsedInput.payslip_id);
+    if (updateError) throw new Error(updateError.message);
+
+    const { error: recalcError } = await supabase.rpc('calculate_payroll', {
+      p_run_id: payslip.payroll_run_id,
+    });
+    if (recalcError) throw new Error(recalcError.message);
+
+    return { run_id: payslip.payroll_run_id };
+  });
+
+/**
+ * Set a per-payslip overtime-multiplier override on one or many payslips of a
+ * run (single-row edit or the bulk popover), then recalc once. The override
+ * survives future recalcs. Refused on a locked run before any write.
+ */
+export const overrideOtMultiplier = authActionClient
+  .schema(overrideOtMultiplierSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: run, error: runError } = await supabase
+      .from('payroll_runs')
+      .select('status')
+      .eq('id', parsedInput.run_id)
+      .single();
+    if (runError) throw new Error(runError.message);
+    if (run.status === 'locked')
+      throw new Error('This run is locked and can no longer be edited.');
+
+    const { error: updateError } = await supabase
+      .from('payslips')
+      .update({ overtime_multiplier: parsedInput.overtime_multiplier })
+      .eq('payroll_run_id', parsedInput.run_id)
+      .in('id', parsedInput.payslip_ids);
+    if (updateError) throw new Error(updateError.message);
+
+    const { error: recalcError } = await supabase.rpc('calculate_payroll', {
+      p_run_id: parsedInput.run_id,
+    });
+    if (recalcError) throw new Error(recalcError.message);
+
+    return { run_id: parsedInput.run_id };
+  });
+
+/**
+ * Append an ad-hoc line item (earning if amount > 0, deduction if < 0) to one or
+ * many payslips of a run, then recalc once. Refused on a locked run.
+ */
+export const addPayslipCustomField = authActionClient
+  .schema(addCustomFieldSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: run, error: runError } = await supabase
+      .from('payroll_runs')
+      .select('status')
+      .eq('id', parsedInput.run_id)
+      .single();
+    if (runError) throw new Error(runError.message);
+    if (run.status === 'locked')
+      throw new Error('This run is locked and can no longer be edited.');
+
+    const { data: rows, error: readError } = await supabase
+      .from('payslips')
+      .select('id, custom_fields')
+      .eq('payroll_run_id', parsedInput.run_id)
+      .in('id', parsedInput.payslip_ids);
+    if (readError) throw new Error(readError.message);
+
+    const field: CustomField = {
+      label: parsedInput.label,
+      amount: parsedInput.amount,
+    };
+    const results = await Promise.all(
+      (rows ?? []).map((row) =>
+        supabase
+          .from('payslips')
+          .update({
+            custom_fields: [...toCustomFields(row.custom_fields), field],
+          })
+          .eq('id', row.id),
+      ),
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) throw new Error(failed.error.message);
+
+    const { error: recalcError } = await supabase.rpc('calculate_payroll', {
+      p_run_id: parsedInput.run_id,
+    });
+    if (recalcError) throw new Error(recalcError.message);
+
+    return { run_id: parsedInput.run_id };
+  });
+
+/**
+ * Remove the custom field at `index` of one payslip, then recalc. Refused on a
+ * locked run before any write.
+ */
+export const removePayslipCustomField = authActionClient
+  .schema(removeCustomFieldSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: payslip, error: readError } = await supabase
+      .from('payslips')
+      .select('payroll_run_id, custom_fields, payroll_runs(status)')
+      .eq('id', parsedInput.payslip_id)
+      .single();
+    if (readError) throw new Error(readError.message);
+    if (payslip.payroll_runs?.status === 'locked')
+      throw new Error('This run is locked and can no longer be edited.');
+
+    const next = toCustomFields(payslip.custom_fields).filter(
+      (_, i) => i !== parsedInput.index,
+    );
+
+    const { error: updateError } = await supabase
+      .from('payslips')
+      .update({ custom_fields: next })
       .eq('id', parsedInput.payslip_id);
     if (updateError) throw new Error(updateError.message);
 

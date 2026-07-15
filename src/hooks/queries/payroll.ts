@@ -11,6 +11,13 @@ import { type Tables } from '@/types/supabase';
 /** 'YYYY-MM-DD' (first of month) → 'YYYY-MM', the shape the existing UI uses. */
 const toCycleMonth = (periodMonth: string) => periodMonth.slice(0, 7);
 
+/** One ad-hoc payslip line item (positive = earning, negative = deduction). */
+export type PayslipCustomField = { label: string; amount: number };
+
+/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array. */
+const toCustomFields = (value: unknown): PayslipCustomField[] =>
+  Array.isArray(value) ? (value as PayslipCustomField[]) : [];
+
 // ---------------------------------------------------------------------------
 // Run list + a run by month (admin only — RLS `runs_admin_all`).
 // ---------------------------------------------------------------------------
@@ -71,11 +78,12 @@ export const useRunByMonth = (month: string) =>
 // ---------------------------------------------------------------------------
 /** A payslip row with the employee's name joined, all numerics coerced. Postgres
  *  `numeric` arrives as a string over PostgREST despite the generated `number`
- *  type, so days/hours/rate are `Number()`-ed to keep the grid's arithmetic right. */
+ *  type, so days/hours/rate/multiplier are `Number()`-ed to keep arithmetic right. */
 export type RunPayslipRow = {
   id: string;
   employeeId: string;
   employeeName: string;
+  designation: string;
   baseSalary: number;
   daysInMonth: number;
   daysWorked: number;
@@ -83,8 +91,11 @@ export type RunPayslipRow = {
   totalBase: number;
   medical: number;
   overtimeHours: number;
+  overtimeMultiplier: number;
   overtimeRate: number;
   overtimePay: number;
+  taxDeduction: number;
+  customFields: PayslipCustomField[];
   totalPay: number;
 };
 
@@ -97,6 +108,7 @@ function toRunPayslipRow(row: PayslipRow): RunPayslipRow {
     id: row.id,
     employeeId: row.employee_id,
     employeeName: row.employees?.full_name ?? '',
+    designation: row.designation ?? '',
     baseSalary: row.base_salary,
     daysInMonth: row.days_in_month,
     daysWorked: Number(row.days_worked),
@@ -104,8 +116,11 @@ function toRunPayslipRow(row: PayslipRow): RunPayslipRow {
     totalBase: row.total_base,
     medical: row.medical,
     overtimeHours: Number(row.overtime_hours),
+    overtimeMultiplier: row.overtime_multiplier ? Number(row.overtime_multiplier) : 0,
     overtimeRate: Number(row.overtime_rate),
     overtimePay: row.overtime_pay,
+    taxDeduction: row.tax_deduction,
+    customFields: toCustomFields(row.custom_fields),
     totalPay: row.total_pay,
   };
 }
@@ -147,6 +162,7 @@ function toPayslip(row: EmployeePayslipRow): Payslip {
     id: row.id,
     employeeId: row.employee_id,
     employeeName: row.employees?.full_name ?? '',
+    designation: row.designation ?? '',
     cycleMonth: toCycleMonth(row.payroll_runs?.period_month ?? ''),
     baseSalary: row.base_salary,
     daysWorked: Number(row.days_worked),
@@ -154,11 +170,12 @@ function toPayslip(row: EmployeePayslipRow): Payslip {
     totalBase: row.total_base,
     medical: row.medical,
     overtimeHours: Number(row.overtime_hours),
-    // Snapshot payslips store the resolved OT rate/pay, not the multiplier; the
-    // multiplier isn't rendered on any payslip surface, so it's left at 0.
-    overtimeMultiplier: 0,
+    overtimeMultiplier: row.overtime_multiplier
+      ? Number(row.overtime_multiplier)
+      : 0,
     overtimePay: row.overtime_pay,
-    customFields: [],
+    taxDeduction: row.tax_deduction,
+    customFields: toCustomFields(row.custom_fields),
     total: row.total_pay,
   };
 }

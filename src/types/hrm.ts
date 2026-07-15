@@ -126,6 +126,8 @@ export type Payslip = {
   id: string;
   employeeId: string;
   employeeName: string;
+  /** Job title at the time the cycle ran — shown on the payslip PDF. */
+  designation: string;
   cycleMonth: string; // e.g. '2026-06'
   baseSalary: number;
   daysWorked: number;
@@ -137,6 +139,9 @@ export type Payslip = {
    *  while the cycle is open — frozen here once the cycle is locked. */
   overtimeMultiplier: number;
   overtimePay: number;
+  /** Tax withheld this cycle (global taxRatePercent × gross earnings),
+   *  frozen here once the cycle is locked. */
+  taxDeduction: number;
   /** Ad-hoc per-employee line items (bonus, deduction, etc.) admin adds
    *  during the cycle — each folds into `total`. */
   customFields: { label: string; amount: number }[];
@@ -157,6 +162,9 @@ export type HrmSettings = {
    *  payroll run. Admin-configured only — never shown to employees
    *  (PRD 5.3.1). */
   overtimeMultiplier: number;
+  /** Percentage of gross earnings withheld as tax each payroll cycle.
+   *  0 disables tax withholding entirely. */
+  taxRatePercent: number;
   /** Size of the shared annual leave pool (Paid + Sick + Half Day), in
    *  days. Resets each year. */
   leavePoolDays: number;

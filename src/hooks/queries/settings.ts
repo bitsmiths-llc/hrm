@@ -13,13 +13,14 @@ const fetchHrmSettings = authQuery(async ({ supabase }) => {
   const { data, error } = await supabase
     .from('payroll_settings')
     .select(
-      'ot_multiplier_default, leave_pool_days, medical_accrual_monthly, medical_cap',
+      'ot_multiplier_default, tax_rate_percent, leave_pool_days, medical_accrual_monthly, medical_cap',
     )
     .eq('id', true)
     .single();
   if (error) throw new Error(error.message);
   return {
     overtimeMultiplier: Number(data.ot_multiplier_default),
+    taxRatePercent: Number(data.tax_rate_percent),
     leavePoolDays: data.leave_pool_days,
     medicalMonthlyAccrual: data.medical_accrual_monthly,
     medicalBalanceCap: data.medical_cap,

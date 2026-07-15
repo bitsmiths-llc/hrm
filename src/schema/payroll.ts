@@ -12,6 +12,7 @@ import { z } from 'zod';
 export const updatePayrollSettingsSchema = z
   .object({
     overtimeMultiplier: z.coerce.number().positive().max(9.99),
+    taxRatePercent: z.coerce.number().min(0).max(100),
     leavePoolDays: z.coerce.number().int().nonnegative(),
     medicalMonthlyAccrual: z.coerce.number().int().nonnegative(),
     medicalBalanceCap: z.coerce.number().int().nonnegative(),
@@ -43,3 +44,32 @@ export const overrideDaysWorkedSchema = z.object({
   days_worked: z.coerce.number().nonnegative().max(31),
 });
 export type OverrideDaysWorkedInput = z.infer<typeof overrideDaysWorkedSchema>;
+
+/** Per-payslip overtime-multiplier override. Applies to one or many payslips of
+ *  the same run (single-row edit passes one id; the bulk popover passes many),
+ *  then a single recalc refreshes the dependent OT rate/pay/tax/net. */
+export const overrideOtMultiplierSchema = z.object({
+  run_id: z.string().uuid(),
+  payslip_ids: z.array(z.string().uuid()).min(1),
+  overtime_multiplier: z.coerce.number().nonnegative().max(9.99),
+});
+export type OverrideOtMultiplierInput = z.infer<
+  typeof overrideOtMultiplierSchema
+>;
+
+/** Append an ad-hoc line item to one or many payslips. A positive `amount` is an
+ *  earning (Adjustment); a negative one is a deduction (Other). */
+export const addCustomFieldSchema = z.object({
+  run_id: z.string().uuid(),
+  payslip_ids: z.array(z.string().uuid()).min(1),
+  label: z.string().trim().min(1, 'Enter a label').max(60),
+  amount: z.coerce.number().refine((n) => n !== 0, 'Amount cannot be 0'),
+});
+export type AddCustomFieldInput = z.infer<typeof addCustomFieldSchema>;
+
+/** Remove the custom field at `index` of a single payslip's `custom_fields`. */
+export const removeCustomFieldSchema = z.object({
+  payslip_id: z.string().uuid(),
+  index: z.coerce.number().int().nonnegative(),
+});
+export type RemoveCustomFieldInput = z.infer<typeof removeCustomFieldSchema>;
