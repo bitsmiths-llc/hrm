@@ -154,7 +154,6 @@ export const useRunPayslips = (runId?: string) =>
 // ---------------------------------------------------------------------------
 type EmployeePayslipRow = Tables<'payslips'> & {
   employees?: Pick<Tables<'employees'>, 'full_name'> | null;
-  payroll_runs?: Pick<Tables<'payroll_runs'>, 'period_month' | 'status'> | null;
 };
 
 function toPayslip(row: EmployeePayslipRow): Payslip {
@@ -163,7 +162,9 @@ function toPayslip(row: EmployeePayslipRow): Payslip {
     employeeId: row.employee_id,
     employeeName: row.employees?.full_name ?? '',
     designation: row.designation ?? '',
-    cycleMonth: toCycleMonth(row.payroll_runs?.period_month ?? ''),
+    // `period_month` is denormalized onto the payslip; employees can't read
+    // payroll_runs (admin-only RLS), so an embed would come back null here.
+    cycleMonth: toCycleMonth(row.period_month),
     baseSalary: row.base_salary,
     daysWorked: Number(row.days_worked),
     daysInMonth: row.days_in_month,
@@ -184,7 +185,7 @@ const fetchEmployeePayslips = authQuery(
   async ({ supabase, params }) => {
     const { data, error } = await supabase
       .from('payslips')
-      .select('*, employees(full_name), payroll_runs(period_month, status)')
+      .select('*, employees(full_name)')
       .eq('employee_id', params.employeeId);
     if (error) throw new Error(error.message);
     return (data as EmployeePayslipRow[]).map(toPayslip);

@@ -537,6 +537,7 @@ export type Database = {
           overtime_pay: number
           overtime_rate: number
           payroll_run_id: string
+          period_month: string
           tax_deduction: number
           total_base: number
           total_pay: number
@@ -558,6 +559,7 @@ export type Database = {
           overtime_pay?: number
           overtime_rate?: number
           payroll_run_id: string
+          period_month?: string
           tax_deduction?: number
           total_base: number
           total_pay: number
@@ -579,6 +581,7 @@ export type Database = {
           overtime_pay?: number
           overtime_rate?: number
           payroll_run_id?: string
+          period_month?: string
           tax_deduction?: number
           total_base?: number
           total_pay?: number

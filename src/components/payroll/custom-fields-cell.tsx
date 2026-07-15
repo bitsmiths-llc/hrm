@@ -37,6 +37,9 @@ type CustomFieldsCellProps = {
   onRemove?: (index: number) => void;
   /** True once the cycle is locked — hides the add-field form. */
   disabled?: boolean;
+  /** Example label for the input — e.g. "Bonus" for earnings, "Loan" for
+   *  deductions. */
+  labelPlaceholder?: string;
 };
 
 /** Per-employee ad-hoc line items (bonus, deduction, etc.) that fold into
@@ -47,6 +50,7 @@ export function CustomFieldsCell({
   onAdd,
   onRemove,
   disabled,
+  labelPlaceholder = 'Bonus',
 }: CustomFieldsCellProps) {
   const total = fields.reduce((sum, field) => sum + field.amount, 0);
 
@@ -124,7 +128,11 @@ export function CustomFieldsCell({
                     <FormItem className='flex-1'>
                       <FormLabel className='text-xs'>Label</FormLabel>
                       <FormControl>
-                        <Input className='h-8' placeholder='Bonus' {...field} />
+                        <Input
+                          className='h-8'
+                          placeholder={labelPlaceholder}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

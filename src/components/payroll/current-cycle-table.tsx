@@ -204,6 +204,7 @@ export function CurrentCycleTable({
                         amount: Math.abs(field.amount),
                       }))}
                       disabled={locked}
+                      labelPlaceholder='Loan'
                       onAdd={(field) =>
                         onAddCustomField(row.id, {
                           label: field.label,

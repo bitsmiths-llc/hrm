@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { useCurrentEmployee } from '@/hooks/queries/employees';
 import { useLeaveBalance, useLeaveRequests } from '@/hooks/queries/leave';
 import { useMedicalBalance } from '@/hooks/queries/medical';
+import { usePayslips } from '@/hooks/queries/payroll';
 
 import { BalanceCard } from '@/components/hrm/balance-card';
 import { StatCard } from '@/components/hrm/stat-card';
@@ -14,8 +15,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { formatCurrency } from '@/utils/number-functions';
 
-import { mockCurrentEmployee } from '@/constants/mock/employees';
-import { mockPayslips } from '@/constants/mock/payroll';
 import { paths } from '@/constants/paths';
 
 export function EmployeeBalances() {
@@ -46,11 +45,16 @@ export function EmployeeBalances() {
     [leaveRequests, year],
   );
 
-  // Payslips are still mock (payroll isn't wired yet), keyed by the mock
-  // employee.
-  const latestPayslip = mockPayslips
-    .filter((payslip) => payslip.employeeId === mockCurrentEmployee.id)
-    .sort((a, b) => b.cycleMonth.localeCompare(a.cycleMonth))[0];
+  // Latest payslip for the signed-in employee. RLS returns only their own
+  // *locked* payslips, so this is empty until a run they're in is locked.
+  const { data: payslips } = usePayslips(me?.id);
+  const latestPayslip = useMemo(
+    () =>
+      [...(payslips ?? [])].sort((a, b) =>
+        b.cycleMonth.localeCompare(a.cycleMonth),
+      )[0],
+    [payslips],
+  );
 
   if (leaveLoading || medicalLoading || !leaveBalance || !medicalBalance) {
     return (
