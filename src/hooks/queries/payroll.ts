@@ -129,10 +129,20 @@ export const useCurrentCycleRows = () => {
           cycleDays,
         );
 
+        // Tax applies to gross earnings (full base + medical + overtime);
+        // adjustments are folded in later on the cycle page, which
+        // recomputes this with them included.
+        const taxDeduction = Math.round(
+          ((employee.baseSalary + medical + overtimePay) *
+            settings.data.taxRatePercent) /
+            100,
+        );
+
         return {
           id: `cycle-${employee.id}`,
           employeeId: employee.id,
           employeeName: employee.fullName,
+          designation: employee.designation,
           cycleMonth: cycle.month,
           baseSalary: employee.baseSalary,
           daysWorked,
@@ -142,8 +152,10 @@ export const useCurrentCycleRows = () => {
           overtimeHours,
           overtimeMultiplier: settings.data.overtimeMultiplier,
           overtimePay,
+          taxDeduction,
           customFields: [],
-          total: calcPayslipTotal(totalBase, medical, overtimePay),
+          total:
+            calcPayslipTotal(totalBase, medical, overtimePay) - taxDeduction,
         };
       });
   }, [

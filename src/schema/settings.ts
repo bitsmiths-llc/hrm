@@ -5,6 +5,10 @@ const baseHrmSettingsSchema = z.object({
     .number({ invalid_type_error: 'Enter a multiplier' })
     .positive('Must be greater than 0')
     .max(5, 'That looks too high — double check the rate'),
+  taxRatePercent: z.coerce
+    .number({ invalid_type_error: 'Enter a percentage' })
+    .min(0, 'Must be 0 or greater')
+    .max(100, 'Cannot exceed 100%'),
   leavePoolDays: z.coerce
     .number({ invalid_type_error: 'Enter a number of days' })
     .int('Whole days only')
@@ -20,6 +24,7 @@ const baseHrmSettingsSchema = z.object({
 
 export const overtimeSettingsSchema = baseHrmSettingsSchema.pick({
   overtimeMultiplier: true,
+  taxRatePercent: true,
 });
 export type OvertimeSettingsInput = z.infer<typeof overtimeSettingsSchema>;
 

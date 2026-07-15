@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -32,6 +32,9 @@ type AddFieldInput = z.infer<typeof addFieldSchema>;
 type CustomFieldsCellProps = {
   fields: { label: string; amount: number }[];
   onAdd: (field: { label: string; amount: number }) => void;
+  /** Removes the item at the given index of `fields` (the caller maps it
+   *  back to its own storage). Omit to disallow removal. */
+  onRemove?: (index: number) => void;
   /** True once the cycle is locked — hides the add-field form. */
   disabled?: boolean;
 };
@@ -42,6 +45,7 @@ type CustomFieldsCellProps = {
 export function CustomFieldsCell({
   fields,
   onAdd,
+  onRemove,
   disabled,
 }: CustomFieldsCellProps) {
   const total = fields.reduce((sum, field) => sum + field.amount, 0);
@@ -83,10 +87,26 @@ export function CustomFieldsCell({
               {fields.map((field, index) => (
                 <li
                   key={index}
-                  className='flex items-center justify-between text-sm'
+                  className='flex items-center justify-between gap-2 text-sm'
                 >
-                  <span className='text-muted-foreground'>{field.label}</span>
-                  <span>{formatCurrency(field.amount)}</span>
+                  <span className='min-w-0 truncate text-muted-foreground'>
+                    {field.label}
+                  </span>
+                  <span className='flex shrink-0 items-center gap-1'>
+                    {formatCurrency(field.amount)}
+                    {!disabled && !!onRemove && (
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='icon'
+                        className='size-5 text-muted-foreground hover:text-destructive'
+                        onClick={() => onRemove(index)}
+                        aria-label={`Remove ${field.label}`}
+                      >
+                        <X className='size-3.5' />
+                      </Button>
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>

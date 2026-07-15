@@ -13,6 +13,7 @@ import {
   useCurrentCycleRows,
   usePayrollCycles,
 } from '@/hooks/queries/payroll';
+import { useHrmSettings } from '@/hooks/queries/settings';
 
 import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { EmptyState } from '@/components/hrm/empty-state';
@@ -51,7 +52,7 @@ export function PayrollCyclePageContent({
   const { data: cycles, isLoading: cyclesLoading } = usePayrollCycles();
   const { data: allPayslips, isLoading: payslipsLoading } = useAllPayslips();
   const { data: employees } = useEmployees();
-  const [overrides, setOverrides] = useState<Record<string, number>>({});
+  const { data: settings } = useHrmSettings();
   const [multiplierOverrides, setMultiplierOverrides] = useState<
     Record<string, number>
   >({});
@@ -67,10 +68,9 @@ export function PayrollCyclePageContent({
   // The edited live rows are also what get frozen into `mockPayslips` at lock
   // time, so they must be computed unconditionally (not only pre-lock).
   const editedLiveRows: Payslip[] = liveRows.map((row) => {
-    const daysWorked = overrides[row.employeeId] ?? row.daysWorked;
     const totalBase = calcTotalBase(
       row.baseSalary,
-      daysWorked,
+      row.daysWorked,
       row.daysInMonth,
     );
 
@@ -92,16 +92,28 @@ export function PayrollCyclePageContent({
       0,
     );
 
+    // Same gross-earnings tax base as useCurrentCycleRows, extended with
+    // positive adjustments.
+    const positiveAdjustments = customFields
+      .filter((field) => field.amount > 0)
+      .reduce((sum, field) => sum + field.amount, 0);
+    const taxDeduction = Math.round(
+      ((row.baseSalary + row.medical + overtimePay + positiveAdjustments) *
+        (settings?.taxRatePercent ?? 0)) /
+        100,
+    );
+
     return {
       ...row,
-      daysWorked,
       totalBase,
       overtimeMultiplier,
       overtimePay,
+      taxDeduction,
       customFields,
       total:
         calcPayslipTotal(totalBase, row.medical, overtimePay) +
-        customFieldsTotal,
+        customFieldsTotal -
+        taxDeduction,
     };
   });
 
@@ -166,6 +178,13 @@ export function PayrollCyclePageContent({
     toast.success(
       `Added "${field.label}" to ${selectedIds.size} ${selectedIds.size === 1 ? 'employee' : 'employees'}`,
     );
+  };
+
+  const handleRemoveCustomField = (employeeId: string, index: number) => {
+    setCustomFieldOverrides((prev) => ({
+      ...prev,
+      [employeeId]: (prev[employeeId] ?? []).filter((_, i) => i !== index),
+    }));
   };
 
   const handleLock = () => {
@@ -274,15 +293,6 @@ export function PayrollCyclePageContent({
             selectedIds={selectedIds}
             onToggleRow={toggleRow}
             onToggleAll={toggleAll}
-            onDaysWorkedChange={
-              locked
-                ? undefined
-                : (employeeId, daysWorked) =>
-                    setOverrides((prev) => ({
-                      ...prev,
-                      [employeeId]: daysWorked,
-                    }))
-            }
             onOvertimeMultiplierChange={
               locked
                 ? undefined
@@ -298,6 +308,7 @@ export function PayrollCyclePageContent({
                 [employeeId]: [...(prev[employeeId] ?? []), field],
               }))
             }
+            onRemoveCustomField={handleRemoveCustomField}
           />
           <p className='text-sm text-muted-foreground'>
             Total payroll this cycle: {formatCurrency(totalPayroll)} ·{' '}
