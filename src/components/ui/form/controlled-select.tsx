@@ -32,6 +32,12 @@ type ControlledSelectProps<TFieldValues extends FieldValues> = {
   label?: string;
 };
 
+function isLabelValueOptions(
+  options: string[] | { label: string; value: string }[],
+): options is { label: string; value: string }[] {
+  return typeof options[0] !== 'string';
+}
+
 export function ControlledSelect<TFieldValues extends FieldValues>({
   options,
   placeholder,
@@ -68,19 +74,15 @@ export function ControlledSelect<TFieldValues extends FieldValues>({
                   className='truncate text-sm'
                   title={
                     field.value
-                      ? Array.isArray(options) && typeof options[0] !== 'string'
-                        ? (options as { label: string; value: string }[]).find(
-                            (o) => o.value === field.value,
-                          )?.label
+                      ? isLabelValueOptions(options)
+                        ? options.find((o) => o.value === field.value)?.label
                         : field.value
                       : undefined
                   }
                 >
                   {field.value ? (
-                    Array.isArray(options) && typeof options[0] !== 'string' ? (
-                      (options as { label: string; value: string }[]).find(
-                        (o) => o.value === field.value,
-                      )?.label
+                    isLabelValueOptions(options) ? (
+                      options.find((o) => o.value === field.value)?.label
                     ) : (
                       field.value
                     )

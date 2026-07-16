@@ -1,6 +1,8 @@
 // Domain types for Bitsmiths HRM (PRD-aligned). These mirror the intended
 // Supabase schema so the later mock → backend swap only touches the hooks.
 
+import { type CustomField } from '@/schema/payroll';
+
 /** Onboarding completion moves the account to `submitted`, an admin review
  *  queue. An admin approves it (→ active) or returns it (→ onboarding) with a
  *  note (BIT-10). */
@@ -147,7 +149,7 @@ export type Payslip = {
   taxDeduction: number;
   /** Ad-hoc per-employee line items (bonus, deduction, etc.) admin adds
    *  during the cycle — each folds into `total`. */
-  customFields: { label: string; amount: number }[];
+  customFields: CustomField[];
   total: number;
 };
 

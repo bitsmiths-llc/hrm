@@ -5,6 +5,8 @@ import { authActionClient } from '@/lib/server/safe-action';
 import {
   addCustomFieldSchema,
   createRunSchema,
+  type CustomField,
+  isCustomField,
   overrideDaysWorkedSchema,
   overrideOtMultiplierSchema,
   removeCustomFieldSchema,
@@ -12,12 +14,10 @@ import {
   updatePayrollSettingsSchema,
 } from '@/schema/payroll';
 
-/** One ad-hoc payslip line item (positive = earning, negative = deduction). */
-type CustomField = { label: string; amount: number };
-
-/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array. */
+/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array,
+ *  keeping the well-formed entries and dropping any malformed one. */
 const toCustomFields = (value: unknown): CustomField[] =>
-  Array.isArray(value) ? (value as CustomField[]) : [];
+  Array.isArray(value) ? value.filter(isCustomField) : [];
 
 /** Admin gate. The role check is server-side even though RLS / the RPC's own
  *  `is_admin()` guard also enforce it (mirrors `actions/overtime.ts`). */

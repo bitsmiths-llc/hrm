@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { authQuery } from '@/lib/client/auth-query';
 
 import { QueryKeys } from '@/constants/query-keys';
+import { type CustomField, isCustomField } from '@/schema/payroll';
 
 import { PayrollCycle, Payslip } from '@/types/hrm';
 import { type Tables } from '@/types/supabase';
@@ -11,12 +12,10 @@ import { type Tables } from '@/types/supabase';
 /** 'YYYY-MM-DD' (first of month) → 'YYYY-MM', the shape the existing UI uses. */
 const toCycleMonth = (periodMonth: string) => periodMonth.slice(0, 7);
 
-/** One ad-hoc payslip line item (positive = earning, negative = deduction). */
-export type PayslipCustomField = { label: string; amount: number };
-
-/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array. */
-const toCustomFields = (value: unknown): PayslipCustomField[] =>
-  Array.isArray(value) ? (value as PayslipCustomField[]) : [];
+/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array,
+ *  keeping the well-formed entries and dropping any malformed one. */
+const toCustomFields = (value: unknown): CustomField[] =>
+  Array.isArray(value) ? value.filter(isCustomField) : [];
 
 // ---------------------------------------------------------------------------
 // Run list + a run by month (admin only — RLS `runs_admin_all`).
@@ -95,7 +94,7 @@ export type RunPayslipRow = {
   overtimeRate: number;
   overtimePay: number;
   taxDeduction: number;
-  customFields: PayslipCustomField[];
+  customFields: CustomField[];
   totalPay: number;
 };
 

@@ -57,6 +57,21 @@ export type OverrideOtMultiplierInput = z.infer<
   typeof overrideOtMultiplierSchema
 >;
 
+/** One stored payslip line item as it lives in the `custom_fields` jsonb array
+ *  (positive `amount` = earning, negative = deduction). Deliberately permissive
+ *  on `amount` — unlike `addCustomFieldSchema`, coercing an already-stored row
+ *  must not reject a legacy 0. */
+export const customFieldSchema = z.object({
+  label: z.string(),
+  amount: z.number(),
+});
+export type CustomField = z.infer<typeof customFieldSchema>;
+
+/** Runtime guard for a single stored line item — lets `toCustomFields` keep the
+ *  well-formed entries of a jsonb `custom_fields` array and drop any malformed one. */
+export const isCustomField = (value: unknown): value is CustomField =>
+  customFieldSchema.safeParse(value).success;
+
 /** Append an ad-hoc line item to one or many payslips. A positive `amount` is an
  *  earning (Adjustment); a negative one is a deduction (Other). */
 export const addCustomFieldSchema = z.object({
