@@ -17,6 +17,11 @@
 -- behind. It raises an exception (non-zero exit) on failure and NOTICE 'PASS' on
 -- success. Uses explicit `raise exception` rather than `assert` so it fails loudly
 -- regardless of the plpgsql.check_asserts setting.
+--
+-- NOTE: employees.id references auth.users(id) (FK added by the migration
+-- `cascade_delete_employees_from_auth_users`, which exists on the DB but has NO
+-- local migration file), so the fixture seeds an auth.users row first. Both are
+-- rolled back.
 
 begin;
 
@@ -35,6 +40,11 @@ begin
   -- Act as an admin for the whole block: satisfies calculate_payroll's
   -- is_admin() guard and every admin RLS policy on the seed inserts.
   perform set_config('request.jwt.claims', '{"app_metadata":{"role":"admin"}}', true);
+
+  -- employees.id references auth.users(id), so seed the auth user first.
+  insert into auth.users (id, instance_id, aud, role, email, encrypted_password, created_at, updated_at)
+  values (v_emp, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+          'reg-' || v_emp || '@example.test', '', now(), now());
 
   -- 13 months of tenure -> accrual is capped at the full 50,000 pool.
   insert into employees (id, role, account_status, email, full_name, activated_at)
