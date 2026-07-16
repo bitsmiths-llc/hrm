@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { authQuery } from '@/lib/client/auth-query';
 
 import { QueryKeys } from '@/constants/query-keys';
+import { type CustomField, isCustomField } from '@/schema/payroll';
 
 import { PayrollCycle, Payslip } from '@/types/hrm';
 import { type Tables } from '@/types/supabase';
@@ -11,12 +12,10 @@ import { type Tables } from '@/types/supabase';
 /** 'YYYY-MM-DD' (first of month) → 'YYYY-MM', the shape the existing UI uses. */
 const toCycleMonth = (periodMonth: string) => periodMonth.slice(0, 7);
 
-/** One ad-hoc payslip line item (positive = earning, negative = deduction). */
-export type PayslipCustomField = { label: string; amount: number };
-
-/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array. */
-const toCustomFields = (value: unknown): PayslipCustomField[] =>
-  Array.isArray(value) ? (value as PayslipCustomField[]) : [];
+/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array,
+ *  keeping the well-formed entries and dropping any malformed one. */
+const toCustomFields = (value: unknown): CustomField[] =>
+  Array.isArray(value) ? value.filter(isCustomField) : [];
 
 // ---------------------------------------------------------------------------
 // Run list + a run by month (admin only — RLS `runs_admin_all`).
@@ -42,7 +41,7 @@ const fetchPayrollRuns = authQuery(async ({ supabase }) => {
     .select('*, payslips(count)')
     .order('period_month', { ascending: false });
   if (error) throw new Error(error.message);
-  return (data as RunRow[]).map(toPayrollCycle);
+  return data.map(toPayrollCycle);
 });
 
 /** All payroll runs, newest month first (admin run-list screen). */
@@ -60,7 +59,7 @@ const fetchRunByMonth = authQuery(
       .eq('period_month', `${params.month}-01`)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ? toPayrollCycle(data as RunRow) : null;
+    return data ? toPayrollCycle(data) : null;
   },
   { paramsSchema: z.object({ month: z.string() }) },
 );
@@ -95,7 +94,7 @@ export type RunPayslipRow = {
   overtimeRate: number;
   overtimePay: number;
   taxDeduction: number;
-  customFields: PayslipCustomField[];
+  customFields: CustomField[];
   totalPay: number;
 };
 
@@ -132,7 +131,7 @@ const fetchRunPayslips = authQuery(
       .select('*, employees(full_name)')
       .eq('payroll_run_id', params.runId);
     if (error) throw new Error(error.message);
-    return (data as PayslipRow[])
+    return data
       .map(toRunPayslipRow)
       .sort((a, b) => a.employeeName.localeCompare(b.employeeName));
   },
@@ -171,6 +170,7 @@ function toPayslip(row: EmployeePayslipRow): Payslip {
     totalBase: row.total_base,
     medical: row.medical,
     overtimeHours: Number(row.overtime_hours),
+    overtimeRate: Number(row.overtime_rate),
     overtimeMultiplier: row.overtime_multiplier
       ? Number(row.overtime_multiplier)
       : 0,
@@ -188,7 +188,7 @@ const fetchEmployeePayslips = authQuery(
       .select('*, employees(full_name)')
       .eq('employee_id', params.employeeId);
     if (error) throw new Error(error.message);
-    return (data as EmployeePayslipRow[]).map(toPayslip);
+    return data.map(toPayslip);
   },
   { paramsSchema: z.object({ employeeId: z.string() }) },
 );

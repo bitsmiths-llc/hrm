@@ -446,6 +446,45 @@ export type Database = {
           },
         ]
       }
+      payroll_exports: {
+        Row: {
+          exported_at: string
+          exported_by: string | null
+          file_path: string | null
+          id: string
+          run_id: string
+        }
+        Insert: {
+          exported_at?: string
+          exported_by?: string | null
+          file_path?: string | null
+          id?: string
+          run_id: string
+        }
+        Update: {
+          exported_at?: string
+          exported_by?: string | null
+          file_path?: string | null
+          id?: string
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_exports_exported_by_fkey"
+            columns: ["exported_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_exports_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payroll_runs: {
         Row: {
           created_at: string

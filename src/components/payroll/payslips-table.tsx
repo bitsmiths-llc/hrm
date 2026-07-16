@@ -202,6 +202,12 @@ export function PayslipsTable({
             },
             { label: 'Overtime Hours', value: `${selected.overtimeHours}h` },
             {
+              label: 'Overtime Rate',
+              value: selected.overtimeRate
+                ? `${formatCurrency(selected.overtimeRate, 2)} / hr`
+                : '—',
+            },
+            {
               label: 'Overtime Pay',
               value: formatCurrency(selected.overtimePay) || '—',
             },
