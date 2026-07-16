@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 
 import { useCreateLeaveRequest } from '@/hooks/actions/use-create-leave-request';
 
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -79,7 +79,7 @@ export function RequestLeaveDialog() {
       <DialogTrigger asChild>
         <Button iconLeft={Plus}>Request leave</Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Request leave</DialogTitle>
           <DialogDescription>
@@ -155,7 +155,7 @@ export function RequestLeaveDialog() {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

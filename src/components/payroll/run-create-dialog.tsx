@@ -6,10 +6,10 @@ import { useState } from 'react';
 
 import { useCreateRun } from '@/hooks/actions/use-create-run';
 
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -46,7 +46,7 @@ export function RunCreateDialog() {
       <DialogTrigger asChild>
         <Button iconLeft={PlusCircle}>Create run</Button>
       </DialogTrigger>
-      <DialogContent>
+      <ScrollableDialogContent>
         <DialogHeader>
           <DialogTitle>Create a payroll run</DialogTitle>
           <DialogDescription>
@@ -69,7 +69,7 @@ export function RunCreateDialog() {
             Create run
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

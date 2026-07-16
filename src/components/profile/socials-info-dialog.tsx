@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 
 import { useUpdateMySocials } from '@/hooks/actions/use-update-my-profile';
 
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -57,7 +57,7 @@ export function SocialsInfoDialog({ defaultValues }: SocialsInfoDialogProps) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Edit social accounts</DialogTitle>
         </DialogHeader>
@@ -123,7 +123,7 @@ export function SocialsInfoDialog({ defaultValues }: SocialsInfoDialogProps) {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

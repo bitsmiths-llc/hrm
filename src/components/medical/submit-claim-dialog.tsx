@@ -10,10 +10,10 @@ import { useCreateMedicalClaim } from '@/hooks/actions/use-create-medical-claim'
 import { useMedicalBalance } from '@/hooks/queries/medical';
 
 import { FileUpload } from '@/components/hrm/file-upload';
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -110,7 +110,7 @@ export function SubmitClaimDialog({
           Submit claim
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-xl'>
+      <ScrollableDialogContent className='sm:max-w-xl'>
         <DialogHeader>
           <DialogTitle>Submit a medical claim</DialogTitle>
           <DialogDescription>
@@ -211,7 +211,7 @@ export function SubmitClaimDialog({
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

@@ -9,10 +9,10 @@ import { toast } from 'sonner';
 import { useLogOvertime } from '@/hooks/actions/use-log-overtime';
 import { useProjects } from '@/hooks/queries/projects';
 
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -73,7 +73,7 @@ export function LogOvertimeDialog() {
       <DialogTrigger asChild>
         <Button iconLeft={Plus}>Log overtime</Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Log overtime</DialogTitle>
           <DialogDescription>
@@ -143,7 +143,7 @@ export function LogOvertimeDialog() {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

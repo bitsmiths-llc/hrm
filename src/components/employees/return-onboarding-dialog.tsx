@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 
 import { useReturnOnboarding } from '@/hooks/actions/use-review-employee';
 
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -82,7 +82,7 @@ export function ReturnOnboardingDialog({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Return for changes</DialogTitle>
           <DialogDescription>
@@ -128,7 +128,7 @@ export function ReturnOnboardingDialog({
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }
