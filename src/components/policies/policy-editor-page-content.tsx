@@ -67,8 +67,14 @@ export function PolicyEditorPageContent({
     setDraftHtml(version.contentHtml);
     setEditorKey((key) => key + 1);
     toast.info(
-      `Version ${version.version} loaded into the editor — publish to make it current.`,
+      `Version ${version.version} loaded into the editor — publish to make it current, or discard changes to go back.`,
     );
+  };
+
+  const handleDiscard = () => {
+    setDraftHtml(null);
+    setEditorKey((key) => key + 1);
+    toast.info(`Draft discarded — back to version ${latest.version}.`);
   };
 
   const handlePublish = () => {
@@ -108,6 +114,9 @@ export function PolicyEditorPageContent({
         title={policy.title}
         description={`${policyCategoryLabels[policy.category]} · Version ${latest.version}`}
       >
+        <Button variant='outline' disabled={!isDirty} onClick={handleDiscard}>
+          Discard changes
+        </Button>
         <ConfirmDialog
           trigger={<Button disabled={!isDirty}>Publish update</Button>}
           title='Publish this update?'

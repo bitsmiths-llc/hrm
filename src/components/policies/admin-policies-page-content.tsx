@@ -25,7 +25,7 @@ export function AdminPoliciesPageContent() {
   return (
     <>
       <PageHeader
-        title='Policies & Contracts'
+        title='Policies'
         description='Manage company policy documents and versions.'
       >
         <Button onClick={() => setCreateOpen(true)}>New Policy</Button>

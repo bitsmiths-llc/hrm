@@ -31,7 +31,7 @@ export function RichTextEditorImpl({
   disabled,
 }: RichTextEditorProps) {
   return (
-    <div className='rich-text-editor rounded-md border border-input [&_.ck-editor__editable]:min-h-48 [&_.ck-editor__editable]:px-3 [&_.ck-toolbar]:rounded-t-md [&_.ck-toolbar]:border-0 [&_.ck-toolbar]:border-b [&_.ck-toolbar]:border-input'>
+    <div className='rich-text-editor rounded-md border border-input [&_.ck-editor__editable]:max-h-[50vh] [&_.ck-editor__editable]:min-h-48 [&_.ck-editor__editable]:overflow-y-auto [&_.ck-editor__editable]:px-3 [&_.ck-toolbar]:rounded-t-md [&_.ck-toolbar]:border-0 [&_.ck-toolbar]:border-b [&_.ck-toolbar]:border-input'>
       <CKEditor
         editor={ClassicEditor}
         disabled={disabled}

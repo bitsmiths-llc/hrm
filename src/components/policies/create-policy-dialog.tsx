@@ -10,14 +10,6 @@ import { usePolicies } from '@/hooks/queries/policies';
 
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   Form,
   FormControl,
   FormField,
@@ -28,6 +20,14 @@ import {
 import { ControlledRichText } from '@/components/ui/form/controlled-rich-text';
 import { ControlledSelect } from '@/components/ui/form/controlled-select';
 import { Input } from '@/components/ui/input';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 
 import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
@@ -85,24 +85,24 @@ export function CreatePolicyDialog({
   };
 
   return (
-    <Dialog
+    <Sheet
       open={open}
       onOpenChange={(next) => {
         onOpenChange(next);
         if (!next) form.reset();
       }}
     >
-      <DialogContent className='sm:max-w-2xl'>
-        <DialogHeader>
-          <DialogTitle>New policy</DialogTitle>
-          <DialogDescription>
+      <SheetContent className='flex w-full flex-col gap-6 overflow-y-auto sm:max-w-xl'>
+        <SheetHeader>
+          <SheetTitle>New policy</SheetTitle>
+          <SheetDescription>
             Employees will be able to view this as soon as it's published.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className='flex flex-col gap-4'
+            className='flex flex-1 flex-col gap-4'
           >
             <div className='grid grid-cols-2 gap-4'>
               <FormField
@@ -129,7 +129,7 @@ export function CreatePolicyDialog({
               name='contentHtml'
               label='Content'
             />
-            <DialogFooter>
+            <SheetFooter className='mt-auto'>
               <Button
                 type='button'
                 variant='outline'
@@ -140,10 +140,10 @@ export function CreatePolicyDialog({
               <Button type='submit' isLoading={form.formState.isSubmitting}>
                 Publish
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }

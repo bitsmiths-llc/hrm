@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { useUnacknowledgedPolicyCount } from '@/hooks/queries/policies';
+
 import {
   Sidebar,
   SidebarContent,
@@ -39,11 +41,19 @@ const exactMatchHrefs: string[] = [
 export function AppSidebar({ role }: AppSidebarProps) {
   const config = role === 'admin' ? adminNav : employeeNav;
   const pathname = usePathname();
+  const unacknowledgedPolicies = useUnacknowledgedPolicyCount();
 
   const isActive = (href: string) =>
     exactMatchHrefs.includes(href)
       ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
+
+  /** Static badges come from the nav config; the employee Policies item
+   *  gets a live "needs acknowledgment" count instead. */
+  const badgeFor = (item: { href: string; badge?: number }) =>
+    role === 'employee' && item.href === paths.employee.policies
+      ? unacknowledgedPolicies || undefined
+      : item.badge;
 
   return (
     <Sidebar collapsible='icon' variant='inset'>
@@ -78,8 +88,10 @@ export function AppSidebar({ role }: AppSidebarProps) {
                       <span>{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
-                  {!!item.badge && (
-                    <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                  {!!badgeFor(item) && (
+                    <SidebarMenuBadge className='rounded-full bg-primary px-1.5 text-primary-foreground'>
+                      {badgeFor(item)}
+                    </SidebarMenuBadge>
                   )}
                 </SidebarMenuItem>
               ))}

@@ -61,6 +61,20 @@ export const useMyPolicyAcknowledgments = () =>
 export const currentVersion = (policy: Policy) =>
   policy.versions[policy.versions.length - 1];
 
+/** How many policies the signed-in employee still has to acknowledge —
+ *  missing acknowledgments and stale ones (older version) both count.
+ *  Drives the dashboard banner and the sidebar notification pill. */
+export const useUnacknowledgedPolicyCount = () => {
+  const { data: policies } = usePolicies();
+  const { data: acknowledgments } = useMyPolicyAcknowledgments();
+
+  return (policies ?? []).filter((policy) => {
+    const latest = currentVersion(policy);
+    const ack = acknowledgments.find((a) => a.policyId === policy.id);
+    return !ack || ack.acknowledgedVersion < latest.version;
+  }).length;
+};
+
 /** Active employees only — invited/onboarding accounts don't have
  *  self-service access yet, so acknowledgment doesn't apply to them. */
 export const useActiveEmployees = () => {
