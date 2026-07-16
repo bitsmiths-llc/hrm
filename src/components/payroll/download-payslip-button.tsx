@@ -6,6 +6,8 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
+import { downloadUrl } from '@/utils/download-functions';
+
 import { PayslipPdfDocument } from './payslip-pdf-document';
 
 import { Payslip } from '@/types/hrm';
@@ -29,10 +31,7 @@ export function DownloadPayslipButton({
     setIsGenerating(true);
     const blob = await pdf(<PayslipPdfDocument payslip={payslip} />).toBlob();
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `payslip-${payslip.cycleMonth}.pdf`;
-    link.click();
+    downloadUrl(url, `payslip-${payslip.cycleMonth}.pdf`);
     URL.revokeObjectURL(url);
     setIsGenerating(false);
   };

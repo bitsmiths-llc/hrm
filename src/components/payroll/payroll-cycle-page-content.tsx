@@ -28,6 +28,7 @@ import { formatCurrency } from '@/utils/number-functions';
 import { paths } from '@/constants/paths';
 
 import { CurrentCycleTable } from './current-cycle-table';
+import { ExportArtifacts } from './export-artifacts';
 import { ExportPayoneerSheet } from './export-payoneer-sheet';
 
 type PayrollCyclePageContentProps = {
@@ -66,7 +67,6 @@ export function PayrollCyclePageContent({
     employeeId: row.employeeId,
     employeeName: row.employeeName,
     total: row.totalPay,
-    cycleMonth: month,
   }));
 
   const toggleRow = (payslipId: string) =>
@@ -177,7 +177,11 @@ export function PayrollCyclePageContent({
                 isLoading={lock.isPending}
                 onConfirm={() => lock.execute({ run_id: run.id })}
               />
-              <ExportPayoneerSheet rows={exportRows} disabled={!locked} />
+              <ExportPayoneerSheet
+                runId={run.id}
+                rows={exportRows}
+                disabled={!locked}
+              />
             </div>
           </div>
 
@@ -234,6 +238,7 @@ export function PayrollCyclePageContent({
                 {locked ? 'Total payroll' : 'Draft total'}:{' '}
                 {formatCurrency(totalPayroll)} · {gridRows.length} employees
               </p>
+              {locked && <ExportArtifacts runId={run.id} />}
             </>
           )}
         </>

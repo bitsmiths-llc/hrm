@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
 
-import { useEmployees } from '@/hooks/queries/employees';
+import { useExportPayoneer } from '@/hooks/actions/use-export-payoneer';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,45 +32,49 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+import { formatCurrency } from '@/utils/number-functions';
+
+/** The Payoneer balances an employee can be paid from. The recipient bank
+ *  account is always PKR; this is only the *source* currency. */
 const BALANCE_CURRENCIES = ['USD', 'GBP', 'EUR'] as const;
 type BalanceCurrency = (typeof BALANCE_CURRENCIES)[number];
 const DEFAULT_CURRENCY: BalanceCurrency = 'USD';
 
-const formatAmount = (amount: number, currency: BalanceCurrency) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
+const isBalanceCurrency = (value: string): value is BalanceCurrency =>
+  (BALANCE_CURRENCIES as readonly string[]).includes(value);
 
-/** The only payslip fields the export needs — decoupled from the full `Payslip`
- *  domain type so the admin run grid (which holds richer DB rows) can pass its
- *  own mapped rows. */
+/** The only payslip fields the picker needs. `total` is the recipient PKR amount
+ *  (shown for context only) — the file's authoritative amount is read from the
+ *  frozen `payslips.total_pay` snapshot server-side. */
 export type PayoneerExportRow = {
   employeeId: string;
   employeeName: string;
   total: number;
-  cycleMonth: string;
 };
 
 type ExportPayoneerSheetProps = {
+  runId: string;
   rows: PayoneerExportRow[];
   disabled?: boolean;
 };
 
 export function ExportPayoneerSheet({
+  runId,
   rows,
   disabled,
 }: ExportPayoneerSheetProps) {
-  const { data: employees } = useEmployees();
   const [open, setOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const [currencies, setCurrencies] = useState<Record<string, BalanceCurrency>>(
     {},
   );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkCurrency, setBulkCurrency] =
     useState<BalanceCurrency>(DEFAULT_CURRENCY);
+
+  const exportAction = useExportPayoneer(() => {
+    setOpen(false);
+    setSelectedIds(new Set());
+  });
 
   const currencyFor = (employeeId: string) =>
     currencies[employeeId] ?? DEFAULT_CURRENCY;
@@ -89,7 +92,7 @@ export function ExportPayoneerSheet({
     setSelectedIds((prev) =>
       prev.size === rows.length
         ? new Set()
-        : new Set(rows.map((r) => r.employeeId)),
+        : new Set(rows.map((row) => row.employeeId)),
     );
   };
 
@@ -102,10 +105,14 @@ export function ExportPayoneerSheet({
       return next;
     });
     toast.success(
-      `Set ${bulkCurrency} for ${selectedIds.size} ${selectedIds.size === 1 ? 'employee' : 'employees'}`,
+      `Set ${bulkCurrency} for ${selectedIds.size} ${
+        selectedIds.size === 1 ? 'employee' : 'employees'
+      }`,
     );
   };
 
+  // Group by source balance: how many employees each balance pays, and the
+  // total PKR those employees receive.
   const breakdown = BALANCE_CURRENCIES.map((currency) => {
     const inCurrency = rows.filter(
       (row) => currencyFor(row.employeeId) === currency,
@@ -117,40 +124,11 @@ export function ExportPayoneerSheet({
     };
   }).filter((group) => group.count > 0);
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    const sheetRows = rows.flatMap((row) => {
-      const employee = employees?.find((e) => e.id === row.employeeId);
-      if (!employee?.bank) return [];
-      const currency = currencyFor(row.employeeId);
-      return [
-        {
-          'Bank Account Holder Name': employee.bank.accountHolderName,
-          'Bank Account Number/IBAN':
-            employee.bank.iban || employee.bank.accountNumber,
-          'Payoneer Balance to Pay From': currency,
-          'Amount to Pay From Balance': '',
-          'Amount Recipient Gets': row.total,
-          'Recipient Bank Account Currency': 'PKR',
-          'Payment Reference (Optional)': '',
-          'Transaction Description (Optional)': '',
-        },
-      ];
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(sheetRows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Payoneer Export');
-    XLSX.writeFile(
-      workbook,
-      `payoneer-export-${rows[0]?.cycleMonth ?? 'export'}.xlsx`,
+  const handleExport = () => {
+    const currencyByEmployee = Object.fromEntries(
+      rows.map((row) => [row.employeeId, currencyFor(row.employeeId)]),
     );
-
-    setIsExporting(false);
-    setOpen(false);
-    toast.success(`Exported ${sheetRows.length} payslips for Payoneer`);
+    exportAction.execute({ run_id: runId, currencyByEmployee });
   };
 
   const allSelected = rows.length > 0 && selectedIds.size === rows.length;
@@ -166,8 +144,9 @@ export function ExportPayoneerSheet({
         <SheetHeader>
           <SheetTitle>Export for Payoneer</SheetTitle>
           <SheetDescription>
-            Choose the balance currency Payoneer should pay each employee from.
-            The recipient bank account is always PKR.
+            Choose the Payoneer balance to pay each employee from. The recipient
+            bank account is always PKR, and the amount is the locked payslip
+            total.
           </SheetDescription>
         </SheetHeader>
 
@@ -176,23 +155,11 @@ export function ExportPayoneerSheet({
             <span className='text-sm text-muted-foreground'>
               {selectedIds.size} selected
             </span>
-            <Select
+            <CurrencySelect
               value={bulkCurrency}
-              onValueChange={(value) =>
-                setBulkCurrency(value as BalanceCurrency)
-              }
-            >
-              <SelectTrigger className='h-8 w-28'>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {BALANCE_CURRENCIES.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={setBulkCurrency}
+              triggerClassName='h-8 w-28'
+            />
             <Button type='button' size='sm' onClick={applyBulkCurrency}>
               Apply to selected
             </Button>
@@ -211,8 +178,8 @@ export function ExportPayoneerSheet({
                   />
                 </TableHead>
                 <TableHead>Employee</TableHead>
-                <TableHead className='text-center'>Amount</TableHead>
-                <TableHead className='text-center'>Currency</TableHead>
+                <TableHead className='text-center'>Amount (PKR)</TableHead>
+                <TableHead className='text-center'>Pay from</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -231,29 +198,19 @@ export function ExportPayoneerSheet({
                       {row.employeeName}
                     </TableCell>
                     <TableCell className='text-center'>
-                      {formatAmount(row.total, currency)}
+                      {formatCurrency(row.total)}
                     </TableCell>
                     <TableCell className='text-center'>
-                      <Select
+                      <CurrencySelect
                         value={currency}
-                        onValueChange={(value) =>
+                        onValueChange={(next) =>
                           setCurrencies((prev) => ({
                             ...prev,
-                            [row.employeeId]: value as BalanceCurrency,
+                            [row.employeeId]: next,
                           }))
                         }
-                      >
-                        <SelectTrigger className='mx-auto h-9 w-28'>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {BALANCE_CURRENCIES.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        triggerClassName='mx-auto h-9 w-28'
+                      />
                     </TableCell>
                   </TableRow>
                 );
@@ -265,7 +222,7 @@ export function ExportPayoneerSheet({
         {breakdown.length > 0 && (
           <div className='rounded-lg border border-border px-4 py-3'>
             <p className='mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
-              Breakdown by currency
+              Breakdown by source balance
             </p>
             <div className='flex flex-col gap-1'>
               {breakdown.map((group) => (
@@ -274,11 +231,11 @@ export function ExportPayoneerSheet({
                   className='flex items-center justify-between text-sm'
                 >
                   <span className='text-muted-foreground'>
-                    {group.currency} · {group.count}{' '}
+                    {group.currency} balance · {group.count}{' '}
                     {group.count === 1 ? 'employee' : 'employees'}
                   </span>
                   <span className='font-medium'>
-                    {formatAmount(group.total, group.currency)}
+                    {formatCurrency(group.total)}
                   </span>
                 </div>
               ))}
@@ -290,11 +247,48 @@ export function ExportPayoneerSheet({
           <Button variant='outline' onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button isLoading={isExporting} onClick={handleExport}>
+          <Button
+            isLoading={exportAction.isPending}
+            disabled={rows.length === 0}
+            onClick={handleExport}
+          >
             Export
           </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+type CurrencySelectProps = {
+  value: BalanceCurrency;
+  onValueChange: (value: BalanceCurrency) => void;
+  triggerClassName?: string;
+};
+
+/** The USD/GBP/EUR source-balance picker, shared by the bulk bar and each row. */
+function CurrencySelect({
+  value,
+  onValueChange,
+  triggerClassName,
+}: CurrencySelectProps) {
+  return (
+    <Select
+      value={value}
+      onValueChange={(next) => {
+        if (isBalanceCurrency(next)) onValueChange(next);
+      }}
+    >
+      <SelectTrigger className={triggerClassName}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {BALANCE_CURRENCIES.map((option) => (
+          <SelectItem key={option} value={option}>
+            {option}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

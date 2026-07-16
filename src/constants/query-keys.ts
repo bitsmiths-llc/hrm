@@ -23,6 +23,7 @@ export enum QueryKeys {
   PAYROLL_SETTINGS = 'payroll-settings', // singleton payroll_settings row (BIT-15)
   PAYROLL_RUNS = 'payroll-runs', // admin run list / a run by month (BIT-15)
   RUN_PAYSLIPS = 'run-payslips', // draft/frozen payslips for one run (BIT-15)
+  RUN_EXPORTS = 'run-exports', // Payoneer export artifacts for one run (BIT-16)
   POLICIES = 'policies',
   HRM_SETTINGS = 'hrm-settings',
   PROJECTS = 'projects',

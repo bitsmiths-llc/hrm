@@ -171,6 +171,7 @@ function toPayslip(row: EmployeePayslipRow): Payslip {
     totalBase: row.total_base,
     medical: row.medical,
     overtimeHours: Number(row.overtime_hours),
+    overtimeRate: Number(row.overtime_rate),
     overtimeMultiplier: row.overtime_multiplier
       ? Number(row.overtime_multiplier)
       : 0,

@@ -135,6 +135,9 @@ export type Payslip = {
   totalBase: number;
   medical: number;
   overtimeHours: number;
+  /** Per-hour overtime rate (base ÷ working hours × multiplier), frozen on the
+   *  snapshot. Shown on the itemized payslip alongside hours and pay. */
+  overtimeRate?: number;
   /** Defaults to the global setting, but admin can override it per employee
    *  while the cycle is open — frozen here once the cycle is locked. */
   overtimeMultiplier: number;
