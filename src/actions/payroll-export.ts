@@ -32,7 +32,8 @@ const EXPORTS_BUCKET = 'payroll-exports';
 const DOWNLOAD_TTL_SECONDS = 60 * 5;
 
 /** One run payslip with the employee name joined (via the `payslips → employees`
- *  FK). Cast locally to mirror the query-hook idiom in `hooks/queries/payroll`. */
+ *  FK). Declared explicitly so `rows` reads as a checked annotation — supabase-js
+ *  infers a shape assignable to this, so no `as` cast is needed. */
 type ExportPayslipRow = Pick<Tables<'payslips'>, 'employee_id' | 'total_pay'> & {
   employees: Pick<Tables<'employees'>, 'full_name'> | null;
 };
@@ -77,7 +78,7 @@ export const exportPayoneer = authActionClient
       .eq('payroll_run_id', run_id);
     if (payslipError) throw new Error(payslipError.message);
 
-    const rows = (payslipData ?? []) as ExportPayslipRow[];
+    const rows: ExportPayslipRow[] = payslipData ?? [];
     if (rows.length === 0) throw new Error('This run has no payslips to export.');
 
     const { data: bankData, error: bankError } = await supabaseAdmin

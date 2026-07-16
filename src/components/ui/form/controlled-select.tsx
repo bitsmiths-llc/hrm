@@ -35,7 +35,10 @@ type ControlledSelectProps<TFieldValues extends FieldValues> = {
 function isLabelValueOptions(
   options: string[] | { label: string; value: string }[],
 ): options is { label: string; value: string }[] {
-  return typeof options[0] !== 'string';
+  // An empty array isn't a label/value list (there's no non-string element to
+  // key on), so it falls through to the raw-value branch rather than a doomed
+  // .find() that always returns undefined.
+  return options.length > 0 && typeof options[0] !== 'string';
 }
 
 export function ControlledSelect<TFieldValues extends FieldValues>({

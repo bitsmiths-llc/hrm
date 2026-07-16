@@ -41,7 +41,7 @@ const fetchPayrollRuns = authQuery(async ({ supabase }) => {
     .select('*, payslips(count)')
     .order('period_month', { ascending: false });
   if (error) throw new Error(error.message);
-  return (data as RunRow[]).map(toPayrollCycle);
+  return data.map(toPayrollCycle);
 });
 
 /** All payroll runs, newest month first (admin run-list screen). */
@@ -59,7 +59,7 @@ const fetchRunByMonth = authQuery(
       .eq('period_month', `${params.month}-01`)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ? toPayrollCycle(data as RunRow) : null;
+    return data ? toPayrollCycle(data) : null;
   },
   { paramsSchema: z.object({ month: z.string() }) },
 );
@@ -131,7 +131,7 @@ const fetchRunPayslips = authQuery(
       .select('*, employees(full_name)')
       .eq('payroll_run_id', params.runId);
     if (error) throw new Error(error.message);
-    return (data as PayslipRow[])
+    return data
       .map(toRunPayslipRow)
       .sort((a, b) => a.employeeName.localeCompare(b.employeeName));
   },
@@ -188,7 +188,7 @@ const fetchEmployeePayslips = authQuery(
       .select('*, employees(full_name)')
       .eq('employee_id', params.employeeId);
     if (error) throw new Error(error.message);
-    return (data as EmployeePayslipRow[]).map(toPayslip);
+    return data.map(toPayslip);
   },
   { paramsSchema: z.object({ employeeId: z.string() }) },
 );
