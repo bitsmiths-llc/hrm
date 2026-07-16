@@ -145,11 +145,14 @@ export const useMedicalProofUrls = (paths: string[]) =>
         .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
       if (error) throw new Error(error.message);
       return (data ?? [])
-        .filter((item) => !!item.signedUrl && !!item.path)
+        .filter(
+          (item): item is typeof item & { signedUrl: string; path: string } =>
+            !!item.signedUrl && !!item.path,
+        )
         .map((item) => {
-          const base = (item.path as string).split('/').pop() ?? 'proof';
+          const base = item.path.split('/').pop() ?? 'proof';
           return {
-            path: item.path as string,
+            path: item.path,
             url: item.signedUrl,
             name: base.replace(/^\d+-/, ''),
           };
