@@ -30,20 +30,45 @@ type Story = StoryObj<typeof meta>;
 
 export const LeavePool: Story = {};
 
-export const MedicalAllowance: Story = {
-  args: {
-    title: 'Medical Allowance',
-    used: 22_500,
-    total: 50_000,
-    format: (amount: number) => `PKR ${amount.toLocaleString()}`,
-    hint: 'Accrues PKR 5,000/month',
-  },
-};
-
 export const NearlyExhausted: Story = {
   args: { used: 21, total: 22, hint: undefined },
 };
 
 export const Untouched: Story = {
   args: { used: 0, total: 22, hint: undefined },
+};
+
+const currencyFormat = (amount: number) => `PKR ${amount.toLocaleString()}`;
+
+export const MedicalAllowanceAccrued: Story = {
+  args: {
+    title: 'Medical Allowance',
+    mode: 'accrued',
+    used: 27_500,
+    total: 50_000,
+    format: currencyFormat,
+    hint: 'Accrues PKR 5,000/month',
+  },
+};
+
+export const MedicalAllowanceJustStarted: Story = {
+  args: {
+    title: 'Medical Allowance',
+    mode: 'accrued',
+    used: 0,
+    total: 50_000,
+    format: currencyFormat,
+    hint: 'Accrues PKR 5,000/month',
+  },
+};
+
+export const MedicalAllowanceAtCap: Story = {
+  args: {
+    title: 'Medical Allowance',
+    mode: 'accrued',
+    used: 50_000,
+    total: 50_000,
+    format: currencyFormat,
+    hint: 'Accrues PKR 5,000/month',
+  },
 };

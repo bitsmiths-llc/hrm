@@ -19,7 +19,10 @@ import {
 import { ControlledSelect } from '@/components/ui/form/controlled-select';
 import { Input } from '@/components/ui/input';
 
-import { employmentTypeLabels } from '@/constants/hrm-labels';
+import {
+  employmentStageLabels,
+  employmentTypeLabels,
+} from '@/constants/hrm-labels';
 import {
   type EmploymentConfigInput,
   employmentConfigSchema,
@@ -28,6 +31,10 @@ import {
 import { Employee } from '@/types/hrm';
 
 const employmentTypeOptions = Object.entries(employmentTypeLabels).map(
+  ([value, label]) => ({ value, label }),
+);
+
+const employmentStageOptions = Object.entries(employmentStageLabels).map(
   ([value, label]) => ({ value, label }),
 );
 
@@ -41,6 +48,7 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
     resolver: zodResolver(employmentConfigSchema),
     defaultValues: {
       employmentType: employee.employmentType,
+      employmentStage: employee.employmentStage,
       baseSalary: employee.baseSalary || 0,
       workingHours: employee.workingHours || 0,
       designation: employee.designation,
@@ -73,6 +81,12 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
               label='Employment type'
               options={employmentTypeOptions}
               placeholder='Select type'
+            />
+            <ControlledSelect<EmploymentConfigInput>
+              name='employmentStage'
+              label='Employment stage'
+              options={employmentStageOptions}
+              placeholder='Select stage'
             />
             <FormField
               control={form.control}

@@ -22,7 +22,9 @@ export function EmployeeDocuments({ employeeId }: EmployeeDocumentsProps) {
   return (
     <Card>
       <CardHeader className='pb-4'>
-        <CardTitle className='text-lg font-medium'>Identity Documents</CardTitle>
+        <CardTitle className='text-lg font-medium'>
+          Identity Documents
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {!isLoading && !hasAny ? (

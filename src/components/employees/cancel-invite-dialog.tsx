@@ -4,10 +4,10 @@ import { toast } from 'sonner';
 
 import { useCancelInvite } from '@/hooks/actions/use-invite-employee';
 
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -39,7 +39,7 @@ export function CancelInviteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Cancel invitation</DialogTitle>
           <DialogDescription>
@@ -64,7 +64,7 @@ export function CancelInviteDialog({
             Cancel invitation
           </Button>
         </DialogFooter>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

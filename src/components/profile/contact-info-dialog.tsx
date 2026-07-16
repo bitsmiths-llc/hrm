@@ -9,10 +9,10 @@ import { toast } from 'sonner';
 import { useUpdateMyProfile } from '@/hooks/actions/use-update-my-profile';
 
 import { ControlledTextField } from '@/components/hrm/form-fields';
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -50,7 +50,7 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Edit contact information</DialogTitle>
           <DialogDescription>
@@ -83,7 +83,7 @@ export function ContactInfoDialog({ defaultValues }: ContactInfoDialogProps) {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

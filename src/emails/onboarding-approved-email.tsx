@@ -41,8 +41,8 @@ export function OnboardingApprovedEmail({
         <Text style={emailStyles.paragraph}>{greeting}</Text>
         <Text style={emailStyles.paragraph}>
           Good news — your onboarding has been reviewed and{' '}
-          <strong>approved</strong>. Your {appName} account is now active and you
-          have full access.
+          <strong>approved</strong>. Your {appName} account is now active and
+          you have full access.
         </Text>
 
         <Section
@@ -71,5 +71,14 @@ export function OnboardingApprovedEmail({
     </EmailLayout>
   );
 }
+
+// Sample data the React Email preview server (`pnpm email`) renders with.
+OnboardingApprovedEmail.PreviewProps = {
+  fullName: 'Ayesha Khan',
+  dashboardUrl: 'http://localhost:3000/dashboard',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies OnboardingApprovedEmailProps;
 
 export default OnboardingApprovedEmail;

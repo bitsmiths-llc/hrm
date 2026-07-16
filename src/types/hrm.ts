@@ -1,6 +1,8 @@
 // Domain types for Bitsmiths HRM (PRD-aligned). These mirror the intended
 // Supabase schema so the later mock → backend swap only touches the hooks.
 
+import { type CustomField } from '@/schema/payroll';
+
 /** Onboarding completion moves the account to `submitted`, an admin review
  *  queue. An admin approves it (→ active) or returns it (→ onboarding) with a
  *  note (BIT-10). */
@@ -14,17 +16,26 @@ export type EmploymentType =
   | 'contract'
   | 'internship';
 
+/** Drives medical-allowance eligibility (Medical Allowance Policy §1) —
+ *  probation and notice-period employees aren't eligible even if
+ *  full-time. */
+export type EmploymentStage = 'probation' | 'confirmed' | 'notice_period';
+
 /** Paid, Sick, and Half Day draw from the shared 22-day pool (half day = 0.5).
  *  Unpaid is separate, uncapped, and the only type that prorates pay. */
 export type LeaveType = 'paid' | 'sick' | 'unpaid' | 'half_day';
 
 export type MedicalClaimFor = 'self' | 'parent' | 'spouse' | 'child';
 
+/** Medical Allowance Policy §3 — eligible expense categories. */
 export type MedicalServiceType =
-  | 'opd'
-  | 'medicine'
-  | 'procedure'
-  | 'hospitalization';
+  | 'consultation'
+  | 'hospitalization'
+  | 'medication'
+  | 'lab_diagnostics'
+  | 'emergency'
+  | 'dental'
+  | 'vision';
 
 export type PayrollCycleStatus = 'open' | 'calculating' | 'locked';
 
@@ -56,6 +67,7 @@ export type Employee = {
   bank: BankInfo | null;
   social: SocialAccounts | null;
   employmentType: EmploymentType;
+  employmentStage: EmploymentStage;
   baseSalary: number; // PKR
   workingHours: number; // standard hours per pay period
   designation: string;
@@ -67,18 +79,6 @@ export type Employee = {
   joinedAt: string | null;
 };
 
-export type LeaveBalance = {
-  poolTotal: number; // 22
-  poolUsed: number; // paid + sick + 0.5 * half days, approved only
-  unpaidTaken: number; // outside the pool
-};
-
-export type MedicalBalance = {
-  accrued: number; // current claimable balance, PKR
-  cap: number; // 50,000
-  monthlyAccrual: number; // 5,000
-};
-
 export type LeaveRequest = {
   id: string;
   employeeId: string;
@@ -88,6 +88,9 @@ export type LeaveRequest = {
   startDate: string;
   days: number; // 0.5 for half day
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee (in the
+   *  decision email and their leave history). */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -102,6 +105,8 @@ export type MedicalClaim = {
   expenseDate: string;
   proofFiles: string[]; // file names/URLs
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee. */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -114,6 +119,8 @@ export type OvertimeLog = {
   project: string;
   task: string;
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee. */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -121,6 +128,8 @@ export type Payslip = {
   id: string;
   employeeId: string;
   employeeName: string;
+  /** Job title at the time the cycle ran — shown on the payslip PDF. */
+  designation: string;
   cycleMonth: string; // e.g. '2026-06'
   baseSalary: number;
   daysWorked: number;
@@ -128,7 +137,19 @@ export type Payslip = {
   totalBase: number;
   medical: number;
   overtimeHours: number;
+  /** Per-hour overtime rate (base ÷ working hours × multiplier), frozen on the
+   *  snapshot. Shown on the itemized payslip alongside hours and pay. */
+  overtimeRate?: number;
+  /** Defaults to the global setting, but admin can override it per employee
+   *  while the cycle is open — frozen here once the cycle is locked. */
+  overtimeMultiplier: number;
   overtimePay: number;
+  /** Tax withheld this cycle (global taxRatePercent × gross earnings),
+   *  frozen here once the cycle is locked. */
+  taxDeduction: number;
+  /** Ad-hoc per-employee line items (bonus, deduction, etc.) admin adds
+   *  during the cycle — each folds into `total`. */
+  customFields: CustomField[];
   total: number;
 };
 
@@ -139,6 +160,29 @@ export type PayrollCycle = {
   totalPayroll: number;
   employeeCount: number;
   lockedAt: string | null;
+};
+
+export type HrmSettings = {
+  /** Applied to the hourly rate when calculating overtime pay during a
+   *  payroll run. Admin-configured only — never shown to employees
+   *  (PRD 5.3.1). */
+  overtimeMultiplier: number;
+  /** Percentage of gross earnings withheld as tax each payroll cycle.
+   *  0 disables tax withholding entirely. */
+  taxRatePercent: number;
+  /** Size of the shared annual leave pool (Paid + Sick + Half Day), in
+   *  days. Resets each year. */
+  leavePoolDays: number;
+  /** Monthly medical allowance accrual, in PKR. */
+  medicalMonthlyAccrual: number;
+  /** Absolute cap on accrued medical allowance, in PKR. */
+  medicalBalanceCap: number;
+};
+
+/** Admin-managed list employees pick from when logging overtime. */
+export type Project = {
+  id: string;
+  name: string;
 };
 
 export type Policy = {

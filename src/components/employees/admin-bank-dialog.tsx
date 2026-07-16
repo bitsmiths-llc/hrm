@@ -9,10 +9,10 @@ import { toast } from 'sonner';
 import { useUpdateEmployeeBank } from '@/hooks/actions/use-update-employee';
 
 import { ControlledTextField } from '@/components/hrm/form-fields';
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -52,7 +52,7 @@ export function AdminBankDialog({
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Edit bank details</DialogTitle>
         </DialogHeader>
@@ -84,7 +84,7 @@ export function AdminBankDialog({
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

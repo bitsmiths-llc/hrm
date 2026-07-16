@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 
 import { useInviteEmployee } from '@/hooks/actions/use-invite-employee';
 
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -52,7 +52,7 @@ export function InviteEmployeeDialog() {
       <DialogTrigger asChild>
         <Button iconLeft={UserPlus}>Invite employee</Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Invite an employee</DialogTitle>
           <DialogDescription>
@@ -113,7 +113,7 @@ export function InviteEmployeeDialog() {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

@@ -30,6 +30,9 @@ export const employmentConfigSchema = z.object({
   employmentType: z.enum(['full_time', 'part_time', 'contract', 'internship'], {
     required_error: 'Select an employment type',
   }),
+  employmentStage: z.enum(['probation', 'confirmed', 'notice_period'], {
+    required_error: 'Select an employment stage',
+  }),
   baseSalary: z.coerce
     .number({ invalid_type_error: 'Enter the base salary' })
     .positive('Base salary must be greater than 0'),

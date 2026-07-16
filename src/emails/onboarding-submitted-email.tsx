@@ -43,7 +43,7 @@ export function OnboardingSubmittedEmail({
       supportEmail={supportEmail}
       preview={`${employeeName} submitted their onboarding for review`}
     >
-      <Section style={{ ...emailStyles.card, borderTopColor: brand.blue }}>
+      <Section style={emailStyles.card}>
         <Heading style={emailStyles.heading}>New onboarding submission</Heading>
         <Text style={emailStyles.paragraph}>{greeting}</Text>
         <Text style={emailStyles.paragraph}>
@@ -55,8 +55,8 @@ export function OnboardingSubmittedEmail({
         <Section
           style={{
             ...emailStyles.callout,
-            borderLeftColor: brand.blue,
-            backgroundColor: '#eff6ff',
+            borderLeftColor: brand.green,
+            backgroundColor: brand.greenBg,
           }}
         >
           <Text style={emailStyles.detailRow}>
@@ -83,5 +83,16 @@ export function OnboardingSubmittedEmail({
     </EmailLayout>
   );
 }
+
+// Sample data the React Email preview server (`pnpm email`) renders with.
+OnboardingSubmittedEmail.PreviewProps = {
+  adminName: 'Bilal Ahmed',
+  employeeName: 'Ayesha Khan',
+  employeeEmail: 'ayesha.khan@example.com',
+  reviewUrl: 'http://localhost:3000/admin/employees/preview',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies OnboardingSubmittedEmailProps;
 
 export default OnboardingSubmittedEmail;

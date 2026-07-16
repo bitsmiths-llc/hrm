@@ -1,14 +1,9 @@
 import { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/hrm/coming-soon';
+import { MedicalPageContent } from '@/components/medical/medical-page-content';
 
 export const metadata: Metadata = { title: 'Medical' };
 
 export default function MedicalPage() {
-  return (
-    <ComingSoon
-      title='Medical Allowance'
-      description='Submit claims against your accrued allowance and track your balance.'
-    />
-  );
+  return <MedicalPageContent />;
 }

@@ -20,7 +20,9 @@ type EmployeeReviewActionsProps = {
  *  standalone onboarding queue — now shown inline on the employees table row and
  *  in the employee detail page header. Callers should only render it while the
  *  employee is `submitted`. */
-export function EmployeeReviewActions({ employee }: EmployeeReviewActionsProps) {
+export function EmployeeReviewActions({
+  employee,
+}: EmployeeReviewActionsProps) {
   const { execute, isPending } = useApproveEmployee(() =>
     toast.success(`${employee.fullName || 'Employee'} approved and activated`),
   );

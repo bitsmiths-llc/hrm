@@ -39,9 +39,9 @@ export function OnboardingReturnedEmail({
       appName={appName}
       baseUrl={baseUrl}
       supportEmail={supportEmail}
-      preview="Your onboarding needs a few changes before it can be approved"
+      preview='Your onboarding needs a few changes before it can be approved'
     >
-      <Section style={{ ...emailStyles.card, borderTopColor: brand.amber }}>
+      <Section style={emailStyles.card}>
         <Heading style={emailStyles.heading}>A few changes needed</Heading>
         <Text style={emailStyles.paragraph}>{greeting}</Text>
         <Text style={emailStyles.paragraph}>
@@ -49,8 +49,16 @@ export function OnboardingReturnedEmail({
           your reviewer has asked for a few changes.
         </Text>
 
-        <Section style={emailStyles.callout}>
-          <Text style={emailStyles.calloutLabel}>What needs changing</Text>
+        <Section
+          style={{
+            ...emailStyles.callout,
+            borderLeftColor: brand.green,
+            backgroundColor: brand.greenBg,
+          }}
+        >
+          <Text style={{ ...emailStyles.calloutLabel, color: brand.greenDark }}>
+            What needs changing
+          </Text>
           <Text style={emailStyles.calloutText}>{reviewNote}</Text>
         </Section>
 
@@ -68,5 +76,16 @@ export function OnboardingReturnedEmail({
     </EmailLayout>
   );
 }
+
+// Sample data the React Email preview server (`pnpm email`) renders with.
+OnboardingReturnedEmail.PreviewProps = {
+  fullName: 'Ayesha Khan',
+  reviewNote:
+    'Your CNIC number appears to have a typo, and your emergency contact number is missing a digit. Please correct both and resubmit.',
+  onboardingUrl: 'http://localhost:3000/onboarding',
+  appName: 'Bitsmiths HRM',
+  baseUrl: 'http://localhost:3000',
+  supportEmail: 'support@bitsmiths.studio',
+} satisfies OnboardingReturnedEmailProps;
 
 export default OnboardingReturnedEmail;

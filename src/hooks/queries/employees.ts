@@ -49,6 +49,10 @@ export function toEmployee(row: EmployeeRow): Employee {
         }
       : null,
     employmentType: work?.employment_type ?? 'full_time',
+    // TODO: employment_details has no employment_stage column yet, so this is a
+    // placeholder. Medical eligibility (lib/medical-eligibility.ts) and the admin
+    // EmploymentConfigForm stage selector stay cosmetic until a migration adds it.
+    employmentStage: 'confirmed',
     baseSalary: work?.base_salary ?? 0,
     workingHours: work?.working_hours ?? 0,
     designation: work?.designation ?? '',

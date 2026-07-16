@@ -1,41 +1,101 @@
+'use client';
+
 import { Receipt } from 'lucide-react';
+import Link from 'next/link';
+import { useMemo } from 'react';
+
+import { useCurrentEmployee } from '@/hooks/queries/employees';
+import { useLeaveBalance, useLeaveRequests } from '@/hooks/queries/leave';
+import { useMedicalBalance } from '@/hooks/queries/medical';
+import { usePayslips } from '@/hooks/queries/payroll';
 
 import { BalanceCard } from '@/components/hrm/balance-card';
 import { StatCard } from '@/components/hrm/stat-card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { formatCurrency } from '@/utils/number-functions';
 
-import {
-  mockLeaveBalance,
-  mockMedicalBalance,
-} from '@/constants/mock/employees';
-import { mockPayslips } from '@/constants/mock/payroll';
+import { paths } from '@/constants/paths';
 
 export function EmployeeBalances() {
-  const latestPayslip = mockPayslips[0];
+  // Leave and medical balances are real, scoped to the signed-in employee. The
+  // medical hook merges the admin-configured cap/accrual in from settings.
+  const { data: me } = useCurrentEmployee();
+  const { data: leaveBalance, isLoading: leaveLoading } = useLeaveBalance(
+    me?.id,
+  );
+  const { data: leaveRequests } = useLeaveRequests(me?.id);
+  const { data: medicalBalance, isLoading: medicalLoading } = useMedicalBalance(
+    me?.id,
+  );
+
+  // Unpaid is excluded from the pool RPC by design, so derive it from the
+  // request history — mirrors the /leave balance cards.
+  const year = new Date().getFullYear();
+  const unpaidTaken = useMemo(
+    () =>
+      (leaveRequests ?? [])
+        .filter(
+          (request) =>
+            request.type === 'unpaid' &&
+            request.status === 'approved' &&
+            request.startDate.startsWith(String(year)),
+        )
+        .reduce((sum, request) => sum + request.days, 0),
+    [leaveRequests, year],
+  );
+
+  // Latest payslip for the signed-in employee. RLS returns only their own
+  // *locked* payslips, so this is empty until a run they're in is locked.
+  const { data: payslips } = usePayslips(me?.id);
+  const latestPayslip = useMemo(
+    () =>
+      [...(payslips ?? [])].sort((a, b) =>
+        b.cycleMonth.localeCompare(a.cycleMonth),
+      )[0],
+    [payslips],
+  );
+
+  if (leaveLoading || medicalLoading || !leaveBalance || !medicalBalance) {
+    return (
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+        <Skeleton className='h-40 rounded-xl' />
+        <Skeleton className='h-40 rounded-xl' />
+        <Skeleton className='h-40 rounded-xl' />
+      </div>
+    );
+  }
 
   return (
     <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
       <BalanceCard
-        title='Leave Pool'
-        used={mockLeaveBalance.poolUsed}
-        total={mockLeaveBalance.poolTotal}
+        title='Leave Pool (Annual)'
+        used={leaveBalance.used}
+        total={leaveBalance.poolTotal}
         format={(days) => `${days} days`}
-        hint={`Unpaid taken this year: ${mockLeaveBalance.unpaidTaken} days`}
+        hint={`Unpaid taken this year: ${unpaidTaken} days`}
       />
       <BalanceCard
         title='Medical Allowance'
-        used={mockMedicalBalance.cap - mockMedicalBalance.accrued}
-        total={mockMedicalBalance.cap}
+        mode='accrued'
+        used={medicalBalance.accrued}
+        total={medicalBalance.cap}
         format={(amount) => formatCurrency(amount) || '0'}
-        hint={`Accrues ${formatCurrency(mockMedicalBalance.monthlyAccrual)}/month`}
+        hint={`Accrues ${formatCurrency(medicalBalance.monthlyAccrual)}/month`}
       />
-      <StatCard
-        label='Latest Payslip'
-        value={formatCurrency(latestPayslip.total)}
-        icon={Receipt}
-        hint={`Cycle ${latestPayslip.cycleMonth}`}
-      />
+      {!!latestPayslip && (
+        <Link
+          href={paths.employee.payslips}
+          className='block rounded-xl transition-shadow hover:shadow-md'
+        >
+          <StatCard
+            label='Latest Payslip'
+            value={formatCurrency(latestPayslip.total)}
+            icon={Receipt}
+            hint={`Cycle ${latestPayslip.cycleMonth}`}
+          />
+        </Link>
+      )}
     </div>
   );
 }

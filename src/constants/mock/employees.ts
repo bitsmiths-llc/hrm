@@ -1,4 +1,4 @@
-import { Employee, LeaveBalance, MedicalBalance } from '@/types/hrm';
+import { Employee } from '@/types/hrm';
 
 export const mockEmployees: Employee[] = [
   {
@@ -24,6 +24,7 @@ export const mockEmployees: Employee[] = [
       linkedin: 'https://linkedin.com/in/johndoe',
     },
     employmentType: 'full_time',
+    employmentStage: 'confirmed',
     baseSalary: 250_000,
     workingHours: 160,
     designation: 'Frontend Engineer',
@@ -56,6 +57,7 @@ export const mockEmployees: Employee[] = [
       twitter: 'https://twitter.com/hamzar',
     },
     employmentType: 'full_time',
+    employmentStage: 'confirmed',
     baseSalary: 320_000,
     workingHours: 160,
     designation: 'Backend Engineer',
@@ -79,6 +81,7 @@ export const mockEmployees: Employee[] = [
     bank: null,
     social: null,
     employmentType: 'part_time',
+    employmentStage: 'probation',
     baseSalary: 120_000,
     workingHours: 80,
     designation: 'UI/UX Designer',
@@ -102,6 +105,7 @@ export const mockEmployees: Employee[] = [
     bank: null,
     social: null,
     employmentType: 'full_time',
+    employmentStage: 'probation',
     baseSalary: 0,
     workingHours: 160,
     designation: 'QA Engineer',
@@ -113,18 +117,6 @@ export const mockEmployees: Employee[] = [
   },
 ];
 
-/** Balances for the mock "current user" (emp-1) on the employee side. */
-export const mockLeaveBalance: LeaveBalance = {
-  poolTotal: 22,
-  poolUsed: 7.5,
-  unpaidTaken: 2,
-};
-
-export const mockMedicalBalance: MedicalBalance = {
-  accrued: 27_500,
-  cap: 50_000,
-  monthlyAccrual: 5_000,
-};
-
-/** The employee the mock "employee role" is signed in as. */
+/** The employee the mock "employee role" is signed in as. Still used by the
+ *  not-yet-wired surfaces (overtime, payslips) to key their mock data. */
 export const mockCurrentEmployee = mockEmployees[0];

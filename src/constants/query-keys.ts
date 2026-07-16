@@ -11,12 +11,20 @@ export enum QueryKeys {
   EMPLOYEE_DOCUMENTS = 'employee-documents',
   IDENTITY_DOC_FILES = 'identity-doc-files', // signed URLs + mime for previews
 
+  // Payroll, leave & settings domain
   LEAVE_REQUESTS = 'leave-requests',
   LEAVE_BALANCE = 'leave-balance',
   MEDICAL_CLAIMS = 'medical-claims',
   MEDICAL_BALANCE = 'medical-balance',
+  MEDICAL_PROOF_URLS = 'medical-proof-urls',
   OVERTIME_LOGS = 'overtime-logs',
   PAYSLIPS = 'payslips',
   PAYROLL_CYCLES = 'payroll-cycles',
+  PAYROLL_SETTINGS = 'payroll-settings', // singleton payroll_settings row (BIT-15)
+  PAYROLL_RUNS = 'payroll-runs', // admin run list / a run by month (BIT-15)
+  RUN_PAYSLIPS = 'run-payslips', // draft/frozen payslips for one run (BIT-15)
+  RUN_EXPORTS = 'run-exports', // Payoneer export artifacts for one run (BIT-16)
   POLICIES = 'policies',
+  HRM_SETTINGS = 'hrm-settings',
+  PROJECTS = 'projects',
 }

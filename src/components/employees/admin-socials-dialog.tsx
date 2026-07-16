@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 
 import { useUpdateEmployeeSocials } from '@/hooks/actions/use-update-employee';
 
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -61,7 +61,7 @@ export function AdminSocialsDialog({
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Edit social accounts</DialogTitle>
         </DialogHeader>
@@ -129,7 +129,7 @@ export function AdminSocialsDialog({
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

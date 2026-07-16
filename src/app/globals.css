@@ -113,3 +113,42 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Thin, overlay-style scrollbar (no track box, no arrow buttons) instead of
+ * the OS default — matches every scrollable surface (page, dialogs, popovers).
+ * Uses --muted-foreground (not --border) for the thumb: --border is nearly
+ * invisible against the dark-mode background, muted-foreground stays legible
+ * in both themes. */
+@layer utilities {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.4);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.7);
+    background-clip: content-box;
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+}

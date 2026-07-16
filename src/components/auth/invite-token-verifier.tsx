@@ -103,10 +103,7 @@ export function InviteTokenVerifier({
     return (
       <Card>
         <CardHeader className='items-center text-center'>
-          <MailWarning
-            className='size-8 text-muted-foreground'
-            aria-hidden
-          />
+          <MailWarning className='size-8 text-muted-foreground' aria-hidden />
           <CardTitle className='text-xl font-semibold'>
             This invitation link is no longer valid
           </CardTitle>

@@ -72,7 +72,7 @@ export function useItemTableColumns() {
       {
         accessorKey: 'email',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Email' />
+          <DataTableColumnHeader column={column} title='Email' align='center' />
         ),
         cell: ({ getValue }) => (
           <CenteredCell formatter={() => (getValue() as string) || 'N/A'} />
@@ -81,7 +81,11 @@ export function useItemTableColumns() {
       {
         accessorKey: 'createdAt',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Created At' />
+          <DataTableColumnHeader
+            column={column}
+            title='Created At'
+            align='center'
+          />
         ),
         cell: (props) => {
           const date = props.getValue() as string;
@@ -99,7 +103,11 @@ export function useItemTableColumns() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Status' />
+          <DataTableColumnHeader
+            column={column}
+            title='Status'
+            align='center'
+          />
         ),
         cell: ({ row }) => {
           const status = row.original.status;

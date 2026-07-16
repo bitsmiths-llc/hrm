@@ -49,7 +49,11 @@ export function useEmployeesTableColumns() {
       {
         accessorKey: 'designation',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Designation' />
+          <DataTableColumnHeader
+            column={column}
+            title='Designation'
+            align='center'
+          />
         ),
         cell: (props) => (
           <CenteredCell
@@ -77,7 +81,7 @@ export function useEmployeesTableColumns() {
       {
         accessorKey: 'employmentType',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Type' />
+          <DataTableColumnHeader column={column} title='Type' align='center' />
         ),
         cell: (props) => (
           <CenteredCell
@@ -96,11 +100,7 @@ export function useEmployeesTableColumns() {
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title='Status' />
         ),
-        cell: ({ row }) => (
-          <div className='flex justify-center'>
-            <StatusBadge status={row.original.status} />
-          </div>
-        ),
+        cell: ({ row }) => <StatusBadge status={row.original.status} />,
         enableSorting: false,
         filterFn: (row, id, value: string[]) =>
           value.includes(row.getValue(id)),
@@ -108,7 +108,11 @@ export function useEmployeesTableColumns() {
       {
         accessorKey: 'invitedAt',
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title='Invited' />
+          <DataTableColumnHeader
+            column={column}
+            title='Invited'
+            align='center'
+          />
         ),
         cell: (props) => (
           <CenteredCell

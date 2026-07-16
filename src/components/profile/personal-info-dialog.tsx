@@ -10,10 +10,10 @@ import { toast } from 'sonner';
 import { useUpdateMyPersonalInfo } from '@/hooks/actions/use-update-my-profile';
 
 import { ControlledTextField } from '@/components/hrm/form-fields';
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -55,7 +55,7 @@ export function PersonalInfoDialog({ defaultValues }: PersonalInfoDialogProps) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Edit personal information</DialogTitle>
         </DialogHeader>
@@ -90,7 +90,7 @@ export function PersonalInfoDialog({ defaultValues }: PersonalInfoDialogProps) {
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }
