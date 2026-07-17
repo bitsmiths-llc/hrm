@@ -153,6 +153,21 @@ export type Payslip = {
   total: number;
 };
 
+export type PayslipMetaField = {
+  label: string;
+  value: string;
+};
+
+export type PayslipLineItem = {
+  label: string;
+  note?: string;
+  amount: number;
+};
+
+export type PayslipLogoVariant = 'default' | 'light' | 'watermark';
+
+export type PayslipContactKind = 'site' | 'phone' | 'pin';
+
 export type PayrollCycle = {
   id: string;
   month: string; // e.g. '2026-06'
