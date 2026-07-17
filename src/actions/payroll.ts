@@ -1,29 +1,90 @@
 'use server';
 
-import { authActionClient } from '@/lib/server/safe-action';
+import { format } from 'date-fns';
 
+import {
+  payslipFileName,
+  renderPayslipPdf,
+} from '@/lib/payroll/render-payslip-pdf';
+import { toCustomFields, toPayslip } from '@/lib/payroll/to-payslip';
+import { sendInvoiceEmail } from '@/lib/resend/send-invoice-emails';
+import { authActionClient } from '@/lib/server/safe-action';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import Logger from '@/utils/logger';
+import { formatCurrency } from '@/utils/number-functions';
+
+import { appConfig } from '@/config/app';
+import { paths } from '@/constants/paths';
 import {
   addCustomFieldSchema,
   createRunSchema,
   type CustomField,
-  isCustomField,
   overrideDaysWorkedSchema,
   overrideOtMultiplierSchema,
   removeCustomFieldSchema,
   runIdSchema,
+  sendInvoiceSchema,
   updatePayrollSettingsSchema,
 } from '@/schema/payroll';
-
-/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array,
- *  keeping the well-formed entries and dropping any malformed one. */
-const toCustomFields = (value: unknown): CustomField[] =>
-  Array.isArray(value) ? value.filter(isCustomField) : [];
 
 /** Admin gate. The role check is server-side even though RLS / the RPC's own
  *  `is_admin()` guard also enforce it (mirrors `actions/overtime.ts`). */
 const requireAdmin = (role?: string) => {
   if (role !== 'admin') throw new Error('Forbidden');
 };
+
+/**
+ * Mail each listed payslip to its employee as a PDF invoice, and report how many
+ * landed. Runs service-role (`supabaseAdmin`) to read employee emails alongside
+ * the payslip figures in one query.
+ *
+ * Every payslip is rendered and sent independently (`allSettled`), so one
+ * missing address or one unrenderable PDF can't take the rest of a run's
+ * invoices down with it. The figures are read back from the DB rather than
+ * accepted from the caller, so a client can never mail a doctored payslip.
+ */
+async function dispatchInvoices(payslipIds: string[]) {
+  if (payslipIds.length === 0) return { sent: 0, failed: 0 };
+
+  const { data: rows, error } = await supabaseAdmin
+    .from('payslips')
+    .select('*, employees(full_name, email)')
+    .in('id', payslipIds);
+  if (error) throw new Error(error.message);
+
+  const payslipsUrl = new URL(
+    paths.employee.payslips,
+    appConfig.appUrl,
+  ).toString();
+
+  const results = await Promise.allSettled(
+    (rows ?? []).map(async (row) => {
+      const to = row.employees?.email;
+      if (!to) throw new Error(`Payslip ${row.id} has no employee email`);
+
+      const payslip = toPayslip(row);
+      const content = await renderPayslipPdf(payslip);
+
+      await sendInvoiceEmail({
+        to,
+        fullName: payslip.employeeName || null,
+        cycleLabel: format(`${payslip.cycleMonth}-01`, 'MMMM yyyy'),
+        // `formatCurrency` renders a falsy amount as '' — a zero-net payslip
+        // still deserves a figure rather than a blank callout.
+        netPayLabel: formatCurrency(payslip.total) || 'Rs 0',
+        payslipsUrl,
+        pdf: { filename: payslipFileName(payslip), content },
+      });
+    }),
+  );
+
+  const failures = results.filter((r) => r.status === 'rejected');
+  failures.forEach((failure) =>
+    Logger.error('Failed to send invoice email', failure.reason),
+  );
+
+  return { sent: results.length - failures.length, failed: failures.length };
+}
 
 /** Last calendar day of the month a first-of-month ISO date falls in. Derived
  *  server-side so a client can never spoof `days_in_month` (it drives proration). */
@@ -121,6 +182,13 @@ export const calculatePayroll = authActionClient
 /**
  * Finalize a run: sweep-stamp approved medical/OT, freeze `total_payroll`, flip
  * to `locked`. The RPC is transactional and refuses a second lock (55000).
+ *
+ * Locking is what makes the figures final and the payslips visible to employees
+ * under RLS, so it's also what mails their invoices out. That fan-out runs after
+ * the RPC has committed and is therefore best-effort: a bounced email is logged,
+ * never thrown, so the lock itself still succeeds. `invoices` comes back in the
+ * result so the UI can report what actually went out, and the per-row Send
+ * button re-sends anything that didn't.
  */
 export const lockPayroll = authActionClient
   .schema(runIdSchema)
@@ -130,7 +198,52 @@ export const lockPayroll = authActionClient
       p_run_id: parsedInput.run_id,
     });
     if (error) throw new Error(error.message);
-    return { run_id: parsedInput.run_id };
+
+    let invoices = { sent: 0, failed: 0 };
+    try {
+      const { data: rows, error: readError } = await supabase
+        .from('payslips')
+        .select('id')
+        .eq('payroll_run_id', parsedInput.run_id);
+      if (readError) throw new Error(readError.message);
+      invoices = await dispatchInvoices((rows ?? []).map((row) => row.id));
+    } catch (invoiceError) {
+      Logger.error('Failed to send invoice emails on lock', invoiceError);
+    }
+
+    return { run_id: parsedInput.run_id, invoices };
+  });
+
+/**
+ * Mail one payslip's invoice to its employee — the per-row Send button, i.e. a
+ * manual re-send of what locking the run already fanned out. Refused until the
+ * run is locked: the figures aren't final before that, and the employee can't
+ * see the payslip under RLS either.
+ *
+ * Unlike the lock fan-out, a failure here IS the outcome of the click, so it
+ * throws rather than being logged and swallowed.
+ */
+export const sendPayslipInvoice = authActionClient
+  .schema(sendInvoiceSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: payslip, error } = await supabase
+      .from('payslips')
+      .select('id, payroll_runs(status)')
+      .eq('id', parsedInput.payslip_id)
+      .single();
+    if (error) throw new Error(error.message);
+    if (payslip.payroll_runs?.status !== 'locked')
+      throw new Error('Lock the run before sending invoices.');
+
+    const { failed } = await dispatchInvoices([payslip.id]);
+    if (failed > 0)
+      throw new Error(
+        'Could not send the invoice. Check the employee has a valid email address, then try again.',
+      );
+
+    return { payslip_id: payslip.id };
   });
 
 /**

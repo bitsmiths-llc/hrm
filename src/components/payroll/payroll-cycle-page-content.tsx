@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ArrowLeft, Calculator, CalendarX2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { useAddPayslipCustomField } from '@/hooks/actions/use-add-payslip-custom-field';
 import { useCalculatePayroll } from '@/hooks/actions/use-calculate-payroll';
@@ -43,11 +44,31 @@ export function PayrollCyclePageContent({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const calc = useCalculatePayroll();
-  const lock = useLockPayroll();
+  // Locking mails every employee their invoice. That fan-out is best-effort
+  // server-side (a bounce never undoes the lock), so the toast has to report
+  // what actually went out rather than just claiming success.
+  const lock = useLockPayroll(({ sent, failed }) => {
+    if (failed > 0) {
+      toast.warning(
+        `Run locked · ${sent} invoice(s) emailed, ${failed} failed. Retry those from the row's send button.`,
+      );
+      return;
+    }
+    toast.success(
+      sent > 0
+        ? `Run locked · ${sent} invoice${sent === 1 ? '' : 's'} emailed`
+        : 'Run locked',
+    );
+  });
   const create = useCreateRun();
   const overrideDays = useOverrideDaysWorked();
   const overrideMult = useOverrideOtMultiplier();
-  const addField = useAddPayslipCustomField();
+  // The add is silent otherwise: the popover stays open and the row's total only
+  // moves once the recalc lands, so nothing confirms the line item stuck. Shared
+  // by the per-row cells and the bulk popover, hence the surface-neutral wording.
+  const addField = useAddPayslipCustomField(() =>
+    toast.success('Adjustment added'),
+  );
   const removeField = useRemovePayslipCustomField();
 
   const monthLabel = format(`${month}-01`, 'MMMM yyyy');
@@ -171,7 +192,7 @@ export function PayrollCyclePageContent({
                   </Button>
                 }
                 title='Lock this payroll run?'
-                description='Figures become read-only once locked, approved medical and overtime for the month are swept into this run, and employees can see their payslips. You can still export for Payoneer afterward.'
+                description='Figures become read-only once locked, approved medical and overtime for the month are swept into this run, and employees can see their payslips. Every employee is emailed their payslip PDF straight away. You can still export for Payoneer afterward.'
                 confirmLabel='Lock run'
                 destructive
                 isLoading={lock.isPending}

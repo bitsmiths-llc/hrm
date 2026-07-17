@@ -1,4 +1,21 @@
+import { currentMonth, nextMonth } from '@/utils/date-functions';
+
 import type { Payslip } from '@/types/hrm';
+
+// `payroll_runs.period_month` is unique, so a month that already has a run can
+// never get a second one. Walk forward from the current month to the first one
+// that's still free — that's what the create dialog should land on. Bounded at
+// 10 years so a pathological `taken` set can't spin forever; the fallback just
+// means the dialog opens on a month the user has to change themselves.
+const MAX_MONTHS_AHEAD = 120;
+
+export const firstAvailableMonth = (takenMonths: string[]) => {
+  let month = currentMonth();
+  for (let i = 0; i < MAX_MONTHS_AHEAD && takenMonths.includes(month); i++) {
+    month = nextMonth(month);
+  }
+  return month;
+};
 
 // These do intermediate FP arithmetic on PKR values, which the currency rule
 // (.claude/docs/rules/config-and-routes.md) normally forbids. It's deliberate
@@ -32,7 +49,10 @@ export const calcPayslipTotal = (
   taxDeduction: number,
   customFields: Payslip['customFields'],
 ) => {
-  const customTotal = customFields.reduce((sum, field) => sum + field.amount, 0);
+  const customTotal = customFields.reduce(
+    (sum, field) => sum + field.amount,
+    0,
+  );
   return Math.round(
     totalBase + medical + overtimePay - taxDeduction + customTotal,
   );

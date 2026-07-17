@@ -74,7 +74,11 @@ export function LeaveSettingsForm() {
               )}
             />
             <div>
-              <Button type='submit' isLoading={isPending}>
+              <Button
+                type='submit'
+                isLoading={isPending}
+                disabled={!form.formState.isDirty}
+              >
                 Save
               </Button>
             </div>

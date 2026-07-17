@@ -1,38 +1,45 @@
 'use client';
 
 import { Send } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from 'sonner';
+
+import { useSendInvoice } from '@/hooks/actions/use-send-invoice';
 
 import { Button } from '@/components/ui/button';
 
-const mockDelay = (ms = 500) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
 type SendInvoiceButtonProps = {
+  payslipId: string;
   employeeName: string;
+  /** Invoices only go out on a locked run — the figures aren't final before
+   *  that, and the employee can't see the payslip under RLS either. */
+  disabled?: boolean;
 };
 
-/** Mocked — no email backend yet, so this just confirms the action. */
-export function SendInvoiceButton({ employeeName }: SendInvoiceButtonProps) {
-  const [isSending, setIsSending] = useState(false);
-
-  const handleSend = async () => {
-    setIsSending(true);
-    await mockDelay();
-    setIsSending(false);
-    toast.success(`Invoice sent to ${employeeName}`);
-  };
+/** Mails one employee their payslip PDF. Locking the run already sends these to
+ *  everyone, so this is the manual re-send for a single row. */
+export function SendInvoiceButton({
+  payslipId,
+  employeeName,
+  disabled,
+}: SendInvoiceButtonProps) {
+  const send = useSendInvoice(() =>
+    toast.success(`Invoice sent to ${employeeName}`),
+  );
 
   return (
     <Button
       type='button'
       variant='outline'
       size='icon'
-      isLoading={isSending}
-      onClick={handleSend}
-      title='Send invoice'
-      aria-label='Send invoice'
+      isLoading={send.isPending}
+      disabled={disabled}
+      onClick={() => send.execute({ payslip_id: payslipId })}
+      title={
+        disabled
+          ? 'Lock the run to send invoices'
+          : `Send invoice to ${employeeName}`
+      }
+      aria-label={`Send invoice to ${employeeName}`}
     >
       <Send className='size-4' />
     </Button>

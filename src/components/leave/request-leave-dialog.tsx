@@ -31,6 +31,8 @@ import { ControlledSelect } from '@/components/ui/form/controlled-select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+import { formatDate } from '@/utils/date-functions';
+
 import { hrmConfig } from '@/constants/hrm-config';
 import { leaveTypeLabels } from '@/constants/hrm-labels';
 import {
@@ -62,8 +64,10 @@ export function RequestLeaveDialog() {
     if (isHalfDay) form.setValue('days', hrmConfig.halfDayValue);
   }, [isHalfDay, form]);
 
-  const { execute, isPending } = useCreateLeaveRequest(() => {
-    toast.success(`${leaveTypeLabels[type]} request submitted for approval`);
+  const { execute, isPending } = useCreateLeaveRequest((input) => {
+    toast.success(`${leaveTypeLabels[input.type]} request submitted`, {
+      description: `${input.days} day(s) from ${formatDate(input.startDate)} — pending admin approval.`,
+    });
     form.reset();
     setOpen(false);
   });

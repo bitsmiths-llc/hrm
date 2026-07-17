@@ -2,20 +2,18 @@ import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { authQuery } from '@/lib/client/auth-query';
+import {
+  type PayslipDbRow,
+  toCustomFields,
+  toCycleMonth,
+  toPayslip,
+} from '@/lib/payroll/to-payslip';
 
 import { QueryKeys } from '@/constants/query-keys';
-import { type CustomField, isCustomField } from '@/schema/payroll';
+import { type CustomField } from '@/schema/payroll';
 
 import { PayrollCycle, Payslip } from '@/types/hrm';
 import { type Tables } from '@/types/supabase';
-
-/** 'YYYY-MM-DD' (first of month) → 'YYYY-MM', the shape the existing UI uses. */
-const toCycleMonth = (periodMonth: string) => periodMonth.slice(0, 7);
-
-/** Coerce a jsonb `custom_fields` value (typed `Json`) into a line-item array,
- *  keeping the well-formed entries and dropping any malformed one. */
-const toCustomFields = (value: unknown): CustomField[] =>
-  Array.isArray(value) ? value.filter(isCustomField) : [];
 
 // ---------------------------------------------------------------------------
 // Run list + a run by month (admin only — RLS `runs_admin_all`).
@@ -83,6 +81,9 @@ export type RunPayslipRow = {
   employeeId: string;
   employeeName: string;
   designation: string;
+  /** 'YYYY-MM'. Read off the payslip's denormalized `period_month` so a grid row
+   *  carries everything `runRowToPayslip` needs to build the invoice PDF. */
+  cycleMonth: string;
   baseSalary: number;
   daysInMonth: number;
   daysWorked: number;
@@ -98,16 +99,13 @@ export type RunPayslipRow = {
   totalPay: number;
 };
 
-type PayslipRow = Tables<'payslips'> & {
-  employees?: Pick<Tables<'employees'>, 'full_name'> | null;
-};
-
-function toRunPayslipRow(row: PayslipRow): RunPayslipRow {
+function toRunPayslipRow(row: PayslipDbRow): RunPayslipRow {
   return {
     id: row.id,
     employeeId: row.employee_id,
     employeeName: row.employees?.full_name ?? '',
     designation: row.designation ?? '',
+    cycleMonth: toCycleMonth(row.period_month),
     baseSalary: row.base_salary,
     daysInMonth: row.days_in_month,
     daysWorked: Number(row.days_worked),
@@ -115,7 +113,9 @@ function toRunPayslipRow(row: PayslipRow): RunPayslipRow {
     totalBase: row.total_base,
     medical: row.medical,
     overtimeHours: Number(row.overtime_hours),
-    overtimeMultiplier: row.overtime_multiplier ? Number(row.overtime_multiplier) : 0,
+    overtimeMultiplier: row.overtime_multiplier
+      ? Number(row.overtime_multiplier)
+      : 0,
     overtimeRate: Number(row.overtime_rate),
     overtimePay: row.overtime_pay,
     taxDeduction: row.tax_deduction,
@@ -123,6 +123,29 @@ function toRunPayslipRow(row: PayslipRow): RunPayslipRow {
     totalPay: row.total_pay,
   };
 }
+
+/** Widen a grid row to the `Payslip` domain shape the PDF renderer takes, so the
+ *  admin can preview an invoice straight from the run table. The two differ only
+ *  in `totalPay` vs `total` plus the grid-only `unpaidLeaveDays`. */
+export const runRowToPayslip = (row: RunPayslipRow): Payslip => ({
+  id: row.id,
+  employeeId: row.employeeId,
+  employeeName: row.employeeName,
+  designation: row.designation,
+  cycleMonth: row.cycleMonth,
+  baseSalary: row.baseSalary,
+  daysWorked: row.daysWorked,
+  daysInMonth: row.daysInMonth,
+  totalBase: row.totalBase,
+  medical: row.medical,
+  overtimeHours: row.overtimeHours,
+  overtimeRate: row.overtimeRate,
+  overtimeMultiplier: row.overtimeMultiplier,
+  overtimePay: row.overtimePay,
+  taxDeduction: row.taxDeduction,
+  customFields: row.customFields,
+  total: row.totalPay,
+});
 
 const fetchRunPayslips = authQuery(
   async ({ supabase, params }) => {
@@ -151,36 +174,6 @@ export const useRunPayslips = (runId?: string) =>
 // tab). RLS scopes the employee to their own *locked* payslips; an admin reads
 // anyone's. Mapped onto the `Payslip` domain type the PDF / table / export use.
 // ---------------------------------------------------------------------------
-type EmployeePayslipRow = Tables<'payslips'> & {
-  employees?: Pick<Tables<'employees'>, 'full_name'> | null;
-};
-
-function toPayslip(row: EmployeePayslipRow): Payslip {
-  return {
-    id: row.id,
-    employeeId: row.employee_id,
-    employeeName: row.employees?.full_name ?? '',
-    designation: row.designation ?? '',
-    // `period_month` is denormalized onto the payslip; employees can't read
-    // payroll_runs (admin-only RLS), so an embed would come back null here.
-    cycleMonth: toCycleMonth(row.period_month),
-    baseSalary: row.base_salary,
-    daysWorked: Number(row.days_worked),
-    daysInMonth: row.days_in_month,
-    totalBase: row.total_base,
-    medical: row.medical,
-    overtimeHours: Number(row.overtime_hours),
-    overtimeRate: Number(row.overtime_rate),
-    overtimeMultiplier: row.overtime_multiplier
-      ? Number(row.overtime_multiplier)
-      : 0,
-    overtimePay: row.overtime_pay,
-    taxDeduction: row.tax_deduction,
-    customFields: toCustomFields(row.custom_fields),
-    total: row.total_pay,
-  };
-}
-
 const fetchEmployeePayslips = authQuery(
   async ({ supabase, params }) => {
     const { data, error } = await supabase

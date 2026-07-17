@@ -1,12 +1,10 @@
 'use client';
 
-import { pdf } from '@react-pdf/renderer';
 import { Eye } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-
-import { PayslipPdfDocument } from './payslip-pdf-document';
 
 import { Payslip } from '@/types/hrm';
 
@@ -21,10 +19,24 @@ export function ViewInvoiceButton({ payslip }: ViewInvoiceButtonProps) {
 
   const handleView = async () => {
     setIsGenerating(true);
-    const blob = await pdf(<PayslipPdfDocument payslip={payslip} />).toBlob();
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    setIsGenerating(false);
+    try {
+      // Pulled in on click, not at import: the renderer is ~500 kB of client JS,
+      // and this button sits on every row of a grid whose actual job is editing
+      // figures. Most visits never preview a PDF, so they shouldn't pay for one.
+      const [{ pdf }, { PayslipPdfDocument }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('./payslip-pdf-document'),
+      ]);
+      const blob = await pdf(<PayslipPdfDocument payslip={payslip} />).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch {
+      toast.error('Could not open the invoice preview.');
+    } finally {
+      // Always clears: without it a failed render leaves the row's button
+      // spinning with no way back.
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -34,8 +46,8 @@ export function ViewInvoiceButton({ payslip }: ViewInvoiceButtonProps) {
       size='icon'
       isLoading={isGenerating}
       onClick={handleView}
-      title='View invoice'
-      aria-label='View invoice'
+      title={`View ${payslip.employeeName}'s invoice`}
+      aria-label={`View ${payslip.employeeName}'s invoice`}
     >
       <Eye className='size-4' />
     </Button>

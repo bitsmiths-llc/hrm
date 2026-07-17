@@ -27,4 +27,5 @@ export enum QueryKeys {
   POLICIES = 'policies',
   HRM_SETTINGS = 'hrm-settings',
   PROJECTS = 'projects',
+  FX_RATES = 'fx-rates', // live exchange rates, keyed by base currency (BIT-16)
 }

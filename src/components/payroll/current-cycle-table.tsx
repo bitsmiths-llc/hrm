@@ -1,4 +1,4 @@
-import { type RunPayslipRow } from '@/hooks/queries/payroll';
+import { type RunPayslipRow, runRowToPayslip } from '@/hooks/queries/payroll';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -14,6 +14,8 @@ import { formatCurrency } from '@/utils/number-functions';
 
 import { CustomFieldsCell } from './custom-fields-cell';
 import { EditableNumberCell } from './editable-number-cell';
+import { SendInvoiceButton } from './send-invoice-button';
+import { ViewInvoiceButton } from './view-invoice-button';
 
 type PayslipGridProps = {
   rows: RunPayslipRow[];
@@ -68,7 +70,8 @@ export function CurrentCycleTable({
             >
               Deductions
             </TableHead>
-            <TableHead colSpan={1} className='h-8 border-l border-border' />
+            {/* Net Salary + Actions — ungrouped, so this spans both. */}
+            <TableHead colSpan={2} className='h-8 border-l border-border' />
           </TableRow>
           <TableRow>
             <TableHead className='w-10'>
@@ -94,6 +97,7 @@ export function CurrentCycleTable({
             <TableHead className='border-l border-border text-center'>
               Net Salary
             </TableHead>
+            <TableHead className='text-center'>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -150,7 +154,8 @@ export function CurrentCycleTable({
                   )}
                 </TableCell>
                 <TableCell className='text-center'>
-                  {row.overtimeHours}h · {formatCurrency(row.overtimePay) || '—'}
+                  {row.overtimeHours}h ·{' '}
+                  {formatCurrency(row.overtimePay) || '—'}
                 </TableCell>
                 <TableCell className='text-center'>
                   <div className='flex justify-center'>
@@ -219,6 +224,16 @@ export function CurrentCycleTable({
                 </TableCell>
                 <TableCell className='border-l border-border text-center font-semibold'>
                   {formatCurrency(row.totalPay)}
+                </TableCell>
+                <TableCell>
+                  <div className='flex items-center justify-center gap-1'>
+                    <ViewInvoiceButton payslip={runRowToPayslip(row)} />
+                    <SendInvoiceButton
+                      payslipId={row.id}
+                      employeeName={row.employeeName}
+                      disabled={!locked}
+                    />
+                  </div>
                 </TableCell>
               </TableRow>
             );

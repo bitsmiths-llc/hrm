@@ -34,14 +34,14 @@ import {
 
 import { formatCurrency } from '@/utils/number-functions';
 
-/** The Payoneer balances an employee can be paid from. The recipient bank
- *  account is always PKR; this is only the *source* currency. */
-const BALANCE_CURRENCIES = ['USD', 'GBP', 'EUR'] as const;
-type BalanceCurrency = (typeof BALANCE_CURRENCIES)[number];
-const DEFAULT_CURRENCY: BalanceCurrency = 'USD';
+import {
+  BALANCE_CURRENCIES,
+  type BalanceCurrency,
+  DEFAULT_BALANCE_CURRENCY,
+  isBalanceCurrency,
+} from '@/constants/payroll-export';
 
-const isBalanceCurrency = (value: string): value is BalanceCurrency =>
-  (BALANCE_CURRENCIES as readonly string[]).includes(value);
+import { PayoneerBalanceBreakdown } from './payoneer-balance-breakdown';
 
 /** The only payslip fields the picker needs. `total` is the recipient PKR amount
  *  (shown for context only) — the file's authoritative amount is read from the
@@ -68,8 +68,9 @@ export function ExportPayoneerSheet({
     {},
   );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkCurrency, setBulkCurrency] =
-    useState<BalanceCurrency>(DEFAULT_CURRENCY);
+  const [bulkCurrency, setBulkCurrency] = useState<BalanceCurrency>(
+    DEFAULT_BALANCE_CURRENCY,
+  );
 
   const exportAction = useExportPayoneer(() => {
     setOpen(false);
@@ -77,7 +78,7 @@ export function ExportPayoneerSheet({
   });
 
   const currencyFor = (employeeId: string) =>
-    currencies[employeeId] ?? DEFAULT_CURRENCY;
+    currencies[employeeId] ?? DEFAULT_BALANCE_CURRENCY;
 
   const toggleRow = (employeeId: string) => {
     setSelectedIds((prev) => {
@@ -112,7 +113,8 @@ export function ExportPayoneerSheet({
   };
 
   // Group by source balance: how many employees each balance pays, and the
-  // total PKR those employees receive.
+  // total PKR those employees receive. The card converts each total into its
+  // own currency for display.
   const breakdown = BALANCE_CURRENCIES.map((currency) => {
     const inCurrency = rows.filter(
       (row) => currencyFor(row.employeeId) === currency,
@@ -120,7 +122,7 @@ export function ExportPayoneerSheet({
     return {
       currency,
       count: inCurrency.length,
-      total: inCurrency.reduce((sum, row) => sum + row.total, 0),
+      totalPkr: inCurrency.reduce((sum, row) => sum + row.total, 0),
     };
   }).filter((group) => group.count > 0);
 
@@ -220,27 +222,7 @@ export function ExportPayoneerSheet({
         </div>
 
         {breakdown.length > 0 && (
-          <div className='rounded-lg border border-border px-4 py-3'>
-            <p className='mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground'>
-              Breakdown by source balance
-            </p>
-            <div className='flex flex-col gap-1'>
-              {breakdown.map((group) => (
-                <div
-                  key={group.currency}
-                  className='flex items-center justify-between text-sm'
-                >
-                  <span className='text-muted-foreground'>
-                    {group.currency} balance · {group.count}{' '}
-                    {group.count === 1 ? 'employee' : 'employees'}
-                  </span>
-                  <span className='font-medium'>
-                    {formatCurrency(group.total)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <PayoneerBalanceBreakdown groups={breakdown} />
         )}
 
         <SheetFooter className='mt-auto'>

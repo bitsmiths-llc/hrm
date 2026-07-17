@@ -10,6 +10,16 @@ export const appConfig = {
   defaultLocale: 'en-PK',
   defaultCurrency: 'PKR',
   defaultCountryCode: 'PK',
+  /** Live exchange rates, used to show a Payoneer source balance in its own
+   *  currency. Keyless public endpoint; PKR is not an ECB reference currency,
+   *  which rules out Frankfurter and similar ECB-backed APIs. */
+  fx: {
+    /** Base URL — the base currency is appended as a path segment. */
+    ratesUrl: 'https://open.er-api.com/v6/latest',
+    /** Upstream only refreshes once a day, so a shorter window would just
+     *  re-fetch identical numbers. */
+    staleTimeMs: 1000 * 60 * 60 * 6,
+  },
   appUrl: env.NEXT_PUBLIC_APP_URL,
   appName: env.NEXT_PUBLIC_APP_NAME,
   emails: {

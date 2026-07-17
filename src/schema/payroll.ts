@@ -88,3 +88,12 @@ export const removeCustomFieldSchema = z.object({
   index: z.coerce.number().int().nonnegative(),
 });
 export type RemoveCustomFieldInput = z.infer<typeof removeCustomFieldSchema>;
+
+/** Mail one payslip's invoice to its employee (the per-row Send button — a
+ *  manual re-send of what locking the run already sent out). Only the id is
+ *  accepted: the figures are read back server-side so a client can never mail
+ *  a doctored payslip. */
+export const sendInvoiceSchema = z.object({
+  payslip_id: z.string().uuid(),
+});
+export type SendInvoiceInput = z.infer<typeof sendInvoiceSchema>;
