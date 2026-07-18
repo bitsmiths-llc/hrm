@@ -22,6 +22,7 @@ import { DataTableColumnHeader } from '@/components/ui/data-table/column-header'
 import { TableSkeleton } from '@/components/ui/data-table/table-skeleton';
 
 import { cn } from '@/lib/utils';
+import { currentYear } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
 import { DownloadPayslipButton } from './download-payslip-button';
@@ -135,7 +136,12 @@ export function PayslipsTable({
     { id: 'cycleMonth', desc: true },
   ]);
   const [selected, setSelected] = useState<Payslip | null>(null);
-  const { month, setMonth, filtered } = useMonthFilter(payslips, getCycleDate);
+  // Default to the current year; the filter can widen to all time or a month.
+  const { month, setMonth, filtered } = useMonthFilter(
+    payslips,
+    getCycleDate,
+    currentYear(),
+  );
 
   const table = useReactTable({
     data: filtered,
@@ -172,8 +178,8 @@ export function PayslipsTable({
       {filtered.length === 0 ? (
         <EmptyState
           icon={Receipt}
-          title='No payslips this month'
-          description='Try a different month, or switch back to all time.'
+          title='No payslips in this period'
+          description='Try a different month or year, or switch back to all time.'
         />
       ) : (
         <div className='rounded-lg border border-border'>

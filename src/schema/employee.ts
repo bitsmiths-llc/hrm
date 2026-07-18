@@ -26,6 +26,28 @@ export const inviteEmployeeSchema = z.object({
 
 export type InviteEmployeeInput = z.infer<typeof inviteEmployeeSchema>;
 
+/** An optional per-employee allowance override (leave pool / medical accrual /
+ *  medical cap). A blank field — RHF's empty-input value — means "inherit the
+ *  global setting" and resolves to `null`; a typed number, including `0`, is a
+ *  real override. `z.coerce.number()` on its own turns `''` into `0` (a silent
+ *  override to zero), so the empty case is matched and mapped to null *before*
+ *  coercion. Kept independently optional (no cap ≥ accrual cross-field refine),
+ *  mirroring the partial-update settings action — the balance math is safe when
+ *  cap < accrual. */
+const allowanceOverride = (unit: string, max?: number) => {
+  let value = z.coerce
+    .number({ invalid_type_error: `Enter a whole number of ${unit}` })
+    .int(`Whole ${unit} only`)
+    .nonnegative('Cannot be negative');
+  if (max !== undefined) {
+    value = value.max(max, 'That looks too high — double check it');
+  }
+  return z
+    .union([z.literal('').transform(() => null), value])
+    .nullable()
+    .optional();
+};
+
 export const employmentConfigSchema = z.object({
   employmentType: z.enum(['full_time', 'part_time', 'contract', 'internship'], {
     required_error: 'Select an employment type',
@@ -39,12 +61,20 @@ export const employmentConfigSchema = z.object({
   workingHours: z.coerce
     .number({ invalid_type_error: 'Enter the standard working hours' })
     .positive('Working hours must be greater than 0')
-    .max(400, 'Working hours look too high for one pay period'),
+    .max(400, 'Working hours look too high for one month'),
   designation: z.string().min(2, 'Enter a designation'),
   department: z.string().optional().or(z.literal('')),
+  // Per-employee allowance overrides — blank inherits the global setting.
+  leavePoolDaysOverride: allowanceOverride('days', 60),
+  medicalAccrualMonthlyOverride: allowanceOverride('PKR'),
+  medicalCapOverride: allowanceOverride('PKR'),
 });
 
-export type EmploymentConfigInput = z.infer<typeof employmentConfigSchema>;
+// Input (form field values) and output (parsed) types differ only on the
+// allowance overrides: the form holds '' for a blank field, which the schema
+// transforms to null. The form is typed on the input; onSubmit receives output.
+export type EmploymentConfigInput = z.input<typeof employmentConfigSchema>;
+export type EmploymentConfigValues = z.output<typeof employmentConfigSchema>;
 
 // Base object kept separate so admin actions can `.extend` it with employeeId
 // (the refined schema below is a ZodEffects and has no `.extend`).

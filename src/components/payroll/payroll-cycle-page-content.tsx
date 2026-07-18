@@ -11,6 +11,7 @@ import { useCalculatePayroll } from '@/hooks/actions/use-calculate-payroll';
 import { useCreateRun } from '@/hooks/actions/use-create-run';
 import { useLockPayroll } from '@/hooks/actions/use-lock-payroll';
 import { useOverrideDaysWorked } from '@/hooks/actions/use-override-days-worked';
+import { useOverrideOtHours } from '@/hooks/actions/use-override-ot-hours';
 import { useOverrideOtMultiplier } from '@/hooks/actions/use-override-ot-multiplier';
 import { useRemovePayslipCustomField } from '@/hooks/actions/use-remove-payslip-custom-field';
 import { useRunByMonth, useRunPayslips } from '@/hooks/queries/payroll';
@@ -19,7 +20,7 @@ import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { PageHeader } from '@/components/hrm/page-header';
 import { StatusBadge } from '@/components/hrm/status-badge';
-import { BulkAdjustmentPopover } from '@/components/payroll/bulk-adjustment-popover';
+import { BulkAdjustmentDialog } from '@/components/payroll/bulk-adjustment-dialog';
 import { BulkOtRatePopover } from '@/components/payroll/bulk-ot-rate-popover';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/utils/number-functions';
 
 import { paths } from '@/constants/paths';
+import { payslipLineItemCopy } from '@/constants/payroll-line-items';
 
 import { CurrentCycleTable } from './current-cycle-table';
 import { ExportArtifacts } from './export-artifacts';
@@ -63,13 +65,21 @@ export function PayrollCyclePageContent({
   const create = useCreateRun();
   const overrideDays = useOverrideDaysWorked();
   const overrideMult = useOverrideOtMultiplier();
-  // The add is silent otherwise: the popover stays open and the row's total only
-  // moves once the recalc lands, so nothing confirms the line item stuck. Shared
-  // by the per-row cells and the bulk popover, hence the surface-neutral wording.
-  const addField = useAddPayslipCustomField(() =>
-    toast.success('Adjustment added'),
+  const overrideOtHours = useOverrideOtHours();
+  // Both writes are silent otherwise: the dialog stays open and the row's total
+  // only moves once the recalc lands, so nothing confirms the edit stuck. This
+  // one serves the per-row dialogs only (the bulk dialog runs its own action, so
+  // it can close itself), hence the single-employee wording — the sign the two
+  // columns split on is what names the item.
+  const addField = useAddPayslipCustomField(({ label, amount }) => {
+    const { noun } = payslipLineItemCopy[amount > 0 ? 'earning' : 'deduction'];
+    toast.success(`${noun} "${label}" added`);
+  });
+  // The remove action takes an index, not the item — there's no label to quote
+  // back, hence the neutral wording.
+  const removeField = useRemovePayslipCustomField(() =>
+    toast.success('Line item removed'),
   );
-  const removeField = useRemovePayslipCustomField();
 
   const monthLabel = format(`${month}-01`, 'MMMM yyyy');
   const locked = run?.status === 'locked';
@@ -78,6 +88,7 @@ export function PayrollCyclePageContent({
     lock.isPending ||
     overrideDays.isPending ||
     overrideMult.isPending ||
+    overrideOtHours.isPending ||
     addField.isPending ||
     removeField.isPending;
   const gridRows = rows ?? [];
@@ -111,16 +122,6 @@ export function PayrollCyclePageContent({
       run_id: run.id,
       payslip_ids: [...selectedIds],
       overtime_multiplier: multiplier,
-    });
-  };
-
-  const handleBulkAdjustment = (field: { label: string; amount: number }) => {
-    if (!run || selectedIds.size === 0) return;
-    addField.execute({
-      run_id: run.id,
-      payslip_ids: [...selectedIds],
-      label: field.label,
-      amount: field.amount,
     });
   };
 
@@ -169,9 +170,9 @@ export function PayrollCyclePageContent({
                     selectedCount={selectedIds.size}
                     onApply={handleBulkOtRate}
                   />
-                  <BulkAdjustmentPopover
-                    selectedCount={selectedIds.size}
-                    onApply={handleBulkAdjustment}
+                  <BulkAdjustmentDialog
+                    runId={run.id}
+                    payslipIds={[...selectedIds]}
                   />
                 </>
               )}
@@ -241,6 +242,12 @@ export function PayrollCyclePageContent({
                     run_id: run.id,
                     payslip_ids: [payslipId],
                     overtime_multiplier: multiplier,
+                  })
+                }
+                onOtHoursCommit={(payslipId, hours) =>
+                  overrideOtHours.execute({
+                    payslip_id: payslipId,
+                    overtime_hours: hours,
                   })
                 }
                 onAddCustomField={(payslipId, field) =>

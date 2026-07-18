@@ -398,6 +398,12 @@ export const updateEmploymentDetails = authActionClient
       working_hours: parsedInput.workingHours,
       designation: parsedInput.designation,
       department: parsedInput.department || null,
+      // null = inherit the global setting (the schema maps a blank field to null,
+      // so a real 0 override is preserved while empty falls back to global).
+      leave_pool_days_override: parsedInput.leavePoolDaysOverride ?? null,
+      medical_accrual_monthly_override:
+        parsedInput.medicalAccrualMonthlyOverride ?? null,
+      medical_cap_override: parsedInput.medicalCapOverride ?? null,
     });
     if (error) throw new Error(error.message);
   });

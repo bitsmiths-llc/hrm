@@ -74,9 +74,19 @@ export function useUpdateEmploymentDetails(
   onSuccess?: () => void,
 ) {
   const invalidate = useInvalidateEmployee(employeeId);
+  const queryClient = useQueryClient();
   return useAction(updateEmploymentDetails, {
     onSuccess: () => {
       invalidate();
+      // The leave/medical allowance overrides feed the balance RPCs, so refresh
+      // this employee's derived balances (prefix-matches the year-scoped leave
+      // key) — the Leave/Medical tabs and their own dashboard read from these.
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.LEAVE_BALANCE, employeeId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKeys.MEDICAL_BALANCE, employeeId],
+      });
       onSuccess?.();
     },
     onError,

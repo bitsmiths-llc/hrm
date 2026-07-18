@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 
-import { useHrmSettings } from '@/hooks/queries/settings';
-
 import { authQuery } from '@/lib/client/auth-query';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
@@ -77,18 +75,20 @@ export type MedicalBalanceResult = {
   spent: number;
   /** accrued − spent, floored at 0 — the claimable amount. */
   available: number;
-  /** Admin-configured cap (from settings, not the RPC). */
+  /** Resolved cap — the per-employee override, else the global setting (PKR). */
   cap: number;
-  /** Admin-configured monthly accrual (from settings, not the RPC). */
+  /** Resolved monthly accrual — override, else global setting (PKR). */
   monthlyAccrual: number;
 };
 
 // Canonical medical balance for one employee, derived on every read by the
-// medical_balance() RPC (SECURITY INVOKER → RLS applies). The cap and monthly
-// accrual are admin-configurable settings, not per-employee, so they're merged
-// in from useHrmSettings rather than returned by the RPC.
+// medical_balance() RPC (SECURITY INVOKER → RLS applies). The RPC resolves the
+// cap and monthly accrual itself — the per-employee override on
+// employment_details, falling back to the global payroll_settings — and returns
+// them, so the figure the UI shows always matches the figure the accrual math
+// used (a per-employee override would otherwise be invisible beside the global).
 const fetchMedicalBalance = authQuery(
-  async ({ supabase, params }) => {
+  async ({ supabase, params }): Promise<MedicalBalanceResult> => {
     const { data, error } = await supabase
       .rpc('medical_balance', { p_employee: params.employeeId })
       .single();
@@ -97,32 +97,19 @@ const fetchMedicalBalance = authQuery(
       accrued: Number(data.accrued),
       spent: Number(data.spent),
       available: Number(data.available),
+      cap: Number(data.cap),
+      monthlyAccrual: Number(data.monthly_accrual),
     };
   },
   { paramsSchema: z.object({ employeeId: z.string() }) },
 );
 
-export const useMedicalBalance = (employeeId?: string) => {
-  const settings = useHrmSettings();
-  const query = useQuery({
+export const useMedicalBalance = (employeeId?: string) =>
+  useQuery({
     queryKey: [QueryKeys.MEDICAL_BALANCE, employeeId],
     queryFn: () => fetchMedicalBalance({ employeeId: employeeId! }),
     enabled: !!employeeId,
   });
-
-  return {
-    ...query,
-    data:
-      query.data && settings.data
-        ? ({
-            ...query.data,
-            cap: settings.data.medicalBalanceCap,
-            monthlyAccrual: settings.data.medicalMonthlyAccrual,
-          } satisfies MedicalBalanceResult)
-        : undefined,
-    isLoading: query.isLoading || settings.isLoading,
-  };
-};
 
 export type MedicalProofFile = { path: string; url: string; name: string };
 

@@ -29,8 +29,8 @@ const FRAME =
  * until the media has actually decoded (not just until the query resolved), so
  * it never flashes borderless → bordered → empty → image. Images render with
  * object-contain; PDFs embed the first page fitted with the viewer chrome
- * hidden, plus an "Open" affordance. Renders nothing until there's something to
- * show.
+ * hidden. Either way the same "Open" affordance opens the full document in a new
+ * tab. Renders nothing until there's something to show.
  */
 export function DocumentPreview({
   file,
@@ -61,45 +61,38 @@ export function DocumentPreview({
 
       {url &&
         (isPdf ? (
-          <>
-            <iframe
-              title={label}
-              // Fit the whole page to the frame and hide the viewer chrome so
-              // the preview shows the document, not a scrollable mini-app.
-              src={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
-              onLoad={() => setLoaded(true)}
-              className={cn('h-full w-full', fade)}
-            />
-            {loaded && (
-              <Button
-                asChild
-                size='sm'
-                variant='secondary'
-                className='absolute bottom-2 right-2 gap-1.5 shadow-sm'
-              >
-                <a href={url} target='_blank' rel='noreferrer'>
-                  <ExternalLink />
-                  Open
-                </a>
-              </Button>
-            )}
-          </>
+          <iframe
+            title={label}
+            // Fit the whole page to the frame and hide the viewer chrome so
+            // the preview shows the document, not a scrollable mini-app.
+            src={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
+            onLoad={() => setLoaded(true)}
+            className={cn('h-full w-full', fade)}
+          />
         ) : (
-          <a
-            href={url}
-            target='_blank'
-            rel='noreferrer'
-            className='flex h-full w-full items-center justify-center transition-colors hover:bg-muted/50'
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- private signed Supabase URL, not a static asset; the Next image optimizer must not proxy/cache identity documents */}
-            <img
-              src={url}
-              alt={label}
-              onLoad={() => setLoaded(true)}
-              className={cn('max-h-full max-w-full object-contain', fade)}
-            />
-          </a>
+          /* eslint-disable-next-line @next/next/no-img-element -- private signed Supabase URL, not a static asset; the Next image optimizer must not proxy/cache identity documents */
+          <img
+            src={url}
+            alt={label}
+            onLoad={() => setLoaded(true)}
+            className={cn('max-h-full max-w-full object-contain', fade)}
+          />
         ))}
+
+      {url && loaded && (
+        <Button
+          asChild
+          size='sm'
+          variant='secondary'
+          iconLeft={ExternalLink}
+          className='absolute bottom-2 right-2 shadow-sm'
+        >
+          <a href={url} target='_blank' rel='noreferrer'>
+            Open
+            <span className='sr-only'> {label}</span>
+          </a>
+        </Button>
+      )}
     </div>
   );
 }

@@ -8,11 +8,15 @@ import { MonthFilter } from '@/components/hrm/month-filter';
 import { PageHeader } from '@/components/hrm/page-header';
 import { SubmitClaimDialog } from '@/components/medical/submit-claim-dialog';
 
+import { currentYear } from '@/utils/date-functions';
+
 import { MedicalBalanceCards } from './medical-balance-cards';
 import { MedicalHistoryTable } from './medical-history-table';
 
 export function MedicalPageContent() {
-  const [month, setMonth] = useState('all');
+  // Default the claim history to the current year; the filter can widen it.
+  // (The balance cards are a lifetime rolling accrual and ignore this.)
+  const [month, setMonth] = useState(currentYear());
   const { data: me } = useCurrentEmployee();
 
   return (

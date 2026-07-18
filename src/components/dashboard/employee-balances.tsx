@@ -19,7 +19,8 @@ import { paths } from '@/constants/paths';
 
 export function EmployeeBalances() {
   // Leave and medical balances are real, scoped to the signed-in employee. The
-  // medical hook merges the admin-configured cap/accrual in from settings.
+  // balance RPCs resolve each employee's cap/accrual/pool — a per-employee
+  // override if set, else the global setting — so these figures already reflect it.
   const { data: me } = useCurrentEmployee();
   const { data: leaveBalance, isLoading: leaveLoading } = useLeaveBalance(
     me?.id,

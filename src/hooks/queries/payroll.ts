@@ -90,7 +90,12 @@ export type RunPayslipRow = {
   unpaidLeaveDays: number;
   totalBase: number;
   medical: number;
+  /** Effective hours the engine paid — the override if one is set, else the
+   *  employee's approved overtime logs for the month. */
   overtimeHours: number;
+  /** Null when `overtimeHours` is still following the approved logs; a number
+   *  when an admin has overridden it. Drives the grid's "reset to logs" affordance. */
+  overtimeHoursOverride: number | null;
   overtimeMultiplier: number;
   overtimeRate: number;
   overtimePay: number;
@@ -113,6 +118,13 @@ function toRunPayslipRow(row: PayslipDbRow): RunPayslipRow {
     totalBase: row.total_base,
     medical: row.medical,
     overtimeHours: Number(row.overtime_hours),
+    // Tested against null rather than for truthiness: 0 is a legitimate
+    // override ("this employee worked no overtime this month") and must stay
+    // distinct from null ("no override — follow the logs").
+    overtimeHoursOverride:
+      row.overtime_hours_override === null
+        ? null
+        : Number(row.overtime_hours_override),
     overtimeMultiplier: row.overtime_multiplier
       ? Number(row.overtime_multiplier)
       : 0,

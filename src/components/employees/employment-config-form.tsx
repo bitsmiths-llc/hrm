@@ -5,12 +5,14 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useUpdateEmploymentDetails } from '@/hooks/actions/use-update-employee';
+import { useHrmSettings } from '@/hooks/queries/settings';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -18,6 +20,9 @@ import {
 } from '@/components/ui/form';
 import { ControlledSelect } from '@/components/ui/form/controlled-select';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+
+import { formatCurrency } from '@/utils/number-functions';
 
 import {
   employmentStageLabels,
@@ -26,6 +31,7 @@ import {
 import {
   type EmploymentConfigInput,
   employmentConfigSchema,
+  type EmploymentConfigValues,
 } from '@/schema/employee';
 
 import { Employee } from '@/types/hrm';
@@ -44,7 +50,9 @@ type EmploymentConfigFormProps = {
 
 /** Admin-only payroll configuration (PRD 4.1) — not part of onboarding. */
 export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
-  const form = useForm<EmploymentConfigInput>({
+  const { data: settings } = useHrmSettings();
+
+  const form = useForm<EmploymentConfigInput, unknown, EmploymentConfigValues>({
     resolver: zodResolver(employmentConfigSchema),
     defaultValues: {
       employmentType: employee.employmentType,
@@ -53,6 +61,9 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
       workingHours: employee.workingHours || 0,
       designation: employee.designation,
       department: employee.department,
+      leavePoolDaysOverride: employee.leavePoolDaysOverride,
+      medicalAccrualMonthlyOverride: employee.medicalAccrualMonthlyOverride,
+      medicalCapOverride: employee.medicalCapOverride,
     },
   });
 
@@ -60,7 +71,7 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
     toast.success('Employment configuration saved'),
   );
 
-  const onSubmit = (values: EmploymentConfigInput) =>
+  const onSubmit = (values: EmploymentConfigValues) =>
     execute({ ...values, employeeId: employee.id });
 
   return (
@@ -136,7 +147,7 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
               name='workingHours'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Working hours / period</FormLabel>
+                  <FormLabel>Working hours / month</FormLabel>
                   <FormControl>
                     <Input type='number' min={0} {...field} />
                   </FormControl>
@@ -144,6 +155,103 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
                 </FormItem>
               )}
             />
+
+            <div className='sm:col-span-2'>
+              <Separator className='mb-4' />
+              <h3 className='text-sm font-medium'>Allowance overrides</h3>
+              <p className='text-sm text-muted-foreground'>
+                Set an allowance just for this employee. Leave a field blank to
+                inherit the company-wide setting.
+              </p>
+            </div>
+
+            <FormField
+              control={form.control}
+              name='leavePoolDaysOverride'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Annual leave pool (days)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min={0}
+                      step={1}
+                      placeholder={
+                        settings ? `${settings.leavePoolDays}` : 'Inherit'
+                      }
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Blank inherits the global pool
+                    {settings ? ` (${settings.leavePoolDays} days)` : ''}.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Spacer so the two medical fields sit together on their own row. */}
+            <div className='hidden sm:block' aria-hidden />
+            <FormField
+              control={form.control}
+              name='medicalAccrualMonthlyOverride'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Medical accrual / month (PKR)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min={0}
+                      step={500}
+                      placeholder={
+                        settings ? `${settings.medicalMonthlyAccrual}` : 'Inherit'
+                      }
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Blank inherits the global accrual
+                    {settings
+                      ? ` (${formatCurrency(settings.medicalMonthlyAccrual)}/mo)`
+                      : ''}
+                    .
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='medicalCapOverride'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Medical balance cap (PKR)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min={0}
+                      step={500}
+                      placeholder={
+                        settings ? `${settings.medicalBalanceCap}` : 'Inherit'
+                      }
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Blank inherits the global cap
+                    {settings
+                      ? ` (${formatCurrency(settings.medicalBalanceCap)})`
+                      : ''}
+                    .
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className='sm:col-span-2'>
               <Button type='submit' isLoading={isPending}>
                 Save configuration

@@ -1,7 +1,11 @@
 'use server';
 
-import * as XLSX from 'xlsx';
-
+import {
+  PAYONEER_CSV_MIME,
+  PAYONEER_HEADER,
+  payoneerFileName,
+  toCsv,
+} from '@/lib/payroll/payoneer-csv';
 import { authActionClient } from '@/lib/server/safe-action';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
@@ -9,23 +13,6 @@ import { exportPayoneerSchema } from '@/schema/payroll-export';
 
 import type { Tables } from '@/types/supabase';
 
-/** The exact Payoneer bulk-payment template header row (from the `june_salaries`
- *  reference). Order and wording are load-bearing — Payoneer matches columns by
- *  header, so do not reword or reorder. `Amount to Pay` (source-currency amount)
- *  is intentionally left blank; Payoneer derives it from the balance + FX. */
-const PAYONEER_HEADER = [
-  'Bank Account Holder Name',
-  'Bank Account Number/IBAN',
-  'Payoneer Balance to Pay From',
-  'Amount to Pay',
-  'Amount Recipient Gets',
-  'Recipient Bank Account Currency',
-  'Payment Reference (Optional)',
-  'Transaction Description (Optional)',
-] as const;
-
-const XLSX_MIME =
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 const EXPORTS_BUCKET = 'payroll-exports';
 /** Short TTL — the URL is only used for the immediate post-export download; the
  *  history view mints its own fresh signed URLs on demand. */
@@ -34,12 +21,15 @@ const DOWNLOAD_TTL_SECONDS = 60 * 5;
 /** One run payslip with the employee name joined (via the `payslips → employees`
  *  FK). Declared explicitly so `rows` reads as a checked annotation — supabase-js
  *  infers a shape assignable to this, so no `as` cast is needed. */
-type ExportPayslipRow = Pick<Tables<'payslips'>, 'employee_id' | 'total_pay'> & {
+type ExportPayslipRow = Pick<
+  Tables<'payslips'>,
+  'employee_id' | 'total_pay'
+> & {
   employees: Pick<Tables<'employees'>, 'full_name'> | null;
 };
 
 /**
- * Build and persist the Payoneer bulk-payment file for a *locked* run.
+ * Build and persist the Payoneer bulk-payment CSV for a *locked* run.
  *
  * Locked-only at two layers: the employee payslip view relies on the RLS
  * `payslip_own_locked` gate; this action adds its own explicit `status` refuse
@@ -48,8 +38,10 @@ type ExportPayslipRow = Pick<Tables<'payslips'>, 'employee_id' | 'total_pay'> & 
  * Bank details are read cross-employee through `supabaseAdmin` — the action's
  * own `role === 'admin'` guard is the access control here, not RLS. Amounts are
  * the frozen `payslips.total_pay` snapshot (recipient PKR); the engine is never
- * re-run. A missing IBAN is a hard, per-employee error: we validate every row
- * before writing anything, so a bad row records no currency, no file, no row.
+ * re-run. A missing IBAN is a hard, per-employee error: we validate every
+ * *included* row before writing anything, so a bad row records no currency, no
+ * file, no row — while `excludedEmployeeIds` is the escape hatch that lets the
+ * rest of the run go out without them.
  */
 export const exportPayoneer = authActionClient
   .schema(exportPayoneerSchema)
@@ -57,12 +49,13 @@ export const exportPayoneer = authActionClient
     if (authUser.user?.app_metadata.role !== 'admin')
       throw new Error('Forbidden');
 
-    const { run_id, currencyByEmployee } = parsedInput;
+    const { run_id, currencyByEmployee, excludedEmployeeIds } = parsedInput;
 
-    // Locked-only gate (via the caller's RLS-scoped client).
+    // Locked-only gate (via the caller's RLS-scoped client). `period_month`
+    // names the file after the month it pays.
     const { data: run, error: runError } = await supabase
       .from('payroll_runs')
-      .select('id, status')
+      .select('id, status, period_month')
       .eq('id', run_id)
       .single();
     if (runError) throw new Error(runError.message);
@@ -78,8 +71,19 @@ export const exportPayoneer = authActionClient
       .eq('payroll_run_id', run_id);
     if (payslipError) throw new Error(payslipError.message);
 
-    const rows: ExportPayslipRow[] = payslipData ?? [];
-    if (rows.length === 0) throw new Error('This run has no payslips to export.');
+    const allRows: ExportPayslipRow[] = payslipData ?? [];
+    if (allRows.length === 0)
+      throw new Error('This run has no payslips to export.');
+
+    // Everything downstream — validation, the currency stamp, the file — works
+    // off the included set only. That is what lets one person's missing IBAN be
+    // worked around by excluding them rather than blocking the whole run.
+    const excluded = new Set(excludedEmployeeIds);
+    const rows = allRows.filter((row) => !excluded.has(row.employee_id));
+    if (rows.length === 0)
+      throw new Error(
+        'Every employee is excluded — include at least one to export.',
+      );
 
     const { data: bankData, error: bankError } = await supabaseAdmin
       .from('bank_details')
@@ -139,23 +143,16 @@ export const exportPayoneer = authActionClient
     const failedUpdate = updates.find((result) => result.error);
     if (failedUpdate?.error) throw new Error(failedUpdate.error.message);
 
-    // Build the .xlsx from an array-of-arrays so column order === the header.
-    const worksheet = XLSX.utils.aoa_to_sheet([
-      [...PAYONEER_HEADER],
-      ...dataRows,
-    ]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Payoneer Template');
-    // XLSX.write's return is typed `any`; the 'buffer' type yields a Node Buffer.
-    const buffer: Buffer = XLSX.write(workbook, {
-      type: 'buffer',
-      bookType: 'xlsx',
-    });
+    // Build the CSV from an array-of-arrays so column order === the header.
+    const csv = toCsv([[...PAYONEER_HEADER], ...dataRows]);
 
-    const filePath = `${run_id}/payoneer-${Date.now()}.xlsx`;
+    const filePath = `${run_id}/${payoneerFileName(run.period_month, new Date())}`;
     const { error: uploadError } = await supabaseAdmin.storage
       .from(EXPORTS_BUCKET)
-      .upload(filePath, buffer, { contentType: XLSX_MIME, upsert: false });
+      .upload(filePath, Buffer.from(csv, 'utf8'), {
+        contentType: PAYONEER_CSV_MIME,
+        upsert: false,
+      });
     if (uploadError) throw new Error(uploadError.message);
 
     // Record the artifact (via the RLS-scoped client — proves an admin session).
@@ -176,5 +173,6 @@ export const exportPayoneer = authActionClient
       file_path: filePath,
       signed_url: signed?.signedUrl ?? null,
       count: dataRows.length,
+      excluded: allRows.length - rows.length,
     };
   });

@@ -28,7 +28,7 @@ export function ExportArtifacts({ runId }: ExportArtifactsProps) {
     setDownloadingId(id);
     try {
       const url = await createExportSignedUrl(filePath);
-      downloadUrl(url, filePath.split('/').pop() ?? 'payoneer-export.xlsx');
+      downloadUrl(url, filePath.split('/').pop() ?? 'salaries.csv');
     } catch (error) {
       toast.error('Could not open export', {
         description: error instanceof Error ? error.message : undefined,

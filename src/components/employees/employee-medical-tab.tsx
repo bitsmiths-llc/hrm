@@ -10,13 +10,15 @@ import { MedicalBalanceCards } from '@/components/medical/medical-balance-cards'
 import { MedicalClaimsTable } from '@/components/medical/medical-claims-table';
 
 import { isMedicalEligible } from '@/lib/medical-eligibility';
+import { currentYear } from '@/utils/date-functions';
 
 type EmployeeMedicalTabProps = {
   employeeId: string;
 };
 
 export function EmployeeMedicalTab({ employeeId }: EmployeeMedicalTabProps) {
-  const [month, setMonth] = useState('all');
+  // Default the claim history to the current year (balance is lifetime).
+  const [month, setMonth] = useState(currentYear());
   const { data: employee } = useEmployee(employeeId);
   const { data: claims, isLoading: claimsLoading } =
     useMedicalClaims(employeeId);

@@ -1,5 +1,8 @@
+import { RotateCcw } from 'lucide-react';
+
 import { type RunPayslipRow, runRowToPayslip } from '@/hooks/queries/payroll';
 
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
@@ -9,6 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import { formatCurrency } from '@/utils/number-functions';
 
@@ -27,6 +35,8 @@ type PayslipGridProps = {
   onToggleAll: () => void;
   onDaysWorkedCommit: (payslipId: string, daysWorked: number) => void;
   onOtMultiplierCommit: (payslipId: string, multiplier: number) => void;
+  /** `null` clears the override, handing the hours back to the approved logs. */
+  onOtHoursCommit: (payslipId: string, hours: number | null) => void;
   onAddCustomField: (
     payslipId: string,
     field: { label: string; amount: number },
@@ -35,9 +45,9 @@ type PayslipGridProps = {
 };
 
 /** The draft (or, once locked, frozen) payslip grid for one run. Earnings and
- *  deductions are grouped; OT multiplier, unpaid days (the days-worked override),
- *  and the adjustment/deduction line items are editable while the run is open.
- *  Everything else is engine-computed and read-only. */
+ *  deductions are grouped; OT multiplier, OT hours, unpaid days (the days-worked
+ *  override), and the adjustment/deduction line items are editable while the run
+ *  is open. Everything else is engine-computed and read-only. */
 export function CurrentCycleTable({
   rows,
   locked,
@@ -47,6 +57,7 @@ export function CurrentCycleTable({
   onToggleAll,
   onDaysWorkedCommit,
   onOtMultiplierCommit,
+  onOtHoursCommit,
   onAddCustomField,
   onRemoveCustomField,
 }: PayslipGridProps) {
@@ -154,14 +165,59 @@ export function CurrentCycleTable({
                   )}
                 </TableCell>
                 <TableCell className='text-center'>
-                  {row.overtimeHours}h ·{' '}
-                  {formatCurrency(row.overtimePay) || '—'}
+                  {locked ? (
+                    <span className='whitespace-nowrap'>
+                      {row.overtimeHours}h ·{' '}
+                      {formatCurrency(row.overtimePay) || '—'}
+                    </span>
+                  ) : (
+                    <div className='flex flex-col items-center gap-0.5'>
+                      <div className='flex items-center justify-center gap-1'>
+                        <EditableNumberCell
+                          value={row.overtimeHours}
+                          min={0}
+                          max={744}
+                          step={0.5}
+                          disabled={isBusy}
+                          ariaLabel={`Overtime hours for ${row.employeeName}`}
+                          onCommit={(hours) => onOtHoursCommit(row.id, hours)}
+                        />
+                        {/* Only reachable once overridden — an override detaches
+                            the row from the approved logs, so this is the way back. */}
+                        {row.overtimeHoursOverride !== null && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                className='h-7 w-7 text-muted-foreground'
+                                disabled={isBusy}
+                                aria-label={`Reset overtime hours for ${row.employeeName} to the approved logs`}
+                                onClick={() => onOtHoursCommit(row.id, null)}
+                              >
+                                <RotateCcw />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Overridden — reset to approved logs
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <span className='text-xs text-muted-foreground'>
+                        {formatCurrency(row.overtimePay) || 'No overtime'}
+                      </span>
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className='text-center'>
                   <div className='flex justify-center'>
                     <CustomFieldsCell
                       fields={earnedFields.map(({ field }) => field)}
+                      employeeName={row.employeeName}
+                      kind='earning'
                       disabled={locked}
+                      isSubmitting={isBusy}
                       onAdd={(field) =>
                         onAddCustomField(row.id, {
                           label: field.label,
@@ -208,8 +264,10 @@ export function CurrentCycleTable({
                         label: field.label,
                         amount: Math.abs(field.amount),
                       }))}
+                      employeeName={row.employeeName}
+                      kind='deduction'
                       disabled={locked}
-                      labelPlaceholder='Loan'
+                      isSubmitting={isBusy}
                       onAdd={(field) =>
                         onAddCustomField(row.id, {
                           label: field.label,

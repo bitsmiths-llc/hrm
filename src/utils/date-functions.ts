@@ -9,6 +9,13 @@ export function currentMonth(): string {
   return format(new Date(), MONTH_FORMAT);
 }
 
+/** The current year as 'YYYY', in the viewer's own timezone. Matches the
+ *  whole-year value MonthFilter emits, so it seeds the month filter to the
+ *  current year (a `.startsWith('YYYY')` match scopes a list to that year). */
+export function currentYear(): string {
+  return format(new Date(), 'yyyy');
+}
+
 /** The month after a 'YYYY-MM' month, as 'YYYY-MM'. Deliberately string math
  *  rather than a Date round-trip: `new Date('2026-07-01')` parses as UTC
  *  midnight, so anywhere behind UTC it formats back as June and the month never

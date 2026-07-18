@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { PAYSLIP_LINE_ITEM_KINDS } from '@/constants/payroll-line-items';
+
 /**
  * Payroll settings singleton. These map onto `payroll_settings` columns
  * (ot_multiplier_default / leave_pool_days / medical_accrual_monthly /
@@ -57,6 +59,18 @@ export type OverrideOtMultiplierInput = z.infer<
   typeof overrideOtMultiplierSchema
 >;
 
+/** Inline per-payslip overtime-hours override, written to the sidecar
+ *  `overtime_hours_override` column. A `null` clears the override and hands the
+ *  hours back to the employee's approved overtime logs — so the field is
+ *  nullable *outside* the coercion (`z.coerce.number()` would turn a null into
+ *  0, i.e. "override to zero hours", which is a different thing entirely).
+ *  Bounded 0..744, the hours in a 31-day month. */
+export const overrideOtHoursSchema = z.object({
+  payslip_id: z.string().uuid(),
+  overtime_hours: z.coerce.number().nonnegative().max(744).nullable(),
+});
+export type OverrideOtHoursInput = z.infer<typeof overrideOtHoursSchema>;
+
 /** One stored payslip line item as it lives in the `custom_fields` jsonb array
  *  (positive `amount` = earning, negative = deduction). Deliberately permissive
  *  on `amount` — unlike `addCustomFieldSchema`, coercing an already-stored row
@@ -81,6 +95,35 @@ export const addCustomFieldSchema = z.object({
   amount: z.coerce.number().refine((n) => n !== 0, 'Amount cannot be 0'),
 });
 export type AddCustomFieldInput = z.infer<typeof addCustomFieldSchema>;
+
+/** The add-a-line-item form behind each grid cell's panel. Only a magnitude is
+ *  collected — the column the panel opened from decides the sign — so this
+ *  rejects 0 and negatives up front instead of letting the server's
+ *  `amount !== 0` refinement bounce them into an error toast. `label` mirrors
+ *  `addCustomFieldSchema`'s bounds so anything valid here survives the action. */
+export const payslipLineItemFormSchema = z.object({
+  label: z
+    .string()
+    .trim()
+    .min(1, 'Enter a label')
+    .max(60, 'Keep the label under 60 characters'),
+  amount: z.coerce
+    .number({ invalid_type_error: 'Enter an amount' })
+    .positive('Enter an amount above 0'),
+});
+export type PayslipLineItemFormInput = z.infer<
+  typeof payslipLineItemFormSchema
+>;
+
+/** The bulk add dialog's form — the per-employee fields plus the column to file
+ *  the item under. The grid cells infer that from the column they sit in; the
+ *  bulk bar sits outside both, so it has to ask. */
+export const bulkPayslipLineItemFormSchema = payslipLineItemFormSchema.extend({
+  kind: z.enum(PAYSLIP_LINE_ITEM_KINDS),
+});
+export type BulkPayslipLineItemFormInput = z.infer<
+  typeof bulkPayslipLineItemFormSchema
+>;
 
 /** Remove the custom field at `index` of a single payslip's `custom_fields`. */
 export const removeCustomFieldSchema = z.object({

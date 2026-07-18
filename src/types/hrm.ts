@@ -69,9 +69,13 @@ export type Employee = {
   employmentType: EmploymentType;
   employmentStage: EmploymentStage;
   baseSalary: number; // PKR
-  workingHours: number; // standard hours per pay period
+  workingHours: number; // standard hours per month
   designation: string;
   department: string;
+  // Per-employee allowance overrides; null means inherit the global setting.
+  leavePoolDaysOverride: number | null;
+  medicalAccrualMonthlyOverride: number | null; // PKR
+  medicalCapOverride: number | null; // PKR
   status: AccountStatus;
   /** Admin's note when a submission is returned to onboarding (BIT-10). */
   reviewNote: string | null;

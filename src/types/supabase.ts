@@ -164,6 +164,9 @@ export type Database = {
           designation: string | null
           employee_id: string
           employment_type: Database["public"]["Enums"]["employment_type"] | null
+          leave_pool_days_override: number | null
+          medical_accrual_monthly_override: number | null
+          medical_cap_override: number | null
           ot_multiplier_override: number | null
           updated_at: string
           working_hours: number | null
@@ -177,6 +180,9 @@ export type Database = {
           employment_type?:
             | Database["public"]["Enums"]["employment_type"]
             | null
+          leave_pool_days_override?: number | null
+          medical_accrual_monthly_override?: number | null
+          medical_cap_override?: number | null
           ot_multiplier_override?: number | null
           updated_at?: string
           working_hours?: number | null
@@ -190,6 +196,9 @@ export type Database = {
           employment_type?:
             | Database["public"]["Enums"]["employment_type"]
             | null
+          leave_pool_days_override?: number | null
+          medical_accrual_monthly_override?: number | null
+          medical_cap_override?: number | null
           ot_multiplier_override?: number | null
           updated_at?: string
           working_hours?: number | null
@@ -572,6 +581,7 @@ export type Database = {
           id: string
           medical: number
           overtime_hours: number
+          overtime_hours_override: number | null
           overtime_multiplier: number | null
           overtime_pay: number
           overtime_rate: number
@@ -594,6 +604,7 @@ export type Database = {
           id?: string
           medical?: number
           overtime_hours?: number
+          overtime_hours_override?: number | null
           overtime_multiplier?: number | null
           overtime_pay?: number
           overtime_rate?: number
@@ -616,6 +627,7 @@ export type Database = {
           id?: string
           medical?: number
           overtime_hours?: number
+          overtime_hours_override?: number | null
           overtime_multiplier?: number | null
           overtime_pay?: number
           overtime_rate?: number
@@ -725,6 +737,8 @@ export type Database = {
         Returns: {
           accrued: number
           available: number
+          cap: number
+          monthly_accrual: number
           spent: number
         }[]
       }

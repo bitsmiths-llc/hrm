@@ -8,12 +8,15 @@ import { MonthFilter } from '@/components/hrm/month-filter';
 import { OvertimeLogsTable } from '@/components/overtime/overtime-logs-table';
 import { OvertimeSummaryCards } from '@/components/overtime/overtime-summary-cards';
 
+import { currentMonth } from '@/utils/date-functions';
+
 type EmployeeOvertimeTabProps = {
   employeeId: string;
 };
 
 export function EmployeeOvertimeTab({ employeeId }: EmployeeOvertimeTabProps) {
-  const [month, setMonth] = useState('all');
+  // Default to the current month.
+  const [month, setMonth] = useState(currentMonth());
   const { data: logs, isLoading } = useOvertimeLogs(employeeId);
 
   return (

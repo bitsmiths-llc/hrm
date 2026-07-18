@@ -26,7 +26,7 @@ export function EmploymentReadonly({ employee }: EmploymentReadonlyProps) {
         { label: 'Department', value: employee.department },
         { label: 'Base salary', value: formatCurrency(employee.baseSalary) },
         {
-          label: 'Working hours / period',
+          label: 'Working hours / month',
           value: employee.workingHours ? `${employee.workingHours}h` : '',
         },
       ]}

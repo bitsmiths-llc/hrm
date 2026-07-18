@@ -20,6 +20,7 @@ import {
   createRunSchema,
   type CustomField,
   overrideDaysWorkedSchema,
+  overrideOtHoursSchema,
   overrideOtMultiplierSchema,
   removeCustomFieldSchema,
   runIdSchema,
@@ -312,6 +313,44 @@ export const overrideOtMultiplier = authActionClient
     if (recalcError) throw new Error(recalcError.message);
 
     return { run_id: parsedInput.run_id };
+  });
+
+/**
+ * Set (or clear) an inline overtime-hours override on one payslip, then recalc
+ * the run so OT pay, tax and net refresh. Refused on a locked run before any
+ * write.
+ *
+ * Writes the sidecar `overtime_hours_override` column rather than
+ * `overtime_hours` itself: the latter is recomputed from the approved overtime
+ * logs on every recalc, so a direct write would be wiped by the very recalc
+ * below. A `null` clears the override and hands the hours back to those logs.
+ */
+export const overrideOtHours = authActionClient
+  .schema(overrideOtHoursSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: payslip, error: readError } = await supabase
+      .from('payslips')
+      .select('payroll_run_id, payroll_runs(status)')
+      .eq('id', parsedInput.payslip_id)
+      .single();
+    if (readError) throw new Error(readError.message);
+    if (payslip.payroll_runs?.status === 'locked')
+      throw new Error('This run is locked and can no longer be edited.');
+
+    const { error: updateError } = await supabase
+      .from('payslips')
+      .update({ overtime_hours_override: parsedInput.overtime_hours })
+      .eq('id', parsedInput.payslip_id);
+    if (updateError) throw new Error(updateError.message);
+
+    const { error: recalcError } = await supabase.rpc('calculate_payroll', {
+      p_run_id: payslip.payroll_run_id,
+    });
+    if (recalcError) throw new Error(recalcError.message);
+
+    return { run_id: payslip.payroll_run_id };
   });
 
 /**
