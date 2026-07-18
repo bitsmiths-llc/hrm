@@ -178,14 +178,6 @@ export function PayrollCyclePageContent({
               )}
             </div>
             <div className='flex flex-wrap items-center gap-2'>
-              <Button
-                variant='outline'
-                isLoading={calc.isPending}
-                disabled={locked || busy}
-                onClick={() => calc.execute({ run_id: run.id })}
-              >
-                Recalculate
-              </Button>
               <ConfirmDialog
                 trigger={
                   <Button disabled={locked || busy || gridRows.length === 0}>
