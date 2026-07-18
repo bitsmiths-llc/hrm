@@ -3,19 +3,18 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useAction } from 'next-safe-action/hooks';
 
-import { lockPayroll } from '@/actions/payroll';
+import { unlockPayroll } from '@/actions/payroll';
 
 import { onError } from '@/lib/show-error-toast';
 
 import { QueryKeys } from '@/constants/query-keys';
 
-/** Finalize a run (admin). Invalidates the run's payslips, the run list, and the
- *  per-employee payslips key (now visible to employees under RLS). Locking no
- *  longer emails anyone — notifications are sent explicitly afterward via
- *  `useSendRunInvoices` — so `onSuccess` carries no tally. */
-export function useLockPayroll(onSuccess?: () => void) {
+/** Reopen a locked run (admin) — the reverse of `useLockPayroll`. Invalidates the
+ *  same three keys: the figures unfreeze, the run list reflects `open`, and the
+ *  per-employee payslips vanish for employees under RLS. */
+export function useUnlockPayroll(onSuccess?: () => void) {
   const queryClient = useQueryClient();
-  return useAction(lockPayroll, {
+  return useAction(unlockPayroll, {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.RUN_PAYSLIPS] });
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PAYROLL_RUNS] });

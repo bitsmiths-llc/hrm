@@ -185,11 +185,9 @@ export const calculatePayroll = authActionClient
  * to `locked`. The RPC is transactional and refuses a second lock (55000).
  *
  * Locking is what makes the figures final and the payslips visible to employees
- * under RLS, so it's also what mails their invoices out. That fan-out runs after
- * the RPC has committed and is therefore best-effort: a bounced email is logged,
- * never thrown, so the lock itself still succeeds. `invoices` comes back in the
- * result so the UI can report what actually went out, and the per-row Send
- * button re-sends anything that didn't.
+ * under RLS. It deliberately mails nothing: sending payslip notifications is a
+ * separate, explicit step (`sendRunInvoices`, the "Send notifications" button on
+ * a locked run), so an admin decides exactly when employees are emailed.
  */
 export const lockPayroll = authActionClient
   .schema(runIdSchema)
@@ -199,29 +197,66 @@ export const lockPayroll = authActionClient
       p_run_id: parsedInput.run_id,
     });
     if (error) throw new Error(error.message);
+    return { run_id: parsedInput.run_id };
+  });
 
-    let invoices = { sent: 0, failed: 0 };
-    try {
-      const { data: rows, error: readError } = await supabase
-        .from('payslips')
-        .select('id')
-        .eq('payroll_run_id', parsedInput.run_id);
-      if (readError) throw new Error(readError.message);
-      invoices = await dispatchInvoices((rows ?? []).map((row) => row.id));
-    } catch (invoiceError) {
-      Logger.error('Failed to send invoice emails on lock', invoiceError);
-    }
+/**
+ * Reopen a locked run — the transactional reverse of `lockPayroll`. Releases the
+ * medical/OT this run swept back to the pool, clears the frozen total, and flips
+ * `locked → open` so the figures are editable and recalculable again. Employees
+ * stop seeing their payslips automatically (RLS scopes them to locked runs). The
+ * RPC refuses a run that isn't locked (55000).
+ */
+export const unlockPayroll = authActionClient
+  .schema(runIdSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+    const { error } = await supabase.rpc('unlock_payroll', {
+      p_run_id: parsedInput.run_id,
+    });
+    if (error) throw new Error(error.message);
+    return { run_id: parsedInput.run_id };
+  });
 
+/**
+ * Mail every payslip in a locked run to its employee — the "Send notifications"
+ * button. Finalizing no longer emails anyone, so this is the explicit fan-out;
+ * clicking it again re-sends to everyone (there is no per-employee sent flag).
+ * Refused until the run is locked: the figures aren't final before that, and
+ * employees can't see the payslips under RLS either. Reports the same
+ * `{ sent, failed }` tally as the per-row send, via `dispatchInvoices`.
+ */
+export const sendRunInvoices = authActionClient
+  .schema(runIdSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: run, error: runError } = await supabase
+      .from('payroll_runs')
+      .select('status')
+      .eq('id', parsedInput.run_id)
+      .single();
+    if (runError) throw new Error(runError.message);
+    if (run.status !== 'locked')
+      throw new Error('Finalize the run before sending notifications.');
+
+    const { data: rows, error: readError } = await supabase
+      .from('payslips')
+      .select('id')
+      .eq('payroll_run_id', parsedInput.run_id);
+    if (readError) throw new Error(readError.message);
+
+    const invoices = await dispatchInvoices((rows ?? []).map((row) => row.id));
     return { run_id: parsedInput.run_id, invoices };
   });
 
 /**
  * Mail one payslip's invoice to its employee — the per-row Send button, i.e. a
- * manual re-send of what locking the run already fanned out. Refused until the
- * run is locked: the figures aren't final before that, and the employee can't
- * see the payslip under RLS either.
+ * single-row send/re-send of what "Send notifications" (`sendRunInvoices`) fans
+ * out to the whole run. Refused until the run is locked: the figures aren't
+ * final before that, and the employee can't see the payslip under RLS either.
  *
- * Unlike the lock fan-out, a failure here IS the outcome of the click, so it
+ * Unlike the batch fan-out, a failure here IS the outcome of the click, so it
  * throws rather than being logged and swallowed.
  */
 export const sendPayslipInvoice = authActionClient
@@ -236,7 +271,7 @@ export const sendPayslipInvoice = authActionClient
       .single();
     if (error) throw new Error(error.message);
     if (payslip.payroll_runs?.status !== 'locked')
-      throw new Error('Lock the run before sending invoices.');
+      throw new Error('Finalize the run before sending invoices.');
 
     const { failed } = await dispatchInvoices([payslip.id]);
     if (failed > 0)

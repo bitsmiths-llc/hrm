@@ -732,6 +732,7 @@ export type Database = {
         }[]
       }
       lock_payroll: { Args: { p_run_id: string }; Returns: undefined }
+      unlock_payroll: { Args: { p_run_id: string }; Returns: undefined }
       medical_balance: {
         Args: { p_employee: string }
         Returns: {

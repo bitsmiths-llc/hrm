@@ -15,8 +15,9 @@ type SendInvoiceButtonProps = {
   disabled?: boolean;
 };
 
-/** Mails one employee their payslip PDF. Locking the run already sends these to
- *  everyone, so this is the manual re-send for a single row. */
+/** Mails one employee their payslip PDF — the per-row send/re-send. "Send
+ *  notifications" fans the same email out to everyone at once; this targets a
+ *  single row (e.g. to retry one that bounced). */
 export function SendInvoiceButton({
   payslipId,
   employeeName,
@@ -36,7 +37,7 @@ export function SendInvoiceButton({
       onClick={() => send.execute({ payslip_id: payslipId })}
       title={
         disabled
-          ? 'Lock the run to send invoices'
+          ? 'Finalize the run to send invoices'
           : `Send invoice to ${employeeName}`
       }
       aria-label={`Send invoice to ${employeeName}`}

@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { ArrowLeft, Calculator, CalendarX2 } from 'lucide-react';
+import { ArrowLeft, Calculator, CalendarX2, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -14,6 +14,8 @@ import { useOverrideDaysWorked } from '@/hooks/actions/use-override-days-worked'
 import { useOverrideOtHours } from '@/hooks/actions/use-override-ot-hours';
 import { useOverrideOtMultiplier } from '@/hooks/actions/use-override-ot-multiplier';
 import { useRemovePayslipCustomField } from '@/hooks/actions/use-remove-payslip-custom-field';
+import { useSendRunInvoices } from '@/hooks/actions/use-send-run-invoices';
+import { useUnlockPayroll } from '@/hooks/actions/use-unlock-payroll';
 import { useRunByMonth, useRunPayslips } from '@/hooks/queries/payroll';
 
 import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
@@ -46,20 +48,24 @@ export function PayrollCyclePageContent({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const calc = useCalculatePayroll();
-  // Locking mails every employee their invoice. That fan-out is best-effort
-  // server-side (a bounce never undoes the lock), so the toast has to report
-  // what actually went out rather than just claiming success.
-  const lock = useLockPayroll(({ sent, failed }) => {
+  // Finalizing no longer emails anyone — that's the separate "Send
+  // notifications" step below — so this just confirms the run is locked.
+  const lock = useLockPayroll(() => toast.success('Run finalized'));
+  const unlock = useUnlockPayroll(() => toast.success('Run reopened'));
+  // The notification fan-out is best-effort server-side (a bounce never fails
+  // the batch), so the toast reports what actually went out rather than just
+  // claiming success.
+  const sendAll = useSendRunInvoices(({ sent, failed }) => {
     if (failed > 0) {
       toast.warning(
-        `Run locked · ${sent} invoice(s) emailed, ${failed} failed. Retry those from the row's send button.`,
+        `${sent} payslip(s) emailed, ${failed} failed. Retry those from the row's send button.`,
       );
       return;
     }
     toast.success(
       sent > 0
-        ? `Run locked · ${sent} invoice${sent === 1 ? '' : 's'} emailed`
-        : 'Run locked',
+        ? `${sent} payslip${sent === 1 ? '' : 's'} emailed`
+        : 'No payslips to send',
     );
   });
   const create = useCreateRun();
@@ -86,6 +92,8 @@ export function PayrollCyclePageContent({
   const busy =
     calc.isPending ||
     lock.isPending ||
+    unlock.isPending ||
+    sendAll.isPending ||
     overrideDays.isPending ||
     overrideMult.isPending ||
     overrideOtHours.isPending ||
@@ -178,19 +186,53 @@ export function PayrollCyclePageContent({
               )}
             </div>
             <div className='flex flex-wrap items-center gap-2'>
-              <ConfirmDialog
-                trigger={
-                  <Button disabled={locked || busy || gridRows.length === 0}>
-                    Lock run
-                  </Button>
-                }
-                title='Lock this payroll run?'
-                description='Figures become read-only once locked, approved medical and overtime for the month are swept into this run, and employees can see their payslips. Every employee is emailed their payslip PDF straight away. You can still export for Payoneer afterward.'
-                confirmLabel='Lock run'
-                destructive
-                isLoading={lock.isPending}
-                onConfirm={() => lock.execute({ run_id: run.id })}
-              />
+              {!locked ? (
+                <ConfirmDialog
+                  trigger={
+                    <Button disabled={busy || gridRows.length === 0}>
+                      Finalize run
+                    </Button>
+                  }
+                  title='Finalize this payroll run?'
+                  description='Figures become read-only once finalized, approved medical and overtime for the month are swept into this run, and employees can see their payslips. No emails go out yet — send them with "Send notifications". You can still export for Payoneer or reopen the run afterward.'
+                  confirmLabel='Finalize run'
+                  destructive
+                  isLoading={lock.isPending}
+                  onConfirm={() => lock.execute({ run_id: run.id })}
+                />
+              ) : (
+                <>
+                  <ConfirmDialog
+                    trigger={
+                      <Button variant='outline' disabled={busy}>
+                        Reopen run
+                      </Button>
+                    }
+                    title='Reopen this payroll run?'
+                    description='The run returns to editable: figures unfreeze, the swept medical and overtime are released back to the pool, and employees can no longer see their payslips. Finalize again to lock it.'
+                    confirmLabel='Reopen run'
+                    destructive
+                    isLoading={unlock.isPending}
+                    onConfirm={() => unlock.execute({ run_id: run.id })}
+                  />
+                  <ConfirmDialog
+                    trigger={
+                      <Button
+                        variant='outline'
+                        iconLeft={Send}
+                        disabled={busy || gridRows.length === 0}
+                      >
+                        Send notifications
+                      </Button>
+                    }
+                    title='Send payslip notifications?'
+                    description='Emails every employee in this run their payslip PDF. Sending again re-sends to everyone.'
+                    confirmLabel='Send notifications'
+                    isLoading={sendAll.isPending}
+                    onConfirm={() => sendAll.execute({ run_id: run.id })}
+                  />
+                </>
+              )}
               <ExportPayoneerSheet
                 runId={run.id}
                 rows={exportRows}
