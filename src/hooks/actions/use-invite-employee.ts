@@ -22,6 +22,8 @@ export function useInviteEmployee(onSuccess?: () => void) {
   return useAction(inviteEmployee, {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.EMPLOYEES] });
+      // A new invited account changes the per-status breakdown.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.EMPLOYEES_BY_STATUS] });
       onSuccess?.();
     },
     onError,
@@ -50,6 +52,8 @@ export function useCancelInvite(onSuccess?: () => void) {
   return useAction(cancelInvite, {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.EMPLOYEES] });
+      // Dropping the invited account changes the per-status breakdown.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.EMPLOYEES_BY_STATUS] });
       onSuccess?.();
     },
     onError,

@@ -30,4 +30,8 @@ export enum QueryKeys {
   HRM_SETTINGS = 'hrm-settings',
   PROJECTS = 'projects',
   FX_RATES = 'fx-rates', // live exchange rates, keyed by base currency (BIT-16)
+
+  // Admin dashboard aggregations (BIT-17)
+  DASHBOARD_SUMMARY = 'dashboard-summary', // guarded jsonb bundle for the admin home
+  EMPLOYEES_BY_STATUS = 'employees-by-status', // count per account_status
 }

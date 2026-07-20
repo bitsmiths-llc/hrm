@@ -20,6 +20,15 @@ export const appConfig = {
      *  re-fetch identical numbers. */
     staleTimeMs: 1000 * 60 * 60 * 6,
   },
+  /** Global TanStack Query defaults (see `providers.tsx`). Writes invalidate
+   *  their own keys explicitly, so these only govern passive refresh: reads stay
+   *  fresh for `staleTimeMs` before a background refetch, and we don't refetch on
+   *  window focus (it re-triggered every query, incl. an auth round-trip, on
+   *  every tab switch). Hooks that need different behaviour override locally. */
+  reactQuery: {
+    staleTimeMs: 1000 * 60,
+    gcTimeMs: 1000 * 60 * 5,
+  },
   appUrl: env.NEXT_PUBLIC_APP_URL,
   appName: env.NEXT_PUBLIC_APP_NAME,
   emails: {

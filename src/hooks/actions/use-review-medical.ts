@@ -30,6 +30,8 @@ export function useReviewMedical(onSuccess?: () => void) {
     if (result?.data) {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.MEDICAL_CLAIMS] });
       queryClient.invalidateQueries({ queryKey: [QueryKeys.MEDICAL_BALANCE] });
+      // The admin dashboard's pending-approvals tile counts this row.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.DASHBOARD_SUMMARY] });
       onSuccess?.();
     }
     return result;

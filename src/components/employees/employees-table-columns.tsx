@@ -13,14 +13,14 @@ import { employmentTypeLabels } from '@/constants/hrm-labels';
 
 import { EmployeesTableRowActions } from './employees-table-row-actions';
 
-import { Employee } from '@/types/hrm';
+import { EmployeeListItem } from '@/types/hrm';
 
 // None of the directory's columns hold numeric/ordered data, so none carry a
 // sort control — the sort chevrons are dropped (`enableSorting: false`) and each
 // header renders as a plain label aligned to its cell (Name left, the rest
 // centered). Finding a row is search- and filter-driven instead.
 export function useEmployeesTableColumns() {
-  return useMemo<ColumnDef<Employee>[]>(
+  return useMemo<ColumnDef<EmployeeListItem>[]>(
     () => [
       {
         id: 'fullName',

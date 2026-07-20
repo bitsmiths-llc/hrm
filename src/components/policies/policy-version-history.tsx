@@ -21,7 +21,7 @@ import {
 import { PolicyPdfDocument } from './policy-pdf-document';
 
 import {
-  Employee,
+  EmployeeListItem,
   Policy,
   PolicyAcknowledgment,
   PolicyVersion,
@@ -33,7 +33,7 @@ type PolicyVersionHistoryProps = {
   currentVersionNumber: number;
   /** Active employees — acknowledgment status inside each version panel is
    *  reported against these. */
-  employees: Employee[];
+  employees: EmployeeListItem[];
   /** Append-only acknowledgment history for this policy: one record per
    *  version each employee acknowledged. */
   acknowledgments: PolicyAcknowledgment[];

@@ -5,7 +5,7 @@ import { authQuery } from '@/lib/client/auth-query';
 
 import { QueryKeys } from '@/constants/query-keys';
 
-import { Employee } from '@/types/hrm';
+import { Employee, EmployeeListItem } from '@/types/hrm';
 import { type Tables } from '@/types/supabase';
 
 // The directory rows are `employees` joined to their one-to-one detail tables
@@ -15,6 +15,34 @@ export type EmployeeRow = Tables<'employees'> & {
   bank_details: Tables<'bank_details'> | null;
   socials: Tables<'socials'> | null;
 };
+
+// The directory list needs only the handful of columns it renders — never the
+// bank/CNIC/salary/social data the full `EmployeeRow` carries. Fetching those
+// for every employee is both wasteful and a needless exposure of sensitive
+// fields to the browser; the detail page loads the full row per-employee.
+type EmployeeListRow = Pick<
+  Tables<'employees'>,
+  'id' | 'full_name' | 'email' | 'account_status' | 'invited_at'
+> & {
+  employment_details: Pick<
+    Tables<'employment_details'>,
+    'designation' | 'department' | 'employment_type'
+  > | null;
+};
+
+function toEmployeeListItem(row: EmployeeListRow): EmployeeListItem {
+  const work = row.employment_details;
+  return {
+    id: row.id,
+    fullName: row.full_name ?? '',
+    email: row.email,
+    designation: work?.designation ?? '',
+    department: work?.department ?? '',
+    employmentType: work?.employment_type ?? 'full_time',
+    status: row.account_status,
+    invitedAt: row.invited_at ?? '',
+  };
+}
 
 /** Map a joined employees row onto the `Employee` domain type, filling the
  *  gaps left by a not-yet-onboarded invitee (no detail rows yet) with sensible
@@ -73,11 +101,13 @@ export function toEmployee(row: EmployeeRow): Employee {
 const fetchEmployees = authQuery(async ({ supabase }) => {
   const { data, error } = await supabase
     .from('employees')
-    .select('*, employment_details(*), bank_details(*), socials(*)')
+    .select(
+      'id, full_name, email, account_status, invited_at, employment_details(designation, department, employment_type)',
+    )
     .eq('role', 'employee')
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return data.map(toEmployee);
+  return data.map(toEmployeeListItem);
 });
 
 const fetchEmployee = authQuery(

@@ -18,6 +18,8 @@ export function useCreateRun(onSuccess?: (run: CreatedRun) => void) {
   return useAction(createRun, {
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PAYROLL_RUNS] });
+      // A new run becomes the latest, so the dashboard's payroll-cycle badge changes.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.DASHBOARD_SUMMARY] });
       onSuccess?.(data ?? null);
     },
     onError,

@@ -83,6 +83,22 @@ export type Employee = {
   joinedAt: string | null;
 };
 
+/** The subset of `Employee` the admin directory list renders. The list query
+ *  fetches only these columns so it never ships bank/CNIC/salary/social data for
+ *  every employee to the browser — the full `Employee` is loaded per-row on the
+ *  detail page instead. */
+export type EmployeeListItem = Pick<
+  Employee,
+  | 'id'
+  | 'fullName'
+  | 'email'
+  | 'designation'
+  | 'department'
+  | 'employmentType'
+  | 'status'
+  | 'invitedAt'
+>;
+
 export type LeaveRequest = {
   id: string;
   employeeId: string;

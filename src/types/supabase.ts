@@ -721,6 +721,32 @@ export type Database = {
     Functions: {
       accept_onboarding: { Args: never; Returns: undefined }
       calculate_payroll: { Args: { p_run_id: string }; Returns: undefined }
+      dashboard_summary: {
+        Args: never
+        Returns: {
+          pending_leave: number
+          pending_medical: number
+          pending_overtime: number
+          pending_onboarding: number
+          active_employees: number
+          payroll_cycle: Database["public"]["Enums"]["payroll_status"] | null
+        }
+      }
+      employees_by_status: {
+        Args: never
+        Returns: {
+          count: number
+          status: string
+        }[]
+      }
+      employees_near_medical_cap: {
+        Args: { threshold?: number }
+        Returns: {
+          employee_id: string
+          full_name: string
+          spent: number
+        }[]
+      }
       ensure_current_run: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
       leave_balance: {
