@@ -23,15 +23,29 @@ import { type HrmSettingsInput, hrmSettingsSchema } from '@/schema/settings';
 import { SettingRow, SettingsCard, SettingsGroup } from './settings-card';
 import { UnitInput } from './unit-input';
 
+import type { HrmSettings } from '@/types/hrm';
+
 /** Every numeric HRM rule — leave, medical, payroll — edited in one card so
  *  the Configuration tab reads as a single console instead of scattered
  *  boxes. Saves all values in one pass to the settings cache. */
 export function HrmSettingsForm() {
   const { data: settings, isLoading } = useHrmSettings();
 
+  if (isLoading || !settings) {
+    return <Skeleton className='h-96 rounded-xl' />;
+  }
+
+  // Mount the form only once settings exist and seed `useForm` from them, so
+  // every input is controlled from its first render — otherwise the values
+  // arrive a commit later and React warns about uncontrolled→controlled inputs.
+  return <HrmSettingsFields settings={settings} />;
+}
+
+function HrmSettingsFields({ settings }: { settings: HrmSettings }) {
   const form = useForm<HrmSettingsInput>({
     resolver: zodResolver(hrmSettingsSchema),
-    values: settings ?? undefined,
+    defaultValues: settings,
+    values: settings,
   });
 
   // Persist to the real `payroll_settings` singleton (Module 2 backend). On
@@ -42,10 +56,6 @@ export function HrmSettingsForm() {
   );
 
   const onSubmit = (values: HrmSettingsInput) => execute(values);
-
-  if (isLoading || !settings) {
-    return <Skeleton className='h-96 rounded-xl' />;
-  }
 
   return (
     <Form {...form}>

@@ -714,6 +714,24 @@ export type Database = {
           },
         ]
       }
+      system_config: {
+        Row: {
+          id: boolean
+          reimbursements_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          reimbursements_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          reimbursements_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -28,6 +28,7 @@ export const paths = {
     payrollRun: (month: string) => `/admin/payroll/${month}`,
     policies: '/admin/policies',
     policyDetail: (id: string) => `/admin/policies/${id}`,
+    reimbursements: '/admin/reimbursements',
     settings: '/admin/settings',
     profile: '/admin/profile',
   },

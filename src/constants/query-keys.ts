@@ -31,6 +31,9 @@ export enum QueryKeys {
   PROJECTS = 'projects',
   FX_RATES = 'fx-rates', // live exchange rates, keyed by base currency (BIT-16)
 
+  // System configuration & module toggles (BIT-20)
+  SYSTEM_CONFIG = 'system-config', // singleton system_config row (feature flags)
+
   // Admin dashboard aggregations (BIT-17)
   DASHBOARD_SUMMARY = 'dashboard-summary', // guarded jsonb bundle for the admin home
   EMPLOYEES_BY_STATUS = 'employees-by-status', // count per account_status

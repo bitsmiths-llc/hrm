@@ -7,8 +7,10 @@ import {
   LayoutDashboard,
   Palmtree,
   Receipt,
+  Settings,
   UserCircle,
   Users,
+  Wallet,
 } from 'lucide-react';
 
 import { paths } from '@/constants/paths';
@@ -48,8 +50,16 @@ export const adminNav: NavConfig = {
       href: paths.admin.policies,
       icon: FileText,
     },
-    // Settings were folded into the Policies "Configuration" tab (Module 3), so
-    // there is no standalone Settings nav item — /settings redirects there.
+    // Reimbursements ships dark (Phase 2): the entry only appears once an admin
+    // enables it in Settings → Module Toggles (`system_config`), gated in the
+    // sidebar via its `requiresFlag`.
+    {
+      label: 'Reimbursements',
+      href: paths.admin.reimbursements,
+      icon: Wallet,
+      requiresFlag: 'reimbursementsEnabled',
+    },
+    { label: 'Settings', href: paths.admin.settings, icon: Settings },
     { label: 'Profile', href: paths.admin.profile, icon: UserCircle },
   ],
 };

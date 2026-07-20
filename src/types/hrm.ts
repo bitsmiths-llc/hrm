@@ -244,6 +244,22 @@ export type HrmSettings = {
   medicalBalanceCap: number;
 };
 
+/** App-wide module toggles / feature flags, stored in the `system_config`
+ *  singleton. Any authenticated user can read them (the nav shell needs to know
+ *  which modules are enabled); only admins can change them (BIT-20). */
+export type SystemConfig = {
+  /** Whether the Reimbursements module is live. `false` keeps the
+   *  Reimbursements nav entry hidden app-wide (Phase 2 stays dark); flipping it
+   *  true reveals it. */
+  reimbursementsEnabled: boolean;
+  /** ISO timestamp of the last change to the toggles. */
+  updatedAt: string;
+};
+
+/** Keys of `SystemConfig` that are boolean module toggles (excludes metadata
+ *  such as `updatedAt`). A nav entry can be gated on one of these. */
+export type ModuleFlag = 'reimbursementsEnabled';
+
 /** Admin-managed list employees pick from when logging overtime. */
 export type Project = {
   id: string;
