@@ -15,4 +15,5 @@ export enum QueryKeys {
   CONTRACTS = 'contracts',
   HRM_SETTINGS = 'hrm-settings',
   PROJECTS = 'projects',
+  ONBOARDING_EMAIL_TEMPLATE = 'onboarding-email-template',
 }

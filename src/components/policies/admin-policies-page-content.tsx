@@ -10,6 +10,7 @@ import { currentVersion, usePolicies } from '@/hooks/queries/policies';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { PageHeader } from '@/components/hrm/page-header';
 import { HrmSettingsForm } from '@/components/settings/hrm-settings-form';
+import { OnboardingTemplateForm } from '@/components/settings/onboarding-template-form';
 import { ProjectsSettingsCard } from '@/components/settings/projects-settings-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ export function AdminPoliciesPageContent() {
         <TabsList>
           <TabsTrigger value='documents'>Documents</TabsTrigger>
           <TabsTrigger value='configuration'>Configuration</TabsTrigger>
+          <TabsTrigger value='onboarding-email'>Onboarding Email</TabsTrigger>
         </TabsList>
 
         <TabsContent value='documents' className='flex flex-col gap-4'>
@@ -89,6 +91,14 @@ export function AdminPoliciesPageContent() {
             <HrmSettingsForm />
             <ProjectsSettingsCard />
           </div>
+        </TabsContent>
+
+        <TabsContent value='onboarding-email'>
+          <p className='mb-4 text-sm text-muted-foreground'>
+            The invitation email sent to every new employee. Edit it once — the
+            same template is reused for all invitations.
+          </p>
+          <OnboardingTemplateForm />
         </TabsContent>
       </Tabs>
 
