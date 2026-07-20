@@ -30,7 +30,9 @@ export function useReviewLeave(onSuccess?: () => void) {
     if (result?.data) {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.LEAVE_REQUESTS] });
       queryClient.invalidateQueries({ queryKey: [QueryKeys.LEAVE_BALANCE] });
-      // The admin dashboard's pending-approvals tile counts this row.
+      // The unified approvals queue (pending_approvals()) and the admin
+      // dashboard's pending-approvals tile both count this row.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.PENDING_APPROVALS] });
       queryClient.invalidateQueries({ queryKey: [QueryKeys.DASHBOARD_SUMMARY] });
       onSuccess?.();
     }

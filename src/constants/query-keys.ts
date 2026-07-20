@@ -34,4 +34,7 @@ export enum QueryKeys {
   // Admin dashboard aggregations (BIT-17)
   DASHBOARD_SUMMARY = 'dashboard-summary', // guarded jsonb bundle for the admin home
   EMPLOYEES_BY_STATUS = 'employees-by-status', // count per account_status
+
+  // Admin approvals (BIT-18)
+  PENDING_APPROVALS = 'pending-approvals', // guarded pending_approvals() union across the four sources
 }

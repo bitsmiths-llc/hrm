@@ -769,6 +769,18 @@ export type Database = {
           spent: number
         }[]
       }
+      pending_approvals: {
+        Args: never
+        Returns: {
+          kind: string
+          item_id: string
+          employee_id: string
+          employee_name: string
+          summary: string
+          amount: number | null
+          submitted_at: string
+        }[]
+      }
       submit_onboarding: { Args: never; Returns: undefined }
     }
     Enums: {
