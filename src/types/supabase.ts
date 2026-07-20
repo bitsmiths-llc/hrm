@@ -757,6 +757,16 @@ export type Database = {
           used: number
         }[]
       }
+      leave_balances_all: {
+        Args: { year?: number }
+        Returns: {
+          employee_id: string
+          full_name: string
+          remaining: number
+          used: number
+          pool: number
+        }[]
+      }
       lock_payroll: { Args: { p_run_id: string }; Returns: undefined }
       unlock_payroll: { Args: { p_run_id: string }; Returns: undefined }
       medical_balance: {
@@ -769,6 +779,7 @@ export type Database = {
           spent: number
         }[]
       }
+      payroll_cycle_cost: { Args: { run_id: string }; Returns: number }
       pending_approvals: {
         Args: never
         Returns: {

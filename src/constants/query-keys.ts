@@ -37,4 +37,8 @@ export enum QueryKeys {
 
   // Admin approvals (BIT-18)
   PENDING_APPROVALS = 'pending-approvals', // guarded pending_approvals() union across the four sources
+
+  // Admin dashboard widgets (BIT-19)
+  PAYROLL_CYCLE_COST = 'payroll-cycle-cost', // guarded sum(payslips.total_pay) for a run
+  LEAVE_BALANCES_ALL = 'leave-balances-all', // guarded per-active-employee leave rollup by year
 }
