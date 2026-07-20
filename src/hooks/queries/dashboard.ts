@@ -4,21 +4,11 @@ import { authQuery } from '@/lib/client/auth-query';
 
 import { QueryKeys } from '@/constants/query-keys';
 
-import { AccountStatus, PayrollCycleStatus } from '@/types/hrm';
-
-/** Admin-home aggregation bundle, one guarded `dashboard_summary()` fetch. */
-export type DashboardSummary = {
-  pendingLeave: number;
-  pendingMedical: number;
-  pendingOvertime: number;
-  pendingOnboarding: number;
-  activeEmployees: number;
-  /** Latest run's status, or null when no payroll run exists yet. */
-  payrollCycle: PayrollCycleStatus | null;
-};
-
-/** One row per account_status present in the directory. */
-export type EmployeeStatusCount = { status: AccountStatus; count: number };
+import {
+  AccountStatus,
+  DashboardSummary,
+  EmployeeStatusCount,
+} from '@/types/hrm';
 
 // Admin home: the six org-wide counters in a single guarded RPC round-trip. The
 // RPC is security definer + asserts is_admin() itself (RLS is bypassed), so a

@@ -48,7 +48,7 @@ export function RunCreateDialog() {
   const { execute, isPending } = useCreateRun((run) => {
     setOpen(false);
     const target = run ? run.period_month.slice(0, 7) : selectedMonth;
-    router.push(`${paths.admin.payroll}/${target}`);
+    router.push(paths.admin.payrollRun(target));
   });
 
   return (

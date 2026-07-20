@@ -57,7 +57,7 @@ export function EmployeesTableRowActions({
 
   return (
     <div className='flex items-center justify-end gap-1'>
-      <Link href={`${paths.admin.employees}/${employee.id}`}>
+      <Link href={paths.admin.employeeDetail(employee.id)}>
         <Button variant='ghost' size='sm' icon={ArrowRight}>
           View
         </Button>

@@ -69,7 +69,7 @@ export function PoliciesPageContent() {
             return (
               <li key={policy.id}>
                 <Link
-                  href={`${paths.employee.policies}/${policy.id}`}
+                  href={paths.employee.policyDetail(policy.id)}
                   className='flex w-full items-center justify-between gap-3 px-4 py-3 hover:bg-accent hover:text-accent-foreground'
                 >
                   <div className='flex min-w-0 flex-col gap-0.5'>

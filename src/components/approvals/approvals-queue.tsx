@@ -9,10 +9,7 @@ import {
   useAllOvertimeLogs,
 } from '@/hooks/queries/approvals';
 import { useEmployees } from '@/hooks/queries/employees';
-import {
-  type PendingApproval,
-  usePendingApprovals,
-} from '@/hooks/queries/pending-approvals';
+import { usePendingApprovals } from '@/hooks/queries/pending-approvals';
 
 import { DetailSheet } from '@/components/hrm/detail-sheet';
 import { EmptyState } from '@/components/hrm/empty-state';
@@ -37,6 +34,8 @@ import { LeaveReviewActions } from './leave-review-actions';
 import { MedicalReviewActions } from './medical-review-actions';
 import { OnboardingReviewActions } from './onboarding-review-actions';
 import { OvertimeReviewActions } from './overtime-review-actions';
+
+import { type PendingApproval } from '@/types/hrm';
 
 export function ApprovalsQueue() {
   // `pending_approvals()` is the queue's source of truth: it decides membership

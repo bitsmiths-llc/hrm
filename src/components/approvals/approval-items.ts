@@ -1,8 +1,3 @@
-import {
-  type ApprovalKind,
-  type PendingApproval,
-} from '@/hooks/queries/pending-approvals';
-
 import { formatDate } from '@/utils/date-functions';
 import { formatCurrency } from '@/utils/number-functions';
 
@@ -13,10 +8,12 @@ import {
 } from '@/constants/hrm-labels';
 
 import {
+  ApprovalKind,
   EmployeeListItem,
   LeaveRequest,
   MedicalClaim,
   OvertimeLog,
+  PendingApproval,
   RequestStatus,
 } from '@/types/hrm';
 

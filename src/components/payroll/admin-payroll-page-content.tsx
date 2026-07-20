@@ -42,7 +42,7 @@ export function AdminPayrollPageContent() {
           {runs.map((run) => (
             <li key={run.id}>
               <Link
-                href={`${paths.admin.payroll}/${run.month}`}
+                href={paths.admin.payrollRun(run.month)}
                 className='flex w-full items-center justify-between gap-3 px-4 py-3 hover:bg-accent hover:text-accent-foreground'
               >
                 <span className='font-medium'>

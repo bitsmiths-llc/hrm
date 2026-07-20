@@ -144,6 +144,36 @@ export type OvertimeLog = {
   createdAt: string;
 };
 
+/** The four sources that feed the unified approvals queue (BIT-18). */
+export type ApprovalKind = 'leave' | 'medical' | 'overtime' | 'onboarding';
+
+/** One normalized row from `pending_approvals()`. Each source projects to this
+ *  common shape; `amount` is populated only for medical (whole PKR) and null for
+ *  the rest, and `submitted_at` unifies each source's timestamp for ordering. */
+export type PendingApproval = {
+  kind: ApprovalKind;
+  item_id: string;
+  employee_id: string;
+  employee_name: string;
+  summary: string;
+  amount: number | null;
+  submitted_at: string;
+};
+
+/** Admin-home aggregation bundle, one guarded `dashboard_summary()` fetch. */
+export type DashboardSummary = {
+  pendingLeave: number;
+  pendingMedical: number;
+  pendingOvertime: number;
+  pendingOnboarding: number;
+  activeEmployees: number;
+  /** Latest run's status, or null when no payroll run exists yet. */
+  payrollCycle: PayrollCycleStatus | null;
+};
+
+/** One row per account_status present in the directory. */
+export type EmployeeStatusCount = { status: AccountStatus; count: number };
+
 export type Payslip = {
   id: string;
   employeeId: string;

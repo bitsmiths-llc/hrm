@@ -57,7 +57,7 @@ export function AdminPoliciesPageContent() {
                 return (
                   <li key={policy.id}>
                     <Link
-                      href={`${paths.admin.policies}/${policy.id}`}
+                      href={paths.admin.policyDetail(policy.id)}
                       className='flex w-full items-center justify-between gap-3 px-4 py-3 hover:bg-accent hover:text-accent-foreground'
                     >
                       <div className='flex min-w-0 flex-col gap-0.5'>

@@ -60,7 +60,7 @@ async function notifyAdminsOfSubmission(employeeId: string) {
 
   const employeeName = employee.full_name || employee.email;
   const reviewUrl = new URL(
-    `${paths.admin.employees}/${employeeId}`,
+    paths.admin.employeeDetail(employeeId),
     appConfig.appUrl,
   ).toString();
 

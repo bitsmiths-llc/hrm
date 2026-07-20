@@ -97,7 +97,7 @@ export function CreatePolicyDialog({
     toast.success(`${values.title} published`);
     onOpenChange(false);
     form.reset();
-    router.push(`${paths.admin.policies}/${id}`);
+    router.push(paths.admin.policyDetail(id));
   };
 
   return (
