@@ -1,15 +1,20 @@
 'use client';
 
-import { useMyOvertimeLogs } from '@/hooks/queries/overtime';
+import { useOvertimeLogs } from '@/hooks/queries/overtime';
 
 import { OvertimeLogsTable } from './overtime-logs-table';
 
 type OvertimeHistoryTableProps = {
+  /** The signed-in employee's id (undefined while their identity loads). */
+  employeeId?: string;
   month: string;
 };
 
-export function OvertimeHistoryTable({ month }: OvertimeHistoryTableProps) {
-  const { data: logs, isLoading } = useMyOvertimeLogs();
+export function OvertimeHistoryTable({
+  employeeId,
+  month,
+}: OvertimeHistoryTableProps) {
+  const { data: logs, isLoading } = useOvertimeLogs(employeeId);
 
   return (
     <OvertimeLogsTable

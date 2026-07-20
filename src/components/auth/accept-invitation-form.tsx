@@ -2,8 +2,11 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
+import { useAction } from 'next-safe-action/hooks';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
+import { acceptInvite } from '@/actions/onboarding';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +20,8 @@ import { Form, FormItem, FormLabel } from '@/components/ui/form';
 import { ControlledPasswordInput } from '@/components/ui/form/controlled-password-input';
 import { Input } from '@/components/ui/input';
 
+import { onError } from '@/lib/show-error-toast';
+
 import { paths } from '@/constants/paths';
 import {
   type AcceptInvitationInput,
@@ -24,12 +29,14 @@ import {
 } from '@/schema/auth';
 
 type AcceptInvitationFormProps = {
-  /** Comes from the invitation link; read-only here. Mocked for now. */
+  /** Read from the invite session on the server; shown read-only here. */
   email: string;
 };
 
 /** Landing screen for the emailed invitation link (PRD 4.2.2): the employee
- *  sets a password, then is routed straight into onboarding. */
+ *  sets a password — which signs them in — then advances invited → onboarding
+ *  and is routed straight into the onboarding wizard. There is no review gate
+ *  or waiting screen in between. */
 export function AcceptInvitationForm({ email }: AcceptInvitationFormProps) {
   const router = useRouter();
 
@@ -38,11 +45,14 @@ export function AcceptInvitationForm({ email }: AcceptInvitationFormProps) {
     defaultValues: { password: '', confirmPassword: '' },
   });
 
-  const onSubmit = async (_values: AcceptInvitationInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    toast.success('Account created — let’s complete your onboarding');
-    router.push(paths.employee.onboarding);
-  };
+  const { execute, isPending } = useAction(acceptInvite, {
+    onSuccess: () => {
+      toast.success('Account created — let’s complete your onboarding');
+      router.push(paths.employee.onboarding);
+      router.refresh();
+    },
+    onError,
+  });
 
   return (
     <Card>
@@ -57,7 +67,7 @@ export function AcceptInvitationForm({ email }: AcceptInvitationFormProps) {
       <CardContent>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(execute)}
             className='flex flex-col gap-4'
           >
             <FormItem>
@@ -75,7 +85,7 @@ export function AcceptInvitationForm({ email }: AcceptInvitationFormProps) {
               placeholder='••••••••'
               hideInstructions
             />
-            <Button type='submit' isLoading={form.formState.isSubmitting}>
+            <Button type='submit' isLoading={isPending}>
               Create account & start onboarding
             </Button>
           </form>

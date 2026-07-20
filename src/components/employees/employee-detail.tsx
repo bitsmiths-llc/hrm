@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, UserX } from 'lucide-react';
+import { ArrowLeft, RotateCcw, UserX } from 'lucide-react';
 import Link from 'next/link';
 
 import { useEmployee } from '@/hooks/queries/employees';
@@ -18,12 +18,17 @@ import { formatDate } from '@/utils/date-functions';
 import { employmentTypeLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
+import { AdminBankDialog } from './admin-bank-dialog';
+import { AdminContactDialog } from './admin-contact-dialog';
+import { AdminSocialsDialog } from './admin-socials-dialog';
 import { EmployeeContractTab } from './employee-contract-tab';
+import { EmployeeDocuments } from './employee-documents';
 import { EmployeeLeaveTab } from './employee-leave-tab';
 import { EmployeeMedicalTab } from './employee-medical-tab';
 import { EmployeeOvertimeTab } from './employee-overtime-tab';
 import { EmployeePayrollTab } from './employee-payroll-tab';
 import { EmploymentConfigForm } from './employment-config-form';
+import { EmployeeReviewActions } from './review-actions';
 
 type EmployeeDetailProps = {
   employeeId: string;
@@ -68,11 +73,33 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
         </Link>
       </div>
       <PageHeader
-        title={employee.fullName}
+        title={employee.fullName || employee.email}
         description={`${employee.designation || 'No designation yet'} · ${employmentTypeLabels[employee.employmentType]}`}
       >
-        <StatusBadge status={employee.status} />
+        <div className='flex items-center gap-3'>
+          <StatusBadge status={employee.status} />
+          {employee.status === 'submitted' && (
+            <EmployeeReviewActions employee={employee} />
+          )}
+        </div>
       </PageHeader>
+
+      {!!employee.reviewNote && (
+        <div className='flex gap-3 rounded-lg border border-border bg-muted/50 p-4'>
+          <RotateCcw
+            className='mt-0.5 size-5 shrink-0 text-muted-foreground'
+            aria-hidden
+          />
+          <div className='flex flex-col gap-1'>
+            <p className='text-sm font-medium'>
+              Last returned to onboarding with this note
+            </p>
+            <p className='text-sm text-muted-foreground'>
+              {employee.reviewNote}
+            </p>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue='profile'>
         <TabsList>
@@ -87,19 +114,30 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
         <TabsContent value='profile' className='flex flex-col gap-6'>
           <InfoCard
             title='Personal Information'
+            action={
+              <AdminContactDialog
+                employeeId={employee.id}
+                defaultValues={{
+                  phone: employee.phone,
+                  emergencyContact: employee.emergencyContact,
+                  address: employee.address,
+                  city: employee.city,
+                  postalCode: employee.postalCode,
+                }}
+              />
+            }
             fields={[
               { label: 'Email', value: employee.email },
               { label: 'Phone', value: employee.phone },
-              {
-                label: 'Emergency contact',
-                value: employee.emergencyContact,
-              },
+              { label: 'Emergency contact', value: employee.emergencyContact },
               {
                 label: 'Date of birth',
                 value: formatDate(employee.dateOfBirth),
               },
               { label: 'CNIC', value: employee.cnic },
               { label: 'Address', value: employee.address },
+              { label: 'City', value: employee.city },
+              { label: 'Postal code', value: employee.postalCode },
               { label: 'Invited', value: formatDate(employee.invitedAt) },
               { label: 'Joined', value: formatDate(employee.joinedAt) },
             ]}
@@ -107,16 +145,25 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
 
           <InfoCard
             title='Bank Information'
+            action={
+              <AdminBankDialog
+                employeeId={employee.id}
+                defaultValues={{
+                  bankName: employee.bank?.bankName ?? '',
+                  accountHolderName: employee.bank?.accountHolderName ?? '',
+                  accountNumber: employee.bank?.accountNumber ?? '',
+                  iban: employee.bank?.iban ?? '',
+                  branch: employee.bank?.branch ?? '',
+                }}
+              />
+            }
             fields={[
               { label: 'Bank', value: employee.bank?.bankName },
               {
                 label: 'Account holder',
                 value: employee.bank?.accountHolderName,
               },
-              {
-                label: 'Account number',
-                value: employee.bank?.accountNumber,
-              },
+              { label: 'Account number', value: employee.bank?.accountNumber },
               { label: 'IBAN', value: employee.bank?.iban },
               { label: 'Branch', value: employee.bank?.branch },
             ]}
@@ -124,12 +171,24 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
 
           <InfoCard
             title='Social Accounts'
+            action={
+              <AdminSocialsDialog
+                employeeId={employee.id}
+                defaultValues={{
+                  github: employee.social?.github ?? '',
+                  linkedin: employee.social?.linkedin ?? '',
+                  twitter: employee.social?.twitter ?? '',
+                }}
+              />
+            }
             fields={[
               { label: 'GitHub', value: employee.social?.github },
               { label: 'LinkedIn', value: employee.social?.linkedin },
               { label: 'Twitter', value: employee.social?.twitter },
             ]}
           />
+
+          <EmployeeDocuments employeeId={employee.id} />
 
           <EmploymentConfigForm employee={employee} />
         </TabsContent>

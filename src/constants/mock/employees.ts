@@ -1,32 +1,39 @@
-import { Employee, LeaveBalance, MedicalBalance } from '@/types/hrm';
+import { Employee } from '@/types/hrm';
 
 export const mockEmployees: Employee[] = [
   {
     id: 'emp-1',
-    fullName: 'Ayesha Khan',
-    email: 'ayesha@bitsmiths.studio',
-    phone: '+92 300 1234567',
-    emergencyContact: '+92 301 7654321',
-    address: 'House 12, Street 4, F-8/3, Islamabad',
+    fullName: 'John Doe',
+    email: 'john.doe@bitsmiths.studio',
+    phone: '03001234567',
+    emergencyContact: '03017654321',
+    address: 'House 12, Street 4, F-8/3',
+    city: 'Islamabad',
+    postalCode: '44000',
     cnic: '61101-1234567-1',
     dateOfBirth: '1996-03-14',
     bank: {
       bankName: 'Meezan Bank',
-      accountHolderName: 'Ayesha Khan',
+      accountHolderName: 'John Doe',
       accountNumber: '01234567890123',
       iban: 'PK36MEZN0001234567890123',
       branch: 'F-8 Markaz, Islamabad',
     },
     social: {
-      github: 'https://github.com/ayeshak',
-      linkedin: 'https://linkedin.com/in/ayeshak',
+      github: 'https://github.com/johndoe',
+      linkedin: 'https://linkedin.com/in/johndoe',
     },
     employmentType: 'full_time',
     employmentStage: 'confirmed',
     baseSalary: 250_000,
     workingHours: 160,
     designation: 'Frontend Engineer',
+    department: 'Engineering',
+    leavePoolDaysOverride: null,
+    medicalAccrualMonthlyOverride: null,
+    medicalCapOverride: null,
     status: 'active',
+    reviewNote: null,
     invitedAt: '2025-02-01',
     joinedAt: '2025-02-10',
   },
@@ -34,9 +41,11 @@ export const mockEmployees: Employee[] = [
     id: 'emp-2',
     fullName: 'Hamza Raza',
     email: 'hamza@bitsmiths.studio',
-    phone: '+92 321 5551234',
-    emergencyContact: '+92 333 9990011',
-    address: 'Flat 7B, Askari 11, Lahore',
+    phone: '03215551234',
+    emergencyContact: '03339990011',
+    address: 'Flat 7B, Askari 11',
+    city: 'Lahore',
+    postalCode: '54000',
     cnic: '35202-9876543-3',
     dateOfBirth: '1993-11-02',
     bank: {
@@ -55,7 +64,13 @@ export const mockEmployees: Employee[] = [
     baseSalary: 320_000,
     workingHours: 160,
     designation: 'Backend Engineer',
+    department: 'Engineering',
+    // A senior on a bespoke package: larger leave pool and medical cap.
+    leavePoolDaysOverride: 26,
+    medicalAccrualMonthlyOverride: null,
+    medicalCapOverride: 75_000,
     status: 'active',
+    reviewNote: null,
     invitedAt: '2024-09-15',
     joinedAt: '2024-09-20',
   },
@@ -63,9 +78,11 @@ export const mockEmployees: Employee[] = [
     id: 'emp-3',
     fullName: 'Fatima Noor',
     email: 'fatima@bitsmiths.studio',
-    phone: '+92 345 2223344',
-    emergencyContact: '+92 300 8887766',
-    address: 'House 45, Block C, Gulshan-e-Iqbal, Karachi',
+    phone: '03452223344',
+    emergencyContact: '03008887766',
+    address: 'House 45, Block C, Gulshan-e-Iqbal',
+    city: 'Karachi',
+    postalCode: '75300',
     cnic: '42101-5556667-9',
     dateOfBirth: '1999-07-21',
     bank: null,
@@ -75,7 +92,12 @@ export const mockEmployees: Employee[] = [
     baseSalary: 120_000,
     workingHours: 80,
     designation: 'UI/UX Designer',
+    department: 'Design',
+    leavePoolDaysOverride: null,
+    medicalAccrualMonthlyOverride: null,
+    medicalCapOverride: null,
     status: 'onboarding',
+    reviewNote: null,
     invitedAt: '2026-06-20',
     joinedAt: null,
   },
@@ -86,6 +108,8 @@ export const mockEmployees: Employee[] = [
     phone: '',
     emergencyContact: '',
     address: '',
+    city: '',
+    postalCode: '',
     cnic: '',
     dateOfBirth: '',
     bank: null,
@@ -95,31 +119,17 @@ export const mockEmployees: Employee[] = [
     baseSalary: 0,
     workingHours: 160,
     designation: 'QA Engineer',
+    department: 'Engineering',
+    leavePoolDaysOverride: null,
+    medicalAccrualMonthlyOverride: null,
+    medicalCapOverride: null,
     status: 'invited',
+    reviewNote: null,
     invitedAt: '2026-07-01',
     joinedAt: null,
   },
 ];
 
-/** Per-employee balances, keyed by employee id — admins need to see any
- *  employee's balance, not just the signed-in one. */
-export const mockLeaveBalances: Record<string, LeaveBalance> = {
-  'emp-1': { poolTotal: 22, poolUsed: 7.5, unpaidTaken: 2 },
-  'emp-2': { poolTotal: 22, poolUsed: 12, unpaidTaken: 4 },
-  'emp-3': { poolTotal: 22, poolUsed: 0, unpaidTaken: 0 },
-  'emp-4': { poolTotal: 22, poolUsed: 0, unpaidTaken: 0 },
-};
-
-export const mockMedicalBalances: Record<string, MedicalBalance> = {
-  'emp-1': { accrued: 27_500, cap: 50_000, monthlyAccrual: 5_000 },
-  'emp-2': { accrued: 45_000, cap: 50_000, monthlyAccrual: 5_000 },
-  'emp-3': { accrued: 0, cap: 50_000, monthlyAccrual: 5_000 },
-  'emp-4': { accrued: 0, cap: 50_000, monthlyAccrual: 5_000 },
-};
-
-/** The employee the mock "employee role" is signed in as. */
+/** The employee the mock "employee role" is signed in as. Still used by the
+ *  not-yet-wired surfaces (overtime, payslips) to key their mock data. */
 export const mockCurrentEmployee = mockEmployees[0];
-
-/** Balances for the signed-in mock employee (emp-1). */
-export const mockLeaveBalance = mockLeaveBalances[mockCurrentEmployee.id];
-export const mockMedicalBalance = mockMedicalBalances[mockCurrentEmployee.id];

@@ -1,11 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { SlidersHorizontal } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useUpdatePayrollSettings } from '@/hooks/actions/use-update-payroll-settings';
 import { useHrmSettings } from '@/hooks/queries/settings';
 
 import { Button } from '@/components/ui/button';
@@ -18,19 +18,15 @@ import {
 } from '@/components/ui/form';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { QueryKeys } from '@/constants/query-keys';
 import { type HrmSettingsInput, hrmSettingsSchema } from '@/schema/settings';
 
 import { SettingRow, SettingsCard, SettingsGroup } from './settings-card';
 import { UnitInput } from './unit-input';
 
-import { HrmSettings } from '@/types/hrm';
-
 /** Every numeric HRM rule — leave, medical, payroll — edited in one card so
  *  the Configuration tab reads as a single console instead of scattered
  *  boxes. Saves all values in one pass to the settings cache. */
 export function HrmSettingsForm() {
-  const queryClient = useQueryClient();
   const { data: settings, isLoading } = useHrmSettings();
 
   const form = useForm<HrmSettingsInput>({
@@ -38,13 +34,14 @@ export function HrmSettingsForm() {
     values: settings ?? undefined,
   });
 
-  const onSubmit = (values: HrmSettingsInput) => {
-    queryClient.setQueryData<HrmSettings>([QueryKeys.HRM_SETTINGS], (old) =>
-      old ? { ...old, ...values } : old,
-    );
-    form.reset(values);
-    toast.success('Configuration saved');
-  };
+  // Persist to the real `payroll_settings` singleton (Module 2 backend). On
+  // success the action invalidates the settings query, so `values: settings`
+  // re-syncs the form and clears the dirty state.
+  const { execute, isPending } = useUpdatePayrollSettings(() =>
+    toast.success('Configuration saved'),
+  );
+
+  const onSubmit = (values: HrmSettingsInput) => execute(values);
 
   if (isLoading || !settings) {
     return <Skeleton className='h-96 rounded-xl' />;
@@ -62,7 +59,7 @@ export function HrmSettingsForm() {
               type='submit'
               size='sm'
               disabled={!form.formState.isDirty}
-              isLoading={form.formState.isSubmitting}
+              isLoading={isPending}
             >
               Save changes
             </Button>

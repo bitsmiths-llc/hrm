@@ -17,6 +17,7 @@ interface MonthSelectorProps {
   placeholder?: string;
   minDate?: string; // YYYY-MM format
   maxDate?: string; // YYYY-MM format
+  disabledMonths?: string[]; // YYYY-MM format — unselectable regardless of range
 }
 
 export function MonthSelector({
@@ -24,6 +25,7 @@ export function MonthSelector({
   onChange,
   minDate,
   maxDate,
+  disabledMonths,
 }: MonthSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -54,6 +56,10 @@ export function MonthSelector({
     }
 
     if (maxDate && dateString > maxDate) {
+      return true;
+    }
+
+    if (disabledMonths?.includes(dateString)) {
       return true;
     }
 

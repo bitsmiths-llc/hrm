@@ -25,7 +25,8 @@ import { appConfig } from '@/config/app';
 import { adminNav, employeeNav } from '@/constants/hrm-nav';
 import { paths } from '@/constants/paths';
 
-import { RoleSwitcher } from './role-switcher';
+import { SignOutButton } from './sign-out-button';
+import { UserCard } from './user-card';
 
 type AppSidebarProps = {
   /** Nav config resolves client-side — icon components can't cross the
@@ -58,7 +59,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
   return (
     <Sidebar collapsible='icon' variant='inset'>
       <SidebarHeader className='px-3 py-3 group-data-[collapsible=icon]:px-2'>
-        <Link href='/' className='flex items-center gap-2'>
+        <Link href={paths.home} className='flex items-center gap-2'>
           <Image
             src={appConfig.logo}
             alt='Bitsmiths logo'
@@ -100,9 +101,8 @@ export function AppSidebar({ role }: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <RoleSwitcher
-          currentRole={config.roleLabel === 'Admin' ? 'Admin' : 'Employee'}
-        />
+        <UserCard />
+        <SignOutButton />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

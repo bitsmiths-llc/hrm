@@ -1,13 +1,20 @@
 // Domain types for Bitsmiths HRM (PRD-aligned). These mirror the intended
 // Supabase schema so the later mock → backend swap only touches the hooks.
 
-/** Onboarding completion activates the account directly — there is no
- *  admin review step. */
-export type AccountStatus = 'invited' | 'onboarding' | 'active';
+import { type CustomField } from '@/schema/payroll';
+
+/** Onboarding completion moves the account to `submitted`, an admin review
+ *  queue. An admin approves it (→ active) or returns it (→ onboarding) with a
+ *  note (BIT-10). */
+export type AccountStatus = 'invited' | 'onboarding' | 'submitted' | 'active';
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
-export type EmploymentType = 'full_time' | 'part_time';
+export type EmploymentType =
+  | 'full_time'
+  | 'part_time'
+  | 'contract'
+  | 'internship';
 
 /** Drives medical-allowance eligibility (Medical Allowance Policy §1) —
  *  probation and notice-period employees aren't eligible even if
@@ -53,6 +60,8 @@ export type Employee = {
   phone: string;
   emergencyContact: string;
   address: string;
+  city: string;
+  postalCode: string;
   cnic: string;
   dateOfBirth: string; // ISO date
   bank: BankInfo | null;
@@ -60,23 +69,18 @@ export type Employee = {
   employmentType: EmploymentType;
   employmentStage: EmploymentStage;
   baseSalary: number; // PKR
-  workingHours: number; // standard hours per pay period
+  workingHours: number; // standard hours per month
   designation: string;
+  department: string;
+  // Per-employee allowance overrides; null means inherit the global setting.
+  leavePoolDaysOverride: number | null;
+  medicalAccrualMonthlyOverride: number | null; // PKR
+  medicalCapOverride: number | null; // PKR
   status: AccountStatus;
+  /** Admin's note when a submission is returned to onboarding (BIT-10). */
+  reviewNote: string | null;
   invitedAt: string;
   joinedAt: string | null;
-};
-
-export type LeaveBalance = {
-  poolTotal: number; // 22
-  poolUsed: number; // paid + sick + 0.5 * half days, approved only
-  unpaidTaken: number; // outside the pool
-};
-
-export type MedicalBalance = {
-  accrued: number; // current claimable balance, PKR
-  cap: number; // 50,000
-  monthlyAccrual: number; // 5,000
 };
 
 export type LeaveRequest = {
@@ -88,6 +92,9 @@ export type LeaveRequest = {
   startDate: string;
   days: number; // 0.5 for half day
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee (in the
+   *  decision email and their leave history). */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -102,6 +109,8 @@ export type MedicalClaim = {
   expenseDate: string;
   proofFiles: string[]; // file names/URLs
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee. */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -114,6 +123,8 @@ export type OvertimeLog = {
   project: string;
   task: string;
   status: RequestStatus;
+  /** Set by admin when status is 'rejected' — shown to the employee. */
+  rejectionReason: string | null;
   createdAt: string;
 };
 
@@ -121,6 +132,8 @@ export type Payslip = {
   id: string;
   employeeId: string;
   employeeName: string;
+  /** Job title at the time the cycle ran — shown on the payslip PDF. */
+  designation: string;
   cycleMonth: string; // e.g. '2026-06'
   baseSalary: number;
   daysWorked: number;
@@ -128,12 +141,36 @@ export type Payslip = {
   totalBase: number;
   medical: number;
   overtimeHours: number;
+  /** Per-hour overtime rate (base ÷ working hours × multiplier), frozen on the
+   *  snapshot. Shown on the itemized payslip alongside hours and pay. */
+  overtimeRate?: number;
   /** Defaults to the global setting, but admin can override it per employee
    *  while the cycle is open — frozen here once the cycle is locked. */
   overtimeMultiplier: number;
   overtimePay: number;
+  /** Tax withheld this cycle (global taxRatePercent × gross earnings),
+   *  frozen here once the cycle is locked. */
+  taxDeduction: number;
+  /** Ad-hoc per-employee line items (bonus, deduction, etc.) admin adds
+   *  during the cycle — each folds into `total`. */
+  customFields: CustomField[];
   total: number;
 };
+
+export type PayslipMetaField = {
+  label: string;
+  value: string;
+};
+
+export type PayslipLineItem = {
+  label: string;
+  note?: string;
+  amount: number;
+};
+
+export type PayslipLogoVariant = 'default' | 'light' | 'watermark';
+
+export type PayslipContactKind = 'site' | 'phone' | 'pin';
 
 export type PayrollCycle = {
   id: string;

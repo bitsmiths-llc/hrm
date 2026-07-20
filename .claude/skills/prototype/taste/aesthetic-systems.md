@@ -1,11 +1,11 @@
 # Aesthetic Systems — Archetypes + the Design-System Library
 
-Taste is not one look — it is the ability to choose the *right* look for the brief and execute it with conviction. This file gives you two layers:
+Taste is not one look — it is the ability to choose the _right_ look for the brief and execute it with conviction. This file gives you two layers:
 
-1. **Archetypes** — a small set of reusable aesthetic directions, each mapped to our token system. Use these to reason about *what kind* of design fits.
+1. **Archetypes** — a small set of reusable aesthetic directions, each mapped to our token system. Use these to reason about _what kind_ of design fits.
 2. **The Library** — 138 concrete, named design-system specs in `design-systems/library/`. Use these when the brief points at a specific vibe (or a specific brand reference).
 
-> Taste serves the **Aesthetics** tier of the Decision Framework. An archetype or library system may set the *visual direction* but must still pass every Accessibility, Consistency, and token rule. See [`taste/design-taste.md`](./design-taste.md) for the anti-slop doctrine and [`taste/motion-choreography.md`](./motion-choreography.md) for motion.
+> Taste serves the **Aesthetics** tier of the Decision Framework. An archetype or library system may set the _visual direction_ but must still pass every Accessibility, Consistency, and token rule. See [`taste/design-taste.md`](./design-taste.md) for the anti-slop doctrine and [`taste/motion-choreography.md`](./motion-choreography.md) for motion.
 
 ---
 
@@ -21,9 +21,10 @@ Taste is not one look — it is the ability to choose the *right* look for the b
 
 ## The Archetypes
 
-Each archetype is a *recipe*, not a brand. Settings reference our existing tokens.
+Each archetype is a _recipe_, not a brand. Settings reference our existing tokens.
 
 ### 1. High-End Agency (Linear / Apple-tier)
+
 - **When:** premium products, launches, anything that must feel expensive.
 - **Type:** large display scale (`6xl`–`7xl`), tight leading, wide measure; one UI sans.
 - **Color:** off-black on warm/cool near-white; single restrained accent; calibrated low-chroma.
@@ -33,6 +34,7 @@ Each archetype is a *recipe*, not a brand. Settings reference our existing token
 - **Library kin:** `linear-app`, `apple`, `vercel`, `stripe`, `superhuman`, `premium`.
 
 ### 2. Editorial Minimalism
+
 - **When:** content, docs, marketing with a literary tone.
 - **Type:** serif or refined sans for headings; strict 60–75ch measure; strong scale contrast.
 - **Color:** paper/ink neutrals; one ink accent.
@@ -41,6 +43,7 @@ Each archetype is a *recipe*, not a brand. Settings reference our existing token
 - **Library kin:** `editorial`, `warm-editorial`, `kami`, `notion`, `modern`, `wired`, `publication`.
 
 ### 3. Industrial Brutalism / Tactical
+
 - **When:** data-heavy dashboards, dev tools, declassified-blueprint vibe.
 - **Type:** monospace or grotesque; extreme scale contrast; mono kickers/labels.
 - **Color:** utilitarian (black/white + one signal color); analog textures optional.
@@ -49,6 +52,7 @@ Each archetype is a *recipe*, not a brand. Settings reference our existing token
 - **Library kin:** `brutalism`, `neobrutalism`, `mono`, `warp`, `voltagent`, `theverge`.
 
 ### 4. Warm Soft-SaaS
+
 - **When:** friendly consumer/productivity apps, onboarding-heavy products.
 - **Type:** rounded humanist sans; medium scale contrast.
 - **Color:** warm neutrals + a friendly accent; soft pastels as support.
@@ -57,6 +61,7 @@ Each archetype is a *recipe*, not a brand. Settings reference our existing token
 - **Library kin:** `duolingo`, `lingo`, `friendly`, `intercom`, `zapier`, `xiaohongshu`.
 
 ### 5. Dark-Tech / Cinematic
+
 - **When:** AI, crypto, gaming, infra — high-drama dark surfaces.
 - **Type:** tight sans or mono; bright type on dark.
 - **Color:** void-black surfaces, neon/gradient accents, desaturated supporting hues.
@@ -65,6 +70,7 @@ Each archetype is a *recipe*, not a brand. Settings reference our existing token
 - **Library kin:** `elevenlabs`, `runwayml`, `cursor`, `revolut`, `spacex`, `cosmic`, `shopify`.
 
 ### 6. Morphism & Effects
+
 - **When:** a specific tactile gimmick is the point.
 - **Use the matching library spec directly** rather than improvising: `glassmorphism`, `claymorphism`, `neumorphism`, `skeumorphism`, `gradient`, `neon`. These are effect-forward and carry strict execution rules in their `DESIGN.md`.
 
@@ -74,15 +80,15 @@ Each archetype is a *recipe*, not a brand. Settings reference our existing token
 
 Every library spec follows the same shape: **Visual Theme → Color Palette & Roles → Typography → Spacing → Components → Motion**. To apply one:
 
-| `DESIGN.md` section | Maps to |
-|---------------------|---------|
-| Color Palette & Roles (hex + role) | Override `semantic.*` in `tokens/colors.json` (primitives stay; re-point semantic aliases). Verify every pair against `accessibility/wcag-checklist.md` contrast — **a brand hex that fails contrast must be adjusted**. |
-| Typography Rules (family, scale, weight) | Set families/scale in `tokens/typography.json`; keep our composite `textStyle` structure. |
-| Spacing / layout | Map to `tokens/spacing.json` scale + `tokens/breakpoints.json` grid. |
-| Radius / geometry | `tokens/borders.json`. |
-| Elevation / shadow / effects | `tokens/shadows.json`, plus `tokens/blur.json` / `tokens/gradients.json` for morphism systems. |
-| Motion | `tokens/motion.json` + `taste/motion-choreography.md`. |
-| Components | Render via component specs in `components/` through the framework adapter. |
+| `DESIGN.md` section                      | Maps to                                                                                                                                                                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Color Palette & Roles (hex + role)       | Override `semantic.*` in `tokens/colors.json` (primitives stay; re-point semantic aliases). Verify every pair against `accessibility/wcag-checklist.md` contrast — **a brand hex that fails contrast must be adjusted**. |
+| Typography Rules (family, scale, weight) | Set families/scale in `tokens/typography.json`; keep our composite `textStyle` structure.                                                                                                                                |
+| Spacing / layout                         | Map to `tokens/spacing.json` scale + `tokens/breakpoints.json` grid.                                                                                                                                                     |
+| Radius / geometry                        | `tokens/borders.json`.                                                                                                                                                                                                   |
+| Elevation / shadow / effects             | `tokens/shadows.json`, plus `tokens/blur.json` / `tokens/gradients.json` for morphism systems.                                                                                                                           |
+| Motion                                   | `tokens/motion.json` + `taste/motion-choreography.md`.                                                                                                                                                                   |
+| Components                               | Render via component specs in `components/` through the framework adapter.                                                                                                                                               |
 
 > **Non-negotiable:** library specs describe brand aesthetics, not accessibility. After applying one, re-run contrast, focus-visible, target-size, and reduced-motion checks. Taste never overrides POUR.
 
@@ -91,7 +97,6 @@ Every library spec follows the same shape: **Visual Theme → Color Palette & Ro
 ## The Library Catalog
 
 There are **138 named design systems** in `design-systems/library/`. Each is a complete `DESIGN.md` spec (visual theme, color roles + hex, typography, spacing, components, motion). Load the one that matches the brief, then translate its values through the [Framework Adapter Protocol](../frameworks/adapter-protocol.md).
-
 
 ### AI & LLM (14)
 

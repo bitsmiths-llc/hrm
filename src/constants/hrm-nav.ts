@@ -43,6 +43,13 @@ export const adminNav: NavConfig = {
     { label: 'Approvals', href: paths.admin.approvals, icon: CheckSquare },
     { label: 'Employees', href: paths.admin.employees, icon: Users },
     { label: 'Payroll', href: paths.admin.payroll, icon: Banknote },
-    { label: 'Policies', href: paths.admin.policies, icon: FileText },
+    {
+      label: 'Policies & Contracts',
+      href: paths.admin.policies,
+      icon: FileText,
+    },
+    // Settings were folded into the Policies "Configuration" tab (Module 3), so
+    // there is no standalone Settings nav item — /settings redirects there.
+    { label: 'Profile', href: paths.admin.profile, icon: UserCircle },
   ],
 };
