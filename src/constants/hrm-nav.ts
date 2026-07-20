@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Palmtree,
   Receipt,
-  Settings,
   UserCircle,
   Users,
 } from 'lucide-react';
@@ -45,6 +44,5 @@ export const adminNav: NavConfig = {
     { label: 'Employees', href: paths.admin.employees, icon: Users },
     { label: 'Payroll', href: paths.admin.payroll, icon: Banknote },
     { label: 'Policies', href: paths.admin.policies, icon: FileText },
-    { label: 'Settings', href: paths.admin.settings, icon: Settings },
   ],
 };

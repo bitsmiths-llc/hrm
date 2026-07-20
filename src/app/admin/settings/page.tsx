@@ -1,24 +1,9 @@
-import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
-import { PageHeader } from '@/components/hrm/page-header';
-import { LeaveSettingsForm } from '@/components/settings/leave-settings-form';
-import { MedicalSettingsForm } from '@/components/settings/medical-settings-form';
-import { OvertimeSettingsForm } from '@/components/settings/overtime-settings-form';
+import { paths } from '@/constants/paths';
 
-export const metadata: Metadata = { title: 'Settings' };
-
+/** Settings were folded into the Policies page ("Configuration" tab), since
+ *  they're the numeric side of the same policies. Old links land there. */
 export default function SettingsPage() {
-  return (
-    <>
-      <PageHeader
-        title='Settings'
-        description='Module-wide configuration for leave, medical allowance, and payroll.'
-      />
-      <div className='flex flex-wrap gap-6'>
-        <LeaveSettingsForm />
-        <MedicalSettingsForm />
-        <OvertimeSettingsForm />
-      </div>
-    </>
-  );
+  redirect(paths.admin.policies);
 }

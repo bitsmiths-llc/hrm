@@ -188,3 +188,31 @@ body {
 .dark .rich-text-editor .ck-content * {
   color: hsl(var(--foreground)) !important;
 }
+
+/* Sizing lives here rather than in Tailwind arbitrary selectors: `__` in a
+ * class like [&_.ck-editor__editable] compiles underscores to spaces, so
+ * those variants silently never match CKEditor's BEM class names. */
+.rich-text-editor .ck-editor__editable {
+  min-height: 12rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-inline: 0.75rem;
+}
+
+/* Fill mode: the editor stretches to its flex parent's height (e.g. the
+ * create-policy sheet) — toolbar stays fixed, the editable area grows and
+ * scrolls internally. */
+.rich-text-editor--fill .ck-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.rich-text-editor--fill .ck-editor__main {
+  flex: 1;
+  min-height: 0;
+}
+.rich-text-editor--fill .ck-editor__editable {
+  height: 100%;
+  max-height: none;
+}

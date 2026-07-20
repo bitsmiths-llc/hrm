@@ -15,10 +15,15 @@ import {
 
 import 'ckeditor5/ckeditor5.css';
 
+import { cn } from '@/lib/utils';
+
 type RichTextEditorProps = {
   value: string;
   onChange: (html: string) => void;
   disabled?: boolean;
+  /** Merged onto the wrapper — e.g. to let the editor stretch and fill a
+   *  flex column instead of the default capped height. */
+  className?: string;
 };
 
 /** CKEditor 5, dynamically imported by `rich-text-editor.tsx` so it never
@@ -29,9 +34,15 @@ export function RichTextEditorImpl({
   value,
   onChange,
   disabled,
+  className,
 }: RichTextEditorProps) {
   return (
-    <div className='rich-text-editor rounded-md border border-input [&_.ck-editor__editable]:max-h-[50vh] [&_.ck-editor__editable]:min-h-48 [&_.ck-editor__editable]:overflow-y-auto [&_.ck-editor__editable]:px-3 [&_.ck-toolbar]:rounded-t-md [&_.ck-toolbar]:border-0 [&_.ck-toolbar]:border-b [&_.ck-toolbar]:border-input'>
+    <div
+      className={cn(
+        'rich-text-editor rounded-md border border-input [&_.ck-toolbar]:rounded-t-md [&_.ck-toolbar]:border-0 [&_.ck-toolbar]:border-b [&_.ck-toolbar]:border-input',
+        className,
+      )}
+    >
       <CKEditor
         editor={ClassicEditor}
         disabled={disabled}

@@ -129,7 +129,15 @@ export const mockPolicyAcknowledgments: PolicyAcknowledgment[] = [
     acknowledgedAt: '2026-03-11',
   },
 
-  // emp-2 (Hamza) — fully caught up on every current version.
+  // emp-2 (Hamza) — fully caught up on every current version. Records are
+  // append-only history: his v1 acknowledgment stays alongside the v2 one,
+  // so past versions can show everyone who acknowledged them at the time.
+  {
+    policyId: 'pol-1',
+    employeeId: 'emp-2',
+    acknowledgedVersion: 1,
+    acknowledgedAt: '2026-01-04',
+  },
   {
     policyId: 'pol-1',
     employeeId: 'emp-2',

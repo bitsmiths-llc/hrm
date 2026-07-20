@@ -61,6 +61,19 @@ export const useMyPolicyAcknowledgments = () =>
 export const currentVersion = (policy: Policy) =>
   policy.versions[policy.versions.length - 1];
 
+/** Acknowledgments are append-only history (one record per version an
+ *  employee acknowledged), so "where does this employee stand" means the
+ *  record with the highest version for the policy. */
+export const latestAcknowledgment = (
+  acknowledgments: PolicyAcknowledgment[],
+  policyId: string,
+) =>
+  acknowledgments
+    .filter((ack) => ack.policyId === policyId)
+    .reduce<
+      PolicyAcknowledgment | undefined
+    >((best, ack) => (!best || ack.acknowledgedVersion > best.acknowledgedVersion ? ack : best), undefined);
+
 /** How many policies the signed-in employee still has to acknowledge —
  *  missing acknowledgments and stale ones (older version) both count.
  *  Drives the dashboard banner and the sidebar notification pill. */
@@ -70,7 +83,7 @@ export const useUnacknowledgedPolicyCount = () => {
 
   return (policies ?? []).filter((policy) => {
     const latest = currentVersion(policy);
-    const ack = acknowledgments.find((a) => a.policyId === policy.id);
+    const ack = latestAcknowledgment(acknowledgments, policy.id);
     return !ack || ack.acknowledgedVersion < latest.version;
   }).length;
 };

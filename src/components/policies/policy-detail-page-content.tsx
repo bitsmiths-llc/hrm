@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import {
   currentVersion,
+  latestAcknowledgment,
   useMyPolicyAcknowledgments,
   usePolicy,
 } from '@/hooks/queries/policies';
@@ -25,6 +26,7 @@ import { mockCurrentEmployee } from '@/constants/mock/employees';
 import { paths } from '@/constants/paths';
 import { QueryKeys } from '@/constants/query-keys';
 
+import { DownloadPolicyButton } from './download-policy-button';
 import { PolicyContent } from './policy-content';
 
 import { PolicyAcknowledgment } from '@/types/hrm';
@@ -55,7 +57,7 @@ export function PolicyDetailPageContent({
   }
 
   const latest = currentVersion(policy);
-  const ack = acknowledgments?.find((a) => a.policyId === policy.id);
+  const ack = latestAcknowledgment(acknowledgments ?? [], policy.id);
   const upToDate = !!ack && ack.acknowledgedVersion >= latest.version;
 
   // Diffed against whatever version the employee last acknowledged (not
@@ -76,15 +78,19 @@ export function PolicyDetailPageContent({
     queryClient.setQueryData<PolicyAcknowledgment[]>(
       [QueryKeys.POLICY_ACKNOWLEDGMENTS],
       (old) => {
-        const withoutThis = (old ?? []).filter(
+        // Append-only history: earlier-version records stay (they feed the
+        // admin's per-version acknowledgment lists); only a duplicate for
+        // this exact version is replaced.
+        const withoutThisVersion = (old ?? []).filter(
           (a) =>
             !(
               a.policyId === policy.id &&
-              a.employeeId === mockCurrentEmployee.id
+              a.employeeId === mockCurrentEmployee.id &&
+              a.acknowledgedVersion === latest.version
             ),
         );
         return [
-          ...withoutThis,
+          ...withoutThisVersion,
           {
             policyId: policy.id,
             employeeId: mockCurrentEmployee.id,
@@ -110,7 +116,9 @@ export function PolicyDetailPageContent({
       <PageHeader
         title={policy.title}
         description={`${policyCategoryLabels[policy.category]} · Version ${latest.version}`}
-      />
+      >
+        <DownloadPolicyButton policy={policy} version={latest} />
+      </PageHeader>
 
       {!upToDate && (
         <Card className='border-amber-500/40 bg-amber-500/5'>

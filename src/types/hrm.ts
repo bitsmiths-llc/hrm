@@ -149,6 +149,9 @@ export type HrmSettings = {
    *  payroll run. Admin-configured only — never shown to employees
    *  (PRD 5.3.1). */
   overtimeMultiplier: number;
+  /** Percentage of gross earnings withheld as tax each payroll cycle.
+   *  0 disables tax withholding entirely. */
+  taxRatePercent: number;
   /** Size of the shared annual leave pool (Paid + Sick + Half Day), in
    *  days. Resets each year. */
   leavePoolDays: number;
@@ -156,6 +159,12 @@ export type HrmSettings = {
   medicalMonthlyAccrual: number;
   /** Absolute cap on accrued medical allowance, in PKR. */
   medicalBalanceCap: number;
+};
+
+/** Admin-managed list employees pick from when logging overtime. */
+export type Project = {
+  id: string;
+  name: string;
 };
 
 export type PolicyCategory = 'leave' | 'medical' | 'overtime' | 'general';

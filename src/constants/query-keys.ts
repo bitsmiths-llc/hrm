@@ -14,4 +14,5 @@ export enum QueryKeys {
   POLICY_ACKNOWLEDGMENTS = 'policy-acknowledgments',
   CONTRACTS = 'contracts',
   HRM_SETTINGS = 'hrm-settings',
+  PROJECTS = 'projects',
 }

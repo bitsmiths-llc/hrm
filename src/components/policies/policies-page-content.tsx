@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useMyContract } from '@/hooks/queries/contracts';
 import {
   currentVersion,
+  latestAcknowledgment,
   useMyPolicyAcknowledgments,
   usePolicies,
 } from '@/hooks/queries/policies';
@@ -62,7 +63,7 @@ export function PoliciesPageContent() {
         <ul className='flex flex-col divide-y divide-border rounded-lg border border-border'>
           {policies.map((policy) => {
             const latest = currentVersion(policy);
-            const ack = acknowledgments?.find((a) => a.policyId === policy.id);
+            const ack = latestAcknowledgment(acknowledgments ?? [], policy.id);
             const upToDate = !!ack && ack.acknowledgedVersion >= latest.version;
 
             return (

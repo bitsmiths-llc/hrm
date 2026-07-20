@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useProjects } from '@/hooks/queries/projects';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -25,6 +27,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { ControlledDatePicker } from '@/components/ui/form/controlled-date-picker';
+import { ControlledSelect } from '@/components/ui/form/controlled-select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -32,6 +35,7 @@ import { type OvertimeLogInput, overtimeLogSchema } from '@/schema/overtime';
 
 export function LogOvertimeDialog() {
   const [open, setOpen] = useState(false);
+  const { data: projects } = useProjects();
 
   const form = useForm<OvertimeLogInput>({
     resolver: zodResolver(overtimeLogSchema),
@@ -96,21 +100,14 @@ export function LogOvertimeDialog() {
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
+            <ControlledSelect<OvertimeLogInput>
               name='project'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder='e.g. Client Website Redesign'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              label='Project'
+              placeholder='Select a project'
+              options={(projects ?? []).map((project) => ({
+                value: project.name,
+                label: project.name,
+              }))}
             />
             <FormField
               control={form.control}

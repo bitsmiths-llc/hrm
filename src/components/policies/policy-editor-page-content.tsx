@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, FileX2 } from 'lucide-react';
+import { ArrowLeft, FileX2, Send, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -24,7 +24,8 @@ import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 import { QueryKeys } from '@/constants/query-keys';
 
-import { PolicyComplianceList } from './policy-compliance-list';
+import { DownloadPolicyButton } from './download-policy-button';
+import { ImportPdfButton } from './import-pdf-button';
 import { PolicyVersionHistory } from './policy-version-history';
 
 import { Policy, PolicyVersion } from '@/types/hrm';
@@ -32,6 +33,10 @@ import { Policy, PolicyVersion } from '@/types/hrm';
 type PolicyEditorPageContentProps = {
   policyId: string;
 };
+
+/** Four actions share the header, so they run one size down from the usual
+ *  `sm` to avoid crowding it. */
+const compactButton = 'h-8 gap-1.5 px-2.5 text-xs [&_svg]:size-3.5';
 
 export function PolicyEditorPageContent({
   policyId,
@@ -77,6 +82,11 @@ export function PolicyEditorPageContent({
     toast.info(`Draft discarded — back to version ${latest.version}.`);
   };
 
+  const handlePdfImported = (html: string) => {
+    setDraftHtml(html);
+    setEditorKey((key) => key + 1);
+  };
+
   const handlePublish = () => {
     const publishedAt = new Date().toISOString().slice(0, 10);
     queryClient.setQueryData<Policy[]>([QueryKeys.POLICIES], (old) =>
@@ -114,11 +124,38 @@ export function PolicyEditorPageContent({
         title={policy.title}
         description={`${policyCategoryLabels[policy.category]} · Version ${latest.version}`}
       >
-        <Button variant='outline' disabled={!isDirty} onClick={handleDiscard}>
+        <ImportPdfButton
+          size='sm'
+          className={compactButton}
+          onImported={handlePdfImported}
+        />
+        <DownloadPolicyButton
+          size='sm'
+          className={compactButton}
+          policy={policy}
+          version={latest}
+        />
+        <Button
+          variant='outline'
+          size='sm'
+          className={compactButton}
+          iconLeft={Undo2}
+          disabled={!isDirty}
+          onClick={handleDiscard}
+        >
           Discard changes
         </Button>
         <ConfirmDialog
-          trigger={<Button disabled={!isDirty}>Publish update</Button>}
+          trigger={
+            <Button
+              size='sm'
+              className={compactButton}
+              iconLeft={Send}
+              disabled={!isDirty}
+            >
+              Publish update
+            </Button>
+          }
           title='Publish this update?'
           description='Employees who already acknowledged an earlier version will see the changed lines highlighted and be prompted to re-acknowledge.'
           confirmLabel='Publish new version'
@@ -128,25 +165,18 @@ export function PolicyEditorPageContent({
 
       <RichTextEditor key={editorKey} value={content} onChange={setDraftHtml} />
 
-      <div className='grid gap-6 md:grid-cols-2'>
-        <div className='flex flex-col gap-3'>
-          <h2 className='text-lg font-semibold'>Version history</h2>
-          <PolicyVersionHistory
-            versions={policy.versions}
-            currentVersionNumber={latest.version}
-            onRevert={handleRevert}
-          />
-        </div>
-        <div className='flex flex-col gap-3'>
-          <h2 className='text-lg font-semibold'>Acknowledgment status</h2>
-          <PolicyComplianceList
-            policy={policy}
-            employees={employees ?? []}
-            acknowledgments={(acknowledgments ?? []).filter(
-              (ack) => ack.policyId === policy.id,
-            )}
-          />
-        </div>
+      <div className='flex flex-col gap-3'>
+        <h2 className='text-lg font-semibold'>Version history</h2>
+        <PolicyVersionHistory
+          policy={policy}
+          versions={policy.versions}
+          currentVersionNumber={latest.version}
+          employees={employees ?? []}
+          acknowledgments={(acknowledgments ?? []).filter(
+            (ack) => ack.policyId === policy.id,
+          )}
+          onRevert={handleRevert}
+        />
       </div>
     </>
   );

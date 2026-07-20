@@ -3,11 +3,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { usePolicies } from '@/hooks/queries/policies';
 
+import { ImportPdfButton } from '@/components/policies/import-pdf-button';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -52,11 +54,25 @@ export function CreatePolicyDialog({
   const queryClient = useQueryClient();
   const router = useRouter();
   const { data: policies } = usePolicies();
+  // CKEditor only reads its `data` prop on mount, so a PDF import has to
+  // force a fresh mount for the imported content to appear.
+  const [editorKey, setEditorKey] = useState(0);
 
   const form = useForm<CreatePolicyInput>({
     resolver: zodResolver(createPolicySchema),
     defaultValues: { title: '', category: 'general', contentHtml: '' },
   });
+
+  const handlePdfImported = (html: string, fileName: string) => {
+    form.setValue('contentHtml', html, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    if (!form.getValues('title')) {
+      form.setValue('title', fileName.replace(/[-_]+/g, ' ').trim());
+    }
+    setEditorKey((key) => key + 1);
+  };
 
   const onSubmit = (values: CreatePolicyInput) => {
     const id = `pol-${Date.now()}`;
@@ -102,7 +118,7 @@ export function CreatePolicyDialog({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className='flex flex-1 flex-col gap-4'
+            className='flex min-h-0 flex-1 flex-col gap-4'
           >
             <div className='grid grid-cols-2 gap-4'>
               <FormField
@@ -125,9 +141,15 @@ export function CreatePolicyDialog({
                 placeholder='Select category'
               />
             </div>
+            <div className='flex justify-end'>
+              <ImportPdfButton onImported={handlePdfImported} />
+            </div>
             <ControlledRichText<CreatePolicyInput>
+              key={editorKey}
               name='contentHtml'
               label='Content'
+              containerClassName='flex min-h-0 flex-1 flex-col'
+              editorClassName='rich-text-editor--fill flex min-h-0 flex-1 flex-col'
             />
             <SheetFooter className='mt-auto'>
               <Button
