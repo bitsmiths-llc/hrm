@@ -5,10 +5,9 @@ import Link from 'next/link';
 
 import { useMyContract } from '@/hooks/queries/contracts';
 import {
-  currentVersion,
   latestAcknowledgment,
+  useActivePolicies,
   useMyPolicyAcknowledgments,
-  usePolicies,
 } from '@/hooks/queries/policies';
 
 import { ContractVersionList } from '@/components/employees/contract-version-list';
@@ -20,7 +19,9 @@ import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
 export function PoliciesPageContent() {
-  const { data: policies, isLoading: policiesLoading } = usePolicies();
+  // Employees only ever see the current version of each policy — this reads
+  // the active `policy_versions` rows, never the history behind them.
+  const { data: policies, isLoading: policiesLoading } = useActivePolicies();
   const { data: acknowledgments, isLoading: acksLoading } =
     useMyPolicyAcknowledgments();
   const { data: contract, isLoading: contractLoading } = useMyContract();
@@ -62,9 +63,8 @@ export function PoliciesPageContent() {
       ) : (
         <ul className='flex flex-col divide-y divide-border rounded-lg border border-border'>
           {policies.map((policy) => {
-            const latest = currentVersion(policy);
             const ack = latestAcknowledgment(acknowledgments ?? [], policy.id);
-            const upToDate = !!ack && ack.acknowledgedVersion >= latest.version;
+            const upToDate = !!ack && ack.acknowledgedVersion >= policy.version;
 
             return (
               <li key={policy.id}>
@@ -78,7 +78,7 @@ export function PoliciesPageContent() {
                     </p>
                     <p className='truncate text-xs text-muted-foreground'>
                       {policyCategoryLabels[policy.category]} · Version{' '}
-                      {latest.version}
+                      {policy.version}
                     </p>
                   </div>
                   {upToDate ? (

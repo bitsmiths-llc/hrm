@@ -24,7 +24,8 @@ export enum QueryKeys {
   PAYROLL_RUNS = 'payroll-runs', // admin run list / a run by month (BIT-15)
   RUN_PAYSLIPS = 'run-payslips', // draft/frozen payslips for one run (BIT-15)
   RUN_EXPORTS = 'run-exports', // Payoneer export artifacts for one run (BIT-16)
-  POLICIES = 'policies',
+  POLICIES = 'policies', // admin repository: policies + full version history (BIT-21)
+  ACTIVE_POLICIES = 'active-policies', // employee view: one active version per policy (BIT-21)
   POLICY_ACKNOWLEDGMENTS = 'policy-acknowledgments',
   CONTRACTS = 'contracts',
   HRM_SETTINGS = 'hrm-settings',

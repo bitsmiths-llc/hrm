@@ -1,11 +1,11 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, FileX2, Send, Undo2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { usePublishPolicyVersion } from '@/hooks/actions/use-manage-policies';
 import {
   currentVersion,
   useActiveEmployees,
@@ -22,13 +22,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
-import { QueryKeys } from '@/constants/query-keys';
 
 import { DownloadPolicyButton } from './download-policy-button';
 import { ImportPdfButton } from './import-pdf-button';
 import { PolicyVersionHistory } from './policy-version-history';
 
-import { Policy, PolicyVersion } from '@/types/hrm';
+import { PolicyVersion } from '@/types/hrm';
 
 type PolicyEditorPageContentProps = {
   policyId: string;
@@ -41,16 +40,29 @@ const compactButton = 'h-8 gap-1.5 px-2.5 text-xs [&_svg]:size-3.5';
 export function PolicyEditorPageContent({
   policyId,
 }: PolicyEditorPageContentProps) {
-  const queryClient = useQueryClient();
   const { data: policy, isLoading } = usePolicy(policyId);
   const { data: employees } = useActiveEmployees();
   const { data: acknowledgments } = useAllPolicyAcknowledgments();
 
   const [draftHtml, setDraftHtml] = useState<string | null>(null);
-  // CKEditor's `data` prop only seeds the *initial* content — it doesn't
-  // reactively re-sync on prop changes — so a revert has to force a fresh
-  // mount to actually show the reverted content in the editor.
-  const [editorKey, setEditorKey] = useState(0);
+  // CKEditor's `data` prop only seeds the *initial* content — it never
+  // re-syncs when the prop changes. Anything that swaps the body out from
+  // under the editor therefore has to force a fresh mount, or the editor
+  // silently keeps showing stale content while the header claims otherwise.
+  // This counter covers revert / discard / PDF import; publishing is handled
+  // by folding the active version number into the key below.
+  const [editorNonce, setEditorNonce] = useState(0);
+
+  // The version number comes back from `publish_policy_version` rather than
+  // being guessed here — the RPC owns the numbering and the active-version flip.
+  const { execute: publish, isPending: isPublishing } = usePublishPolicyVersion(
+    (version) => {
+      setDraftHtml(null);
+      toast.success(
+        `${policy?.title ?? 'Policy'} updated to version ${version}`,
+      );
+    },
+  );
 
   if (isLoading) return <Skeleton className='h-96 rounded-xl' />;
 
@@ -70,7 +82,7 @@ export function PolicyEditorPageContent({
 
   const handleRevert = (version: PolicyVersion) => {
     setDraftHtml(version.contentHtml);
-    setEditorKey((key) => key + 1);
+    setEditorNonce((nonce) => nonce + 1);
     toast.info(
       `Version ${version.version} loaded into the editor — publish to make it current, or discard changes to go back.`,
     );
@@ -78,37 +90,17 @@ export function PolicyEditorPageContent({
 
   const handleDiscard = () => {
     setDraftHtml(null);
-    setEditorKey((key) => key + 1);
+    setEditorNonce((nonce) => nonce + 1);
     toast.info(`Draft discarded — back to version ${latest.version}.`);
   };
 
   const handlePdfImported = (html: string) => {
     setDraftHtml(html);
-    setEditorKey((key) => key + 1);
+    setEditorNonce((nonce) => nonce + 1);
   };
 
-  const handlePublish = () => {
-    const publishedAt = new Date().toISOString().slice(0, 10);
-    queryClient.setQueryData<Policy[]>([QueryKeys.POLICIES], (old) =>
-      old?.map((p) =>
-        p.id === policy.id
-          ? {
-              ...p,
-              versions: [
-                ...p.versions,
-                {
-                  version: latest.version + 1,
-                  contentHtml: content,
-                  publishedAt,
-                },
-              ],
-            }
-          : p,
-      ),
-    );
-    setDraftHtml(null);
-    toast.success(`${policy.title} updated to version ${latest.version + 1}`);
-  };
+  const handlePublish = () =>
+    publish({ policyId: policy.id, bodyHtml: content });
 
   return (
     <>
@@ -152,6 +144,7 @@ export function PolicyEditorPageContent({
               className={compactButton}
               iconLeft={Send}
               disabled={!isDirty}
+              isLoading={isPublishing}
             >
               Publish update
             </Button>
@@ -163,7 +156,15 @@ export function PolicyEditorPageContent({
         />
       </PageHeader>
 
-      <RichTextEditor key={editorKey} value={content} onChange={setDraftHtml} />
+      {/* Keyed on the version being edited: when a publish lands and the query
+          refetches, `latest` becomes the new version and the editor remounts
+          carrying its body — so what's on screen always matches the active
+          version in the header. */}
+      <RichTextEditor
+        key={`v${latest.version}-${editorNonce}`}
+        value={content}
+        onChange={setDraftHtml}
+      />
 
       <div className='flex flex-col gap-3'>
         <h2 className='text-lg font-semibold'>Version history</h2>

@@ -280,9 +280,24 @@ export type PolicyVersion = {
 export type Policy = {
   id: string;
   title: string;
+  /** Kebab-case, unique, stable across title edits — the join key M3.5 uses to
+   *  tie a policy document to the rule the system actually enforces. */
+  slug: string;
   category: PolicyCategory;
   /** Oldest first; the last entry is the current version. */
   versions: PolicyVersion[];
+};
+
+/** A policy flattened onto its single active version — what employees see and
+ *  what the sidebar badge counts. Deliberately omits `contentHtml`: the list
+ *  only needs the heading, and the body is fetched on the detail page. */
+export type ActivePolicy = {
+  id: string;
+  title: string;
+  slug: string;
+  category: PolicyCategory;
+  version: number;
+  publishedAt: string;
 };
 
 /** One employee's acknowledgment of a policy — separate from `Policy`

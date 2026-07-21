@@ -609,7 +609,7 @@ export type Database = {
           overtime_pay?: number
           overtime_rate?: number
           payroll_run_id: string
-          period_month?: string
+          period_month: string
           tax_deduction?: number
           total_base: number
           total_pay: number
@@ -651,6 +651,68 @@ export type Database = {
             columns: ["payroll_run_id"]
             isOneToOne: false
             referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policies: {
+        Row: {
+          category: Database["public"]["Enums"]["policy_category"]
+          created_at: string
+          id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["policy_category"]
+          created_at?: string
+          id?: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["policy_category"]
+          created_at?: string
+          id?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      policy_versions: {
+        Row: {
+          body_html: string
+          id: string
+          is_active: boolean
+          policy_id: string
+          published_at: string
+          version: number
+        }
+        Insert: {
+          body_html: string
+          id?: string
+          is_active?: boolean
+          policy_id: string
+          published_at?: string
+          version: number
+        }
+        Update: {
+          body_html?: string
+          id?: string
+          is_active?: boolean
+          policy_id?: string
+          published_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_versions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
             referencedColumns: ["id"]
           },
         ]
@@ -739,6 +801,32 @@ export type Database = {
     Functions: {
       accept_onboarding: { Args: never; Returns: undefined }
       calculate_payroll: { Args: { p_run_id: string }; Returns: undefined }
+      create_policy: {
+        Args: {
+          p_body_html: string
+          p_category: Database["public"]["Enums"]["policy_category"]
+          p_slug: string
+          p_title: string
+        }
+        Returns: {
+          category: Database["public"]["Enums"]["policy_category"]
+          created_at: string
+          id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      // Hand-typed: dashboard_summary() returns jsonb, which the generator
+      // widens to `Json`. The shape is fixed by the RPC (see
+      // 20260720120000_m4_dashboard_rpcs.sql) — keep this block when
+      // regenerating.
       dashboard_summary: {
         Args: never
         Returns: {
@@ -780,13 +868,12 @@ export type Database = {
         Returns: {
           employee_id: string
           full_name: string
+          pool: number
           remaining: number
           used: number
-          pool: number
         }[]
       }
       lock_payroll: { Args: { p_run_id: string }; Returns: undefined }
-      unlock_payroll: { Args: { p_run_id: string }; Returns: undefined }
       medical_balance: {
         Args: { p_employee: string }
         Returns: {
@@ -801,16 +888,35 @@ export type Database = {
       pending_approvals: {
         Args: never
         Returns: {
-          kind: string
-          item_id: string
+          amount: number
           employee_id: string
           employee_name: string
-          summary: string
-          amount: number | null
+          item_id: string
+          kind: string
           submitted_at: string
+          summary: string
         }[]
       }
+      publish_policy_version: {
+        Args: { p_body_html: string; p_policy_id: string }
+        Returns: {
+          body_html: string
+          id: string
+          is_active: boolean
+          policy_id: string
+          published_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "policy_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      run_is_locked: { Args: { p_run_id: string }; Returns: boolean }
       submit_onboarding: { Args: never; Returns: undefined }
+      unlock_payroll: { Args: { p_run_id: string }; Returns: undefined }
     }
     Enums: {
       account_status: "invited" | "onboarding" | "submitted" | "active"
@@ -818,6 +924,7 @@ export type Database = {
       leave_type: "paid" | "sick" | "unpaid" | "half_day"
       medical_for: "self" | "parent" | "spouse" | "child"
       payroll_status: "open" | "locked"
+      policy_category: "leave" | "medical" | "overtime" | "general"
       request_status: "pending" | "approved" | "rejected"
       service_type:
         | "consultation"
@@ -960,6 +1067,7 @@ export const Constants = {
       leave_type: ["paid", "sick", "unpaid", "half_day"],
       medical_for: ["self", "parent", "spouse", "child"],
       payroll_status: ["open", "locked"],
+      policy_category: ["leave", "medical", "overtime", "general"],
       request_status: ["pending", "approved", "rejected"],
       service_type: [
         "consultation",
