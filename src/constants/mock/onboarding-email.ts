@@ -1,12 +1,24 @@
 import { OnboardingEmailTemplate } from '@/types/hrm';
 
 /** Placeholders the admin can drop into the subject or body — swapped for
- *  real values when each invitation is sent. */
+ *  real values when each invitation is sent. `sample` is what the preview
+ *  substitutes so the admin sees a realistic email. */
 export const ONBOARDING_EMAIL_PLACEHOLDERS = [
-  { token: '{{employee_name}}', label: 'Employee name' },
-  { token: '{{invite_link}}', label: 'Invitation link' },
-  { token: '{{company_name}}', label: 'Company name' },
+  { token: '{{employee_name}}', label: 'Employee name', sample: 'Ayesha Khan' },
+  { token: '{{invite_link}}', label: 'Invitation link', sample: '#' },
+  {
+    token: '{{company_name}}',
+    label: 'Company name',
+    sample: 'Bitsmiths Studio',
+  },
 ] as const;
+
+/** Replaces every placeholder token with its preview sample value. */
+export const fillOnboardingPlaceholders = (text: string) =>
+  ONBOARDING_EMAIL_PLACEHOLDERS.reduce(
+    (result, { token, sample }) => result.split(token).join(sample),
+    text,
+  );
 
 export const mockOnboardingEmailTemplate: OnboardingEmailTemplate = {
   subject: 'You’re invited to join {{company_name}}',
