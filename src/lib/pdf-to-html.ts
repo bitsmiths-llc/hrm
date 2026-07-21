@@ -48,10 +48,18 @@ export async function pdfToPolicyHtml(file: File): Promise<string> {
 export async function documentToPolicyHtml(
   doc: PDFDocumentProxy,
 ): Promise<string> {
+  // Every page's text is fetched up front and in parallel — the pages are
+  // independent, and pdf.js resolves them off the same worker either way. The
+  // parse below still walks them in page order, so `lines` stays in document
+  // order.
+  const contents = await Promise.all(
+    Array.from({ length: doc.numPages }, (_, index) =>
+      doc.getPage(index + 1).then((page) => page.getTextContent()),
+    ),
+  );
+
   const lines: PdfLine[] = [];
-  for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber += 1) {
-    const page = await doc.getPage(pageNumber);
-    const content = await page.getTextContent();
+  for (const content of contents) {
     const items = content.items.filter(
       (item): item is TextItem => 'str' in item,
     );

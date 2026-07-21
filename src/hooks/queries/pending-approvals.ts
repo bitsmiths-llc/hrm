@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { authQuery } from '@/lib/client/auth-query';
 
 import { QueryKeys } from '@/constants/query-keys';
+import { pendingApprovalsSchema } from '@/schema/pending-approval';
 
 import { PendingApproval } from '@/types/hrm';
 
@@ -16,7 +17,9 @@ const fetchPendingApprovals = authQuery(
   async ({ supabase }): Promise<PendingApproval[]> => {
     const { data, error } = await supabase.rpc('pending_approvals');
     if (error) throw new Error(error.message);
-    return (data ?? []) as PendingApproval[];
+    // Parsed, not cast: the generated RPC type mis-reports `kind` (widened to
+    // string) and `amount` (typed non-null), so only this validates the shape.
+    return pendingApprovalsSchema.parse(data ?? []);
   },
 );
 
