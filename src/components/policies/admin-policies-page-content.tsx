@@ -3,6 +3,7 @@
 import { format } from 'date-fns';
 import { FileText } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { currentVersion, usePolicies } from '@/hooks/queries/policies';
@@ -22,9 +23,21 @@ import { paths } from '@/constants/paths';
 
 import { CreatePolicyDialog } from './create-policy-dialog';
 
+const TAB_VALUES = ['documents', 'configuration', 'onboarding-email'] as const;
+
 export function AdminPoliciesPageContent() {
   const { data: policies, isLoading } = usePolicies();
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Deep-linkable tabs — e.g. the invite dialog links here with
+  // ?tab=onboarding-email to open the email template directly.
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const initialTab = TAB_VALUES.includes(
+    requestedTab as (typeof TAB_VALUES)[number],
+  )
+    ? requestedTab!
+    : 'documents';
 
   return (
     <>
@@ -33,7 +46,7 @@ export function AdminPoliciesPageContent() {
         description='Company policy documents and the numeric rules that govern leave, medical allowance, and payroll.'
       />
 
-      <Tabs defaultValue='documents'>
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value='documents'>Documents</TabsTrigger>
           <TabsTrigger value='configuration'>Configuration</TabsTrigger>
