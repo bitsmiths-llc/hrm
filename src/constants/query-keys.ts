@@ -27,7 +27,9 @@ export enum QueryKeys {
   POLICIES = 'policies', // admin repository: policies + full version history (BIT-21)
   ACTIVE_POLICIES = 'active-policies', // employee view: one active version per policy (BIT-21)
   POLICY_ACKNOWLEDGMENTS = 'policy-acknowledgments',
-  CONTRACTS = 'contracts',
+  CONTRACTS = 'contracts', // admin view: one employee's full version history (BIT-22)
+  MY_CONTRACT = 'my-contract', // employee view: own active contract only (BIT-22)
+  CONTRACT_FILE_URLS = 'contract-file-urls', // signed URLs for contract PDFs
   HRM_SETTINGS = 'hrm-settings',
   PROJECTS = 'projects',
   FX_RATES = 'fx-rates', // live exchange rates, keyed by base currency (BIT-16)

@@ -3,7 +3,10 @@
 import { AlertCircle, CheckCircle2, FileText, FileX2 } from 'lucide-react';
 import Link from 'next/link';
 
-import { useMyContract } from '@/hooks/queries/contracts';
+import {
+  currentContractVersion,
+  useMyContract,
+} from '@/hooks/queries/contracts';
 import {
   latestAcknowledgment,
   useActivePolicies,
@@ -45,9 +48,7 @@ export function PoliciesPageContent() {
             description="Contact admin if you're expecting one."
           />
         ) : (
-          <ContractVersionList
-            versions={[contract.versions[contract.versions.length - 1]]}
-          />
+          <ContractVersionList versions={[currentContractVersion(contract)]} />
         )}
       </div>
 

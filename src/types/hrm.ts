@@ -312,14 +312,18 @@ export type PolicyAcknowledgment = {
 export type ContractVersion = {
   version: number;
   fileName: string;
+  /** Key in the private `contracts` bucket; the UI mints a short-lived signed
+   *  URL from it on demand (see `useContractFileUrls`). */
+  storagePath: string;
   uploadedAt: string;
   /** e.g. "Annual renewal", "Promoted to Senior Engineer". */
   note: string | null;
 };
 
-/** One contract per employee (PRD 6.2 — assumed manual PDF upload, not
+/** One contract per employee (PRD 6.2 — manual PDF upload, not
  *  system-generated). Admin sees the full version history; the employee
- *  only ever sees their current version. */
+ *  only ever sees their current version — enforced by `contracts_select_own`,
+ *  not just by the query. */
 export type EmployeeContract = {
   employeeId: string;
   /** Oldest first; the last entry is the current version. */

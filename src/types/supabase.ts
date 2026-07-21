@@ -55,6 +55,57 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          employee_id: string
+          file_name: string
+          id: string
+          is_active: boolean
+          note: string | null
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          employee_id: string
+          file_name: string
+          id?: string
+          is_active?: boolean
+          note?: string | null
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version: number
+        }
+        Update: {
+          employee_id?: string
+          file_name?: string
+          id?: string
+          is_active?: boolean
+          note?: string | null
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           doc_type: string
@@ -917,6 +968,31 @@ export type Database = {
       run_is_locked: { Args: { p_run_id: string }; Returns: boolean }
       submit_onboarding: { Args: never; Returns: undefined }
       unlock_payroll: { Args: { p_run_id: string }; Returns: undefined }
+      upload_contract: {
+        Args: {
+          p_employee_id: string
+          p_file_name: string
+          p_note?: string
+          p_storage_path: string
+        }
+        Returns: {
+          employee_id: string
+          file_name: string
+          id: string
+          is_active: boolean
+          note: string | null
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       account_status: "invited" | "onboarding" | "submitted" | "active"
