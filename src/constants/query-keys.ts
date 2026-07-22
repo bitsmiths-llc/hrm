@@ -36,6 +36,10 @@ export enum QueryKeys {
   PROJECTS = 'projects',
   FX_RATES = 'fx-rates', // live exchange rates, keyed by base currency (BIT-16)
 
+  // In-app notifications (BIT-26)
+  NOTIFICATIONS = 'notifications', // caller's own notification feed (bell dropdown)
+  NOTIFICATIONS_UNREAD = 'notifications-unread', // caller's unread count (bell badge)
+
   // System configuration & module toggles (BIT-20)
   SYSTEM_CONFIG = 'system-config', // singleton system_config row (feature flags)
 

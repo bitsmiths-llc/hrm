@@ -395,3 +395,25 @@ export type EmployeeContract = {
   /** Oldest first; the last entry is the current version. */
   versions: ContractVersion[];
 };
+
+/** The event kinds a notification can carry. The table is generic (`type` +
+ *  `link`), so this is a string on the wire; the union documents the producers
+ *  that exist today (BIT-26 ships only `policy_updated`) and stays open for
+ *  later ones without a schema change. */
+export type NotificationType = 'policy_updated' | (string & {});
+
+/** One row of the signed-in user's in-app notification feed (BIT-26). Rows are
+ *  trigger-created, never client-inserted; the client only ever flips
+ *  `readAt` via mark-read. */
+export type Notification = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  /** Longer supporting line; null for events that need only a title. */
+  body: string | null;
+  /** In-app route the bell navigates to on click, e.g. '/policies'. */
+  link: string | null;
+  /** Null until the recipient reads it — the unread test. */
+  readAt: string | null;
+  createdAt: string;
+};
