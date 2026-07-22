@@ -266,6 +266,15 @@ export type Project = {
   name: string;
 };
 
+/** The single reusable invitation email (PRD 6.4) — one template, edited in
+ *  admin config and sent on every invite. `{{placeholders}}` are filled in
+ *  per recipient when the invite goes out. */
+export type OnboardingEmailTemplate = {
+  subject: string;
+  /** Rich-text body authored in CKEditor, stored as HTML. */
+  bodyHtml: string;
+};
+
 export type PolicyCategory = 'leave' | 'medical' | 'overtime' | 'general';
 
 export type PolicyVersion = {

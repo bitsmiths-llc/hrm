@@ -3,6 +3,7 @@
 import { format } from 'date-fns';
 import { ClipboardCheck, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { currentVersion, usePolicies } from '@/hooks/queries/policies';
@@ -10,6 +11,7 @@ import { currentVersion, usePolicies } from '@/hooks/queries/policies';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { PageHeader } from '@/components/hrm/page-header';
 import { HrmSettingsForm } from '@/components/settings/hrm-settings-form';
+import { OnboardingTemplateForm } from '@/components/settings/onboarding-template-form';
 import { ProjectsSettingsCard } from '@/components/settings/projects-settings-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,9 +24,21 @@ import { paths } from '@/constants/paths';
 import { CreatePolicyDialog } from './create-policy-dialog';
 import { PolicyLinkagePanel } from './linkage-panel';
 
+const TAB_VALUES = ['documents', 'configuration', 'onboarding-email'] as const;
+
 export function AdminPoliciesPageContent() {
   const { data: policies, isLoading } = usePolicies();
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Deep-linkable tabs — e.g. the invite dialog links here with
+  // ?tab=onboarding-email to open the email template directly.
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const initialTab = TAB_VALUES.includes(
+    requestedTab as (typeof TAB_VALUES)[number],
+  )
+    ? requestedTab!
+    : 'documents';
 
   return (
     <>
@@ -33,11 +47,12 @@ export function AdminPoliciesPageContent() {
         description='Company policy documents and the numeric rules that govern leave, medical allowance, and payroll.'
       />
 
-      <Tabs defaultValue='documents'>
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value='documents'>Documents</TabsTrigger>
           <TabsTrigger value='linkage'>Linkage</TabsTrigger>
           <TabsTrigger value='configuration'>Configuration</TabsTrigger>
+          <TabsTrigger value='onboarding-email'>Onboarding Email</TabsTrigger>
         </TabsList>
 
         <TabsContent value='documents' className='flex flex-col gap-4'>
@@ -100,6 +115,14 @@ export function AdminPoliciesPageContent() {
             <HrmSettingsForm />
             <ProjectsSettingsCard />
           </div>
+        </TabsContent>
+
+        <TabsContent value='onboarding-email'>
+          <p className='mb-4 text-sm text-muted-foreground'>
+            The invitation email sent to every new employee. Edit it once — the
+            same template is reused for all invitations.
+          </p>
+          <OnboardingTemplateForm />
         </TabsContent>
       </Tabs>
 

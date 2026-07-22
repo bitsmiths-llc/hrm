@@ -1,7 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserPlus } from 'lucide-react';
+import { Mail, UserPlus } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -28,6 +29,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
+import { paths } from '@/constants/paths';
 import {
   type InviteEmployeeInput,
   inviteEmployeeSchema,
@@ -99,6 +101,24 @@ export function InviteEmployeeDialog() {
                 </FormItem>
               )}
             />
+            <div className='flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-3'>
+              <Mail
+                className='mt-0.5 size-4 shrink-0 text-muted-foreground'
+                aria-hidden
+              />
+              <div className='flex flex-col gap-1 text-sm'>
+                <p className='text-muted-foreground'>
+                  The onboarding email will be sent to this address with their
+                  invitation link.
+                </p>
+                <Link
+                  href={`${paths.admin.policies}?tab=onboarding-email`}
+                  className='font-medium text-primary hover:underline'
+                >
+                  View or edit the onboarding email
+                </Link>
+              </div>
+            </div>
             <DialogFooter>
               <Button
                 type='button'

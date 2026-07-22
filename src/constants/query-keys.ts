@@ -34,6 +34,7 @@ export enum QueryKeys {
   CONTRACT_FILE_URLS = 'contract-file-urls', // signed URLs for contract PDFs
   HRM_SETTINGS = 'hrm-settings',
   PROJECTS = 'projects',
+  ONBOARDING_EMAIL_TEMPLATE = 'onboarding-email-template',
   FX_RATES = 'fx-rates', // live exchange rates, keyed by base currency (BIT-16)
 
   // In-app notifications (BIT-26)
