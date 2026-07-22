@@ -98,7 +98,7 @@ export function ProjectsSettingsCard() {
     <SettingsCard
       icon={FolderKanban}
       title='Projects'
-      description='Company projects. Active ones show on the employee Company page and when logging overtime.'
+      description='Company projects — active ones are visible to employees.'
       action={<AddProjectDialog />}
     >
       <div className='flex flex-1 flex-col gap-4 py-4'>
