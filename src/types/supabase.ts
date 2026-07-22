@@ -470,6 +470,38 @@ export type Database = {
           },
         ]
       }
+      onboarding_email_template: {
+        Row: {
+          body_html: string
+          id: boolean
+          subject: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body_html: string
+          id?: boolean
+          subject: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body_html?: string
+          id?: boolean
+          subject?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_email_template_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       overtime_logs: {
         Row: {
           created_at: string

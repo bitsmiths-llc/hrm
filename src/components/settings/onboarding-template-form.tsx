@@ -1,13 +1,12 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { Copy } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
-import { useOnboardingEmailTemplate } from '@/hooks/queries/onboarding-email';
+import { useUpdateOnboardingEmailTemplate } from '@/hooks/actions/use-update-onboarding-email-template';
+import { useOnboardingEmailTemplate } from '@/hooks/queries/email-template';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,53 +25,58 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { appConfig } from '@/config/app';
 import {
-  fillOnboardingPlaceholders,
-  ONBOARDING_EMAIL_PLACEHOLDERS,
-} from '@/constants/mock/onboarding-email';
-import { QueryKeys } from '@/constants/query-keys';
+  fillOnboardingPreview,
+  ONBOARDING_EMAIL_TOKENS,
+} from '@/constants/onboarding-email';
+import {
+  type EmailTemplateInput,
+  emailTemplateSchema,
+} from '@/schema/email-template';
 
 import { OnboardingEmailTemplate } from '@/types/hrm';
 
-const templateSchema = z.object({
-  subject: z.string().min(3, 'Enter a subject line'),
-  bodyHtml: z.string().min(20, 'Write the email body'),
-});
-type TemplateInput = z.infer<typeof templateSchema>;
-
 /** The single invitation email, edited here and reused for every invite
- *  (PRD 6.4). Placeholders are copied in and swapped per recipient at send
- *  time; the preview on the right shows them filled with sample values.
- *  Saving mutates the template cache. */
+ *  (PRD §6.4). Backed by the `onboarding_email_template` singleton: the body is
+ *  sanitized server-side on save, and the invite flow renders the tokens per
+ *  recipient. The preview on the right shows them filled with sample values. */
 export function OnboardingTemplateForm() {
-  const queryClient = useQueryClient();
   const { data: template, isLoading } = useOnboardingEmailTemplate();
 
-  const form = useForm<TemplateInput>({
-    resolver: zodResolver(templateSchema),
-    values: template ?? undefined,
+  if (isLoading || !template) {
+    return <Skeleton className='h-96 rounded-xl' />;
+  }
+
+  // Mount the fields only once the template exists so every input is controlled
+  // from its first render (see HrmSettingsForm — otherwise the values arrive a
+  // commit later and React warns about uncontrolled→controlled inputs).
+  return <OnboardingTemplateFields template={template} />;
+}
+
+function OnboardingTemplateFields({
+  template,
+}: {
+  template: OnboardingEmailTemplate;
+}) {
+  const form = useForm<EmailTemplateInput>({
+    resolver: zodResolver(emailTemplateSchema),
+    defaultValues: template,
+    values: template,
   });
+
+  // On success the action invalidates the template query, so `values: template`
+  // re-syncs the form and clears the dirty state.
+  const { execute, isPending } = useUpdateOnboardingEmailTemplate(() =>
+    toast.success('Onboarding email template saved'),
+  );
 
   // Live values drive the preview as the admin edits.
   const subject = form.watch('subject') ?? '';
   const bodyHtml = form.watch('bodyHtml') ?? '';
 
-  const onSubmit = (values: TemplateInput) => {
-    queryClient.setQueryData<OnboardingEmailTemplate>(
-      [QueryKeys.ONBOARDING_EMAIL_TEMPLATE],
-      values,
-    );
-    form.reset(values);
-    toast.success('Onboarding email template saved');
-  };
-
-  const copyPlaceholder = async (token: string) => {
+  const copyToken = async (token: string) => {
     await navigator.clipboard.writeText(token);
     toast.success(`Copied ${token}`);
   };
-
-  if (isLoading || !template) {
-    return <Skeleton className='h-96 rounded-xl' />;
-  }
 
   return (
     <div className='grid items-start gap-4 lg:grid-cols-2'>
@@ -80,7 +84,7 @@ export function OnboardingTemplateForm() {
         <CardContent className='p-6'>
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={form.handleSubmit((values) => execute(values))}
               className='flex flex-col gap-5'
             >
               <FormField
@@ -100,11 +104,11 @@ export function OnboardingTemplateForm() {
               <div className='flex flex-col gap-2'>
                 <span className='text-sm font-medium'>Placeholders</span>
                 <div className='flex flex-wrap gap-2'>
-                  {ONBOARDING_EMAIL_PLACEHOLDERS.map((placeholder) => (
+                  {ONBOARDING_EMAIL_TOKENS.map((placeholder) => (
                     <button
                       key={placeholder.token}
                       type='button'
-                      onClick={() => copyPlaceholder(placeholder.token)}
+                      onClick={() => copyToken(placeholder.token)}
                       className='flex items-center gap-1.5 rounded-full border border-border bg-muted/40 py-1 pl-3 pr-2.5 text-xs hover:bg-accent hover:text-accent-foreground'
                     >
                       <code className='font-mono'>{placeholder.token}</code>
@@ -115,10 +119,11 @@ export function OnboardingTemplateForm() {
                 <p className='text-xs text-muted-foreground'>
                   Click to copy, then paste into the subject or body. Each is
                   replaced with the recipient’s details when the invite is sent.
+                  The body must include <code>{'{{onboarding_link}}'}</code>.
                 </p>
               </div>
 
-              <ControlledRichText<TemplateInput>
+              <ControlledRichText<EmailTemplateInput>
                 name='bodyHtml'
                 label='Email body'
               />
@@ -131,7 +136,7 @@ export function OnboardingTemplateForm() {
                 <Button
                   type='submit'
                   disabled={!form.formState.isDirty}
-                  isLoading={form.formState.isSubmitting}
+                  isLoading={isPending}
                 >
                   Save template
                 </Button>
@@ -150,21 +155,21 @@ export function OnboardingTemplateForm() {
             <span className='text-muted-foreground'>
               From{' '}
               <span className='text-foreground'>
-                {appConfig.title} &lt;no-reply@bitsmiths.studio&gt;
+                {appConfig.title} &lt;hr@bitsmiths.studio&gt;
               </span>
             </span>
             <span className='text-muted-foreground'>
               To <span className='text-foreground'>Ayesha Khan</span>
             </span>
             <span className='mt-1 text-sm font-semibold text-foreground'>
-              {fillOnboardingPlaceholders(subject) || 'No subject'}
+              {fillOnboardingPreview(subject) || 'No subject'}
             </span>
           </div>
           <div
             className='email-preview px-5 py-4 text-sm leading-relaxed [&_a]:text-primary [&_a]:underline [&_li]:mb-1 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5'
             dangerouslySetInnerHTML={{
               __html:
-                fillOnboardingPlaceholders(bodyHtml) ||
+                fillOnboardingPreview(bodyHtml) ||
                 '<p class="text-muted-foreground">Nothing to preview yet.</p>',
             }}
           />

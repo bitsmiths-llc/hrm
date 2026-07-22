@@ -3,6 +3,8 @@ import type {
   TextItem,
 } from 'pdfjs-dist/types/src/display/api';
 
+import { escapeHtml } from '@/lib/escape-html';
+
 /** One visual line of the PDF, reassembled from positioned glyph runs. */
 type PdfLine = {
   text: string;
@@ -16,14 +18,6 @@ const BULLET_PATTERN = /^[•·▪●◦\-–*]\s+/;
 const ORDERED_PATTERN = /^\d{1,2}[.)]\s+/;
 /** Bare page numbers / "Page 3 of 4" furniture — never policy content. */
 const PAGE_FURNITURE_PATTERN = /^(\d{1,3}|page\s+\d+(\s+of\s+\d+)?)$/i;
-
-const escapeHtml = (text: string) =>
-  text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
 
 /** Extracts a PDF's text in the browser (pdf.js) and reconstructs simple
  *  policy HTML from layout heuristics: larger lines become headings, bullet/
