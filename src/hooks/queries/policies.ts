@@ -12,6 +12,7 @@ import {
   Policy,
   PolicyAcknowledgment,
   PolicyCompliance,
+  PolicyLinkage,
   PolicyVersion,
 } from '@/types/hrm';
 
@@ -197,6 +198,45 @@ const fetchPolicyCompliance = authQuery(
   },
 );
 
+/** The admin linkage panel (BIT-25): each policy's current active version
+ *  alongside the version an admin last reconciled, so the panel can flag drift.
+ *  The slug→rule map itself is app-level (`POLICY_LINKS`); this only supplies the
+ *  version-comparison inputs. Live enforced values come from `useHrmSettings`. */
+const fetchPolicyLinkage = authQuery(
+  async ({ supabase }): Promise<PolicyLinkage[]> => {
+    const { data, error } = await supabase
+      .from('policies')
+      .select(
+        'id, title, slug, policy_versions!inner(id, version, is_active), policy_reconciliations(reconciled_version_id)',
+      )
+      .eq('policy_versions.is_active', true)
+      .order('created_at', { ascending: true });
+    if (error) throw new Error(error.message);
+
+    return data.map((row) => {
+      // `!inner` filtered to the active version leaves exactly one row.
+      const active = row.policy_versions[0];
+      // `policy_id` is the reconciliation table's PK, so there is at most one
+      // marker; tolerate either embed shape (object vs single-element array).
+      const reconciled = Array.isArray(row.policy_reconciliations)
+        ? row.policy_reconciliations[0]
+        : row.policy_reconciliations;
+      const reconciledVersionId = reconciled?.reconciled_version_id ?? null;
+
+      return {
+        policyId: row.id,
+        title: row.title,
+        slug: row.slug,
+        activeVersionId: active.id,
+        activeVersion: active.version,
+        reconciledVersionId,
+        // Drift = never reconciled, or reconciled against an older version.
+        hasDrift: reconciledVersionId !== active.id,
+      } satisfies PolicyLinkage;
+    });
+  },
+);
+
 /** Admin repository: every policy with its full version history. */
 export const usePolicies = () =>
   useQuery({
@@ -241,6 +281,14 @@ export const usePolicyCompliance = () =>
   useQuery({
     queryKey: [QueryKeys.POLICY_COMPLIANCE],
     queryFn: () => fetchPolicyCompliance(),
+  });
+
+/** Admin linkage panel: per policy, its active version vs the reconciled marker,
+ *  the inputs the panel turns into a drift badge. */
+export const usePolicyLinkage = () =>
+  useQuery({
+    queryKey: [QueryKeys.POLICY_LINKAGE],
+    queryFn: () => fetchPolicyLinkage(),
   });
 
 export const currentVersion = (policy: Policy) =>

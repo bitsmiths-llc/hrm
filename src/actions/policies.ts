@@ -11,6 +11,7 @@ import {
   DUPLICATE_SLUG_MESSAGE,
   publishPolicyVersionSchema,
 } from '@/schema/policy';
+import { markReviewedSchema } from '@/schema/policy-linkage';
 
 /** Admin gate. Server-side even though `public.is_admin()` guards both RPCs and
  *  the `*_admin_all` RLS policies — defense in depth, mirroring
@@ -103,6 +104,41 @@ export const acknowledgePolicy = authActionClient
     if (error && error.code !== DUPLICATE_ACKNOWLEDGMENT) {
       throw new Error(error.message);
     }
+
+    return { success: true };
+  });
+
+/**
+ * Advance a policy's reconciliation marker to its current active version (admin
+ * only) — the "Mark reviewed" action behind the linkage panel (BIT-25, M3.5).
+ *
+ * This records only that the admin has re-read the policy against the rule it
+ * governs; it never writes `payroll_settings`, so reconciling a drifted policy
+ * changes no enforced value (the PRD's flag-drift/manual-reconcile resolution).
+ * The version reconciled to is re-derived here from the active row rather than
+ * trusted from the client, and the upsert keys on the `policy_id` primary key so
+ * it's idempotent and moves an existing marker forward in place.
+ */
+export const markPolicyReviewed = authActionClient
+  .schema(markReviewedSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { data: active, error: activeError } = await supabase
+      .from('policy_versions')
+      .select('id')
+      .eq('policy_id', parsedInput.policyId)
+      .eq('is_active', true)
+      .single();
+    if (activeError) throw new Error(activeError.message);
+
+    const { error } = await supabase.from('policy_reconciliations').upsert({
+      policy_id: parsedInput.policyId,
+      reconciled_version_id: active.id,
+      reconciled_by: authUser.user?.id,
+      reconciled_at: new Date().toISOString(),
+    });
+    if (error) throw new Error(error.message);
 
     return { success: true };
   });

@@ -357,6 +357,24 @@ export type PolicyComplianceRow = {
   subRows?: PolicyComplianceRow[];
 };
 
+/** One policy's standing against the rule it governs (BIT-25). Drift is a pure
+ *  version comparison — the policy's current active version vs the one an admin
+ *  last reconciled — never a diff of policy prose against enforced values. */
+export type PolicyLinkage = {
+  policyId: string;
+  title: string;
+  /** The join key into `POLICY_LINKS`; an unmapped slug renders "no linked rule". */
+  slug: string;
+  /** The `policy_versions` row that is active right now. */
+  activeVersionId: string;
+  activeVersion: number;
+  /** The version an admin last marked reviewed, or null if never reconciled. */
+  reconciledVersionId: string | null;
+  /** True when the active version differs from the reconciled one — i.e. the
+   *  policy changed since it was last confirmed to match the enforced rule. */
+  hasDrift: boolean;
+};
+
 export type ContractVersion = {
   version: number;
   fileName: string;

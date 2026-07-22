@@ -20,6 +20,7 @@ import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
 import { CreatePolicyDialog } from './create-policy-dialog';
+import { PolicyLinkagePanel } from './linkage-panel';
 
 export function AdminPoliciesPageContent() {
   const { data: policies, isLoading } = usePolicies();
@@ -35,6 +36,7 @@ export function AdminPoliciesPageContent() {
       <Tabs defaultValue='documents'>
         <TabsList>
           <TabsTrigger value='documents'>Documents</TabsTrigger>
+          <TabsTrigger value='linkage'>Linkage</TabsTrigger>
           <TabsTrigger value='configuration'>Configuration</TabsTrigger>
         </TabsList>
 
@@ -83,6 +85,10 @@ export function AdminPoliciesPageContent() {
               })}
             </ul>
           )}
+        </TabsContent>
+
+        <TabsContent value='linkage'>
+          <PolicyLinkagePanel />
         </TabsContent>
 
         <TabsContent value='configuration'>

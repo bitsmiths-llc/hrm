@@ -769,6 +769,49 @@ export type Database = {
           },
         ]
       }
+      policy_reconciliations: {
+        Row: {
+          policy_id: string
+          reconciled_at: string
+          reconciled_by: string | null
+          reconciled_version_id: string
+        }
+        Insert: {
+          policy_id: string
+          reconciled_at?: string
+          reconciled_by?: string | null
+          reconciled_version_id: string
+        }
+        Update: {
+          policy_id?: string
+          reconciled_at?: string
+          reconciled_by?: string | null
+          reconciled_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_reconciliations_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: true
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_reconciliations_reconciled_by_fkey"
+            columns: ["reconciled_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_reconciliations_reconciled_version_id_fkey"
+            columns: ["reconciled_version_id"]
+            isOneToOne: false
+            referencedRelation: "policy_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       policy_versions: {
         Row: {
           body_html: string
