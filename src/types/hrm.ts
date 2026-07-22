@@ -169,6 +169,8 @@ export type Project = {
   techStack: string[];
   /** Repo or live URL. Optional — some internal projects have none. */
   url: string;
+  /** Inactive projects are hidden from overtime logging and onboarding. */
+  active: boolean;
 };
 
 /** The single reusable invitation email (PRD 6.4) — one template, edited in

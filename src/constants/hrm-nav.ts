@@ -1,5 +1,6 @@
 import {
   Banknote,
+  Building2,
   CheckSquare,
   Clock,
   FileText,
@@ -32,7 +33,7 @@ export const employeeNav: NavConfig = {
       href: paths.employee.policies,
       icon: FileText,
     },
-    { label: 'Team', href: paths.employee.team, icon: Users },
+    { label: 'Company', href: paths.employee.company, icon: Building2 },
     { label: 'Profile', href: paths.employee.profile, icon: UserCircle },
   ],
 };

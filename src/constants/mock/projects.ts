@@ -7,6 +7,7 @@ export const mockProjects: Project[] = [
     description: 'The internal HR platform for leave, payroll, and policies.',
     techStack: ['Next.js', 'TypeScript', 'Tailwind', 'Supabase'],
     url: 'https://github.com/bitsmiths-llc/hrm',
+    active: true,
   },
   {
     id: 'proj-2',
@@ -14,6 +15,7 @@ export const mockProjects: Project[] = [
     description: 'Backend services and integrations for client deliverables.',
     techStack: ['Node.js', 'PostgreSQL', 'Prisma'],
     url: 'https://github.com/bitsmiths-llc/client-api',
+    active: true,
   },
   {
     id: 'proj-3',
@@ -21,6 +23,7 @@ export const mockProjects: Project[] = [
     description: 'Shared component library and design tokens across products.',
     techStack: ['React', 'Storybook', 'Radix UI'],
     url: 'https://github.com/bitsmiths-llc/design-system',
+    active: true,
   },
   {
     id: 'proj-4',
@@ -28,5 +31,6 @@ export const mockProjects: Project[] = [
     description: 'Marketing site rebuild with the new brand direction.',
     techStack: ['Next.js', 'Framer Motion'],
     url: 'https://bitsmiths.studio',
+    active: false,
   },
 ];

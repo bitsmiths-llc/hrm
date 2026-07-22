@@ -104,10 +104,12 @@ export function LogOvertimeDialog() {
               name='project'
               label='Project'
               placeholder='Select a project'
-              options={(projects ?? []).map((project) => ({
-                value: project.name,
-                label: project.name,
-              }))}
+              options={(projects ?? [])
+                .filter((project) => project.active)
+                .map((project) => ({
+                  value: project.name,
+                  label: project.name,
+                }))}
             />
             <FormField
               control={form.control}

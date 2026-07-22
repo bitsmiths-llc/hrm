@@ -11,6 +11,8 @@ type SettingsCardProps = {
   /** Right-aligned action, typically the Save button. Sits in a divided
    *  footer so every card ends the same way. */
   footer?: React.ReactNode;
+  /** Right-aligned control in the header, e.g. an "Add" button. */
+  action?: React.ReactNode;
   className?: string;
   children: React.ReactNode;
 };
@@ -23,6 +25,7 @@ export function SettingsCard({
   title,
   description,
   footer,
+  action,
   className,
   children,
 }: SettingsCardProps) {
@@ -30,10 +33,11 @@ export function SettingsCard({
     <Card className={cn('flex flex-col overflow-hidden', className)}>
       <div className='flex items-center gap-2.5 border-b border-border px-5 py-4'>
         <Icon className='size-4 shrink-0 text-primary' aria-hidden />
-        <div className='flex flex-col'>
+        <div className='flex min-w-0 flex-col'>
           <h3 className='text-sm font-semibold leading-tight'>{title}</h3>
           <p className='text-xs text-muted-foreground'>{description}</p>
         </div>
+        {!!action && <div className='ml-auto shrink-0'>{action}</div>}
       </div>
       <div className='flex flex-1 flex-col divide-y divide-border px-5'>
         {children}

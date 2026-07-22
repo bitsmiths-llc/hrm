@@ -32,6 +32,7 @@ export function OnboardingComplete({ firstName }: { firstName?: string }) {
   const teammates = (employees ?? [])
     .filter((employee) => employee.status !== 'invited')
     .slice(0, 6);
+  const activeProjects = (projects ?? []).filter((project) => project.active);
 
   return (
     <Card className='max-w-3xl'>
@@ -104,7 +105,7 @@ export function OnboardingComplete({ firstName }: { firstName?: string }) {
             </div>
           ) : (
             <div className='grid gap-2 sm:grid-cols-2'>
-              {projects?.map((project) => (
+              {activeProjects.map((project) => (
                 <div
                   key={project.id}
                   className='flex flex-col gap-2 rounded-lg border border-border p-3'
@@ -149,9 +150,9 @@ export function OnboardingComplete({ firstName }: { firstName?: string }) {
               Go to dashboard
             </Button>
           </Link>
-          <Link href={paths.employee.team}>
+          <Link href={paths.employee.company}>
             <Button variant='outline' className='w-full sm:w-auto'>
-              Browse the team
+              Explore the company
             </Button>
           </Link>
         </div>
