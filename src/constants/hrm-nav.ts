@@ -32,6 +32,7 @@ export const employeeNav: NavConfig = {
       href: paths.employee.policies,
       icon: FileText,
     },
+    { label: 'Team', href: paths.employee.team, icon: Users },
     { label: 'Profile', href: paths.employee.profile, icon: UserCircle },
   ],
 };

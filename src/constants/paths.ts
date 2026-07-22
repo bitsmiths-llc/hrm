@@ -13,6 +13,7 @@ export const paths = {
     overtime: '/overtime',
     payslips: '/payslips',
     policies: '/policies',
+    team: '/team',
     profile: '/profile',
   },
   admin: {

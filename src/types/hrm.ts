@@ -165,6 +165,10 @@ export type HrmSettings = {
 export type Project = {
   id: string;
   name: string;
+  description: string;
+  techStack: string[];
+  /** Repo or live URL. Optional — some internal projects have none. */
+  url: string;
 };
 
 /** The single reusable invitation email (PRD 6.4) — one template, edited in
