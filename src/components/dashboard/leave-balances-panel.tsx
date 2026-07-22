@@ -37,8 +37,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import Logger from '@/utils/logger';
-
 /** The current year and the four before it — the window the year filter offers.
  *  The leave pool resets per calendar year, so older years stay meaningful. */
 const YEAR_OPTIONS = Array.from(
@@ -103,7 +101,6 @@ export function LeaveBalancesPanel() {
 
   useEffect(() => {
     if (isError) {
-      Logger.error('Leave balances rollup fetch failed', error);
       toast.error('Could not load leave balances', {
         description: 'The balances table failed to load. Try refreshing.',
       });

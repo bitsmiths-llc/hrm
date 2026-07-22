@@ -154,9 +154,7 @@ function OnboardingTemplateFields({
           <div className='flex flex-col gap-1 border-b border-border bg-muted/40 px-5 py-3 text-xs'>
             <span className='text-muted-foreground'>
               From{' '}
-              <span className='text-foreground'>
-                {appConfig.title} &lt;hr@bitsmiths.studio&gt;
-              </span>
+              <span className='text-foreground'>{appConfig.emails.sender}</span>
             </span>
             <span className='text-muted-foreground'>
               To <span className='text-foreground'>Ayesha Khan</span>
