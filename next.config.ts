@@ -1,6 +1,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Rendering the payslip PDF server-side (invoice emails) needs the package's
+  // Node build, which is what exposes `renderToBuffer`. Leaving it external
+  // keeps the bundler from resolving it through its `browser` export condition.
+  serverExternalPackages: ['@react-pdf/renderer'],
   async rewrites() {
     return [
       {

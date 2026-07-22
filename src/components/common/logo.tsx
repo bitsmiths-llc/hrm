@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 import { appConfig } from '@/config/app';
+import { paths } from '@/constants/paths';
 
 type Props = {
   className?: string;
@@ -34,7 +35,7 @@ const Logo = ({
           className={cn(className)}
         />
       ) : (
-        <Link href='/' className={cn(linkStyles)}>
+        <Link href={paths.home} className={cn(linkStyles)}>
           <Image
             src={appConfig.logo}
             alt='Logo'

@@ -1,11 +1,16 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAction } from 'next-safe-action/hooks';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
+import { signInWithPassword } from '@/actions/auth';
+
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -30,17 +35,33 @@ import { type LoginInput, loginSchema } from '@/schema/auth';
 
 export function LoginForm() {
   const router = useRouter();
+  const [signInError, setSignInError] = useState<string | null>(null);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (values: LoginInput) => {
-    // Frontend-only phase: simulate sign-in, then land on the dashboard.
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    toast.success(`Signed in as ${values.email}`);
-    router.push(paths.employee.dashboard);
+  const { execute, isPending } = useAction(signInWithPassword, {
+    onSuccess: ({ data }) => {
+      router.push(
+        data?.role === 'admin'
+          ? paths.admin.dashboard
+          : paths.employee.dashboard,
+      );
+      router.refresh();
+    },
+    // Show the failure inline in the card rather than as a corner toast — the
+    // action returns a uniform, user-safe message ("Invalid email or password").
+    onError: ({ error }) =>
+      setSignInError(
+        error.serverError ?? 'Something went wrong. Please try again.',
+      ),
+  });
+
+  const onSubmit = (values: LoginInput) => {
+    setSignInError(null);
+    execute(values);
   };
 
   return (
@@ -57,6 +78,13 @@ export function LoginForm() {
             onSubmit={form.handleSubmit(onSubmit)}
             className='flex flex-col gap-4'
           >
+            {signInError && (
+              <Alert variant='destructive'>
+                <AlertCircle className='h-4 w-4' />
+                <AlertTitle>Sign in failed</AlertTitle>
+                <AlertDescription>{signInError}</AlertDescription>
+              </Alert>
+            )}
             <FormField
               control={form.control}
               name='email'
@@ -80,7 +108,7 @@ export function LoginForm() {
               placeholder='••••••••'
               hideInstructions
             />
-            <Button type='submit' isLoading={form.formState.isSubmitting}>
+            <Button type='submit' isLoading={isPending}>
               Sign in
             </Button>
             <Link

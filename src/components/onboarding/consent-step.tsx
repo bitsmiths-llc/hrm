@@ -24,8 +24,11 @@ type ConsentStepProps = {
 export function ConsentStep({ onSubmit, onBack }: ConsentStepProps) {
   const form = useForm<ConsentInput>({
     resolver: zodResolver(consentSchema),
+    // reason: zod infers consent as literal `true`; the unchecked initial state is undefined, not false
     defaultValues: { consent: undefined as unknown as true },
   });
+
+  const consented = form.watch('consent') === true;
 
   return (
     <Form {...form}>
@@ -34,8 +37,8 @@ export function ConsentStep({ onSubmit, onBack }: ConsentStepProps) {
         className='flex flex-col gap-6'
       >
         <p className='text-sm text-muted-foreground'>
-          Check your details in the previous steps, then confirm below to
-          complete onboarding and activate your account.
+          Check your details in the previous steps, then confirm below to submit
+          your onboarding for admin review.
         </p>
         <FormField
           control={form.control}
@@ -65,8 +68,12 @@ export function ConsentStep({ onSubmit, onBack }: ConsentStepProps) {
           <Button type='button' variant='outline' onClick={onBack}>
             Back
           </Button>
-          <Button type='submit' isLoading={form.formState.isSubmitting}>
-            Complete onboarding
+          <Button
+            type='submit'
+            disabled={!consented}
+            isLoading={form.formState.isSubmitting}
+          >
+            Submit for review
           </Button>
         </div>
       </form>

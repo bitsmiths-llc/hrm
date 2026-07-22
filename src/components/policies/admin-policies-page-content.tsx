@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { FileText } from 'lucide-react';
+import { ClipboardCheck, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -22,6 +22,7 @@ import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
 import { CreatePolicyDialog } from './create-policy-dialog';
+import { PolicyLinkagePanel } from './linkage-panel';
 
 const TAB_VALUES = ['documents', 'configuration', 'onboarding-email'] as const;
 
@@ -49,12 +50,18 @@ export function AdminPoliciesPageContent() {
       <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value='documents'>Documents</TabsTrigger>
+          <TabsTrigger value='linkage'>Linkage</TabsTrigger>
           <TabsTrigger value='configuration'>Configuration</TabsTrigger>
           <TabsTrigger value='onboarding-email'>Onboarding Email</TabsTrigger>
         </TabsList>
 
         <TabsContent value='documents' className='flex flex-col gap-4'>
-          <div className='flex justify-end'>
+          <div className='flex justify-end gap-2'>
+            <Link href={paths.admin.policyCompliance}>
+              <Button variant='outline' iconLeft={ClipboardCheck}>
+                Compliance
+              </Button>
+            </Link>
             <Button onClick={() => setCreateOpen(true)}>New Policy</Button>
           </div>
           {isLoading ? (
@@ -72,7 +79,7 @@ export function AdminPoliciesPageContent() {
                 return (
                   <li key={policy.id}>
                     <Link
-                      href={`${paths.admin.policies}/${policy.id}`}
+                      href={paths.admin.policyDetail(policy.id)}
                       className='flex w-full items-center justify-between gap-3 px-4 py-3 hover:bg-accent hover:text-accent-foreground'
                     >
                       <div className='flex min-w-0 flex-col gap-0.5'>
@@ -93,6 +100,10 @@ export function AdminPoliciesPageContent() {
               })}
             </ul>
           )}
+        </TabsContent>
+
+        <TabsContent value='linkage'>
+          <PolicyLinkagePanel />
         </TabsContent>
 
         <TabsContent value='configuration'>

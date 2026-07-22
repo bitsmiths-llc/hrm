@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { useUnacknowledgedPolicyCount } from '@/hooks/queries/policies';
+import { useSystemConfig } from '@/hooks/queries/system-config';
 
 import {
   Sidebar,
@@ -25,7 +26,8 @@ import { appConfig } from '@/config/app';
 import { adminNav, employeeNav } from '@/constants/hrm-nav';
 import { paths } from '@/constants/paths';
 
-import { RoleSwitcher } from './role-switcher';
+import { SignOutButton } from './sign-out-button';
+import { UserCard } from './user-card';
 
 type AppSidebarProps = {
   /** Nav config resolves client-side — icon components can't cross the
@@ -42,6 +44,14 @@ export function AppSidebar({ role }: AppSidebarProps) {
   const config = role === 'admin' ? adminNav : employeeNav;
   const pathname = usePathname();
   const unacknowledgedPolicies = useUnacknowledgedPolicyCount();
+  const { data: systemConfig } = useSystemConfig();
+
+  // Feature-flagged entries (e.g. Reimbursements) stay hidden until their
+  // `system_config` toggle is on. Config is unknown while the query loads, so
+  // gated items default to hidden — matching "Phase 2 stays dark".
+  const items = config.items.filter(
+    (item) => !item.requiresFlag || !!systemConfig?.[item.requiresFlag],
+  );
 
   const isActive = (href: string) =>
     exactMatchHrefs.includes(href)
@@ -58,7 +68,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
   return (
     <Sidebar collapsible='icon' variant='inset'>
       <SidebarHeader className='px-3 py-3 group-data-[collapsible=icon]:px-2'>
-        <Link href='/' className='flex items-center gap-2'>
+        <Link href={paths.home} className='flex items-center gap-2'>
           <Image
             src={appConfig.logo}
             alt='Bitsmiths logo'
@@ -76,7 +86,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
           <SidebarGroupLabel>{config.roleLabel}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {config.items.map((item) => (
+              {items.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
@@ -100,9 +110,8 @@ export function AppSidebar({ role }: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <RoleSwitcher
-          currentRole={config.roleLabel === 'Admin' ? 'Admin' : 'Employee'}
-        />
+        <UserCard />
+        <SignOutButton />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

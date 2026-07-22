@@ -8,13 +8,16 @@ import {
 } from '@/constants/hrm-labels';
 
 import {
+  ApprovalKind,
+  EmployeeListItem,
   LeaveRequest,
   MedicalClaim,
   OvertimeLog,
+  PendingApproval,
   RequestStatus,
 } from '@/types/hrm';
 
-export type ApprovalKind = 'leave' | 'medical' | 'overtime';
+export type { ApprovalKind };
 
 export type ApprovalItem = {
   id: string;
@@ -33,6 +36,7 @@ export const approvalKindLabels: Record<ApprovalKind, string> = {
   leave: 'Leave',
   medical: 'Medical',
   overtime: 'Overtime',
+  onboarding: 'Onboarding',
 };
 
 export function leaveToItem(request: LeaveRequest): ApprovalItem {
@@ -96,6 +100,64 @@ export function overtimeToItem(log: OvertimeLog): ApprovalItem {
       { label: 'Project', value: log.project },
       { label: 'Task', value: log.task },
       { label: 'Logged', value: formatDate(log.createdAt) },
+    ],
+  };
+}
+
+// Onboarding has no per-request table — a `submitted` employee *is* the item, so
+// the timestamp comes from the RPC row (consent_at → updated_at) and the detail
+// fields are enriched from the directory list when it's loaded.
+export function onboardingToItem(
+  row: PendingApproval,
+  employee?: EmployeeListItem,
+): ApprovalItem {
+  return {
+    id: row.item_id,
+    kind: 'onboarding',
+    employeeName: row.employee_name,
+    title: 'Onboarding submission',
+    summary: employee?.designation
+      ? [employee.designation, employee.department].filter(Boolean).join(' · ')
+      : 'Submitted for review',
+    createdAt: row.submitted_at,
+    status: 'pending',
+    fields: [
+      { label: 'Employee', value: row.employee_name },
+      ...(employee?.email ? [{ label: 'Email', value: employee.email }] : []),
+      ...(employee?.designation
+        ? [{ label: 'Designation', value: employee.designation }]
+        : []),
+      ...(employee?.department
+        ? [{ label: 'Department', value: employee.department }]
+        : []),
+      { label: 'Submitted', value: formatDate(row.submitted_at) },
+    ],
+  };
+}
+
+// Fallback when the per-module admin read backing a row's rich detail hasn't
+// resolved yet (or the row briefly outlives its source). The queue's membership
+// and order come from `pending_approvals()`, so a row must always render — here
+// from the normalized RPC fields alone.
+export function fallbackToItem(row: PendingApproval): ApprovalItem {
+  return {
+    id: row.item_id,
+    kind: row.kind,
+    employeeName: row.employee_name,
+    title: approvalKindLabels[row.kind],
+    summary:
+      row.amount != null
+        ? `${row.summary} · ${formatCurrency(row.amount)}`
+        : row.summary,
+    createdAt: row.submitted_at,
+    status: 'pending',
+    fields: [
+      { label: 'Employee', value: row.employee_name },
+      { label: 'Summary', value: row.summary },
+      ...(row.amount != null
+        ? [{ label: 'Amount', value: formatCurrency(row.amount) }]
+        : []),
+      { label: 'Submitted', value: formatDate(row.submitted_at) },
     ],
   };
 }

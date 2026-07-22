@@ -13,8 +13,13 @@ type FileUploadProps = {
   onChange: (files: File[]) => void;
   maxFiles?: number;
   maxSizeMb?: number;
-  /** Passed to the native input, e.g. 'image/*,.pdf'. */
+  /** Passed to the native input, e.g. 'image/png,application/pdf'. */
   accept?: string;
+  /** Enforced MIME allow-list (the `accept` attribute alone is only a hint the
+   *  user can bypass). Files outside this list are rejected. */
+  allowedMimeTypes?: readonly string[];
+  /** Overrides the default "Up to N files, XMB each" helper line. */
+  hint?: string;
   label?: string;
 };
 
@@ -24,14 +29,40 @@ export function FileUpload({
   maxFiles = 5,
   maxSizeMb = 10,
   accept,
+  allowedMimeTypes,
+  hint,
   label = 'Upload files',
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const isAllowedType = (file: File) => {
+    if (!allowedMimeTypes?.length) return true;
+    if (allowedMimeTypes.includes(file.type)) return true;
+    // Some browsers report an empty MIME type — fall back to the extension,
+    // matched against the subtype of each allowed MIME (png, pdf, …).
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    return allowedMimeTypes.some((type) => type.split('/')[1] === ext);
+  };
 
   const handleSelect = (selected: FileList | null) => {
     if (!selected?.length) return;
 
     const incoming = Array.from(selected);
+
+    const wrongType = incoming.filter((file) => !isAllowedType(file));
+    if (wrongType.length) {
+      const typeLabel =
+        allowedMimeTypes
+          ?.map((type) => type.split('/')[1].toUpperCase())
+          .join(' or ') ?? 'the allowed file types';
+      toast.error(
+        `Only ${typeLabel} files are accepted: ${wrongType
+          .map((f) => f.name)
+          .join(', ')}`,
+      );
+      return;
+    }
+
     const oversized = incoming.filter(
       (file) => file.size > maxSizeMb * 1024 * 1024,
     );
@@ -80,7 +111,7 @@ export function FileUpload({
         {label}
       </Button>
       <p className='text-xs text-muted-foreground'>
-        Up to {maxFiles} files, {maxSizeMb}MB each
+        {hint ?? `Up to ${maxFiles} files, ${maxSizeMb}MB each`}
       </p>
       {value.length > 0 && (
         <ul className='flex flex-col gap-1'>

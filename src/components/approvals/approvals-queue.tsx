@@ -2,15 +2,15 @@
 
 import { CheckCircle2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
 
 import {
   useAllLeaveRequests,
   useAllMedicalClaims,
   useAllOvertimeLogs,
 } from '@/hooks/queries/approvals';
+import { useEmployees } from '@/hooks/queries/employees';
+import { usePendingApprovals } from '@/hooks/queries/pending-approvals';
 
-import { ConfirmDialog } from '@/components/hrm/confirm-dialog';
 import { DetailSheet } from '@/components/hrm/detail-sheet';
 import { EmptyState } from '@/components/hrm/empty-state';
 import { StatusBadge } from '@/components/hrm/status-badge';
@@ -24,47 +24,78 @@ import {
   type ApprovalItem,
   type ApprovalKind,
   approvalKindLabels,
+  fallbackToItem,
   leaveToItem,
   medicalToItem,
+  onboardingToItem,
   overtimeToItem,
 } from './approval-items';
+import { LeaveReviewActions } from './leave-review-actions';
+import { MedicalReviewActions } from './medical-review-actions';
+import { OnboardingReviewActions } from './onboarding-review-actions';
+import { OvertimeReviewActions } from './overtime-review-actions';
 
-type Decision = 'approved' | 'rejected';
+import { type PendingApproval } from '@/types/hrm';
 
 export function ApprovalsQueue() {
+  // `pending_approvals()` is the queue's source of truth: it decides membership
+  // and order (newest first), guarded server-side. The per-module admin reads
+  // below only enrich the open row's detail sheet with the rich per-kind fields
+  // (reasons, dates, proof files) the normalized RPC row doesn't carry.
+  const pending = usePendingApprovals();
   const leave = useAllLeaveRequests();
   const medical = useAllMedicalClaims();
   const overtime = useAllOvertimeLogs();
+  const employees = useEmployees();
 
   const [tab, setTab] = useState<'all' | ApprovalKind>('all');
-  const [decisions, setDecisions] = useState<Record<string, Decision>>({});
-  const [selected, setSelected] = useState<ApprovalItem | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const isLoading = leave.isLoading || medical.isLoading || overtime.isLoading;
+  // Index each source by id so a queue row can be enriched to its full detail.
+  const details = useMemo(() => {
+    return {
+      leave: new Map((leave.data ?? []).map((r) => [r.id, r])),
+      medical: new Map((medical.data ?? []).map((c) => [c.id, c])),
+      overtime: new Map((overtime.data ?? []).map((o) => [o.id, o])),
+      employee: new Map((employees.data ?? []).map((e) => [e.id, e])),
+    };
+  }, [leave.data, medical.data, overtime.data, employees.data]);
 
-  const pending = useMemo(() => {
-    const all: ApprovalItem[] = [
-      ...(leave.data ?? []).map(leaveToItem),
-      ...(medical.data ?? []).map(medicalToItem),
-      ...(overtime.data ?? []).map(overtimeToItem),
-    ];
-    return all
-      .filter((item) => item.status === 'pending' && !decisions[item.id])
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-  }, [leave.data, medical.data, overtime.data, decisions]);
+  const enrich = useMemo(() => {
+    return (row: PendingApproval): ApprovalItem => {
+      switch (row.kind) {
+        case 'leave': {
+          const r = details.leave.get(row.item_id);
+          return r ? leaveToItem(r) : fallbackToItem(row);
+        }
+        case 'medical': {
+          const c = details.medical.get(row.item_id);
+          return c ? medicalToItem(c) : fallbackToItem(row);
+        }
+        case 'overtime': {
+          const o = details.overtime.get(row.item_id);
+          return o ? overtimeToItem(o) : fallbackToItem(row);
+        }
+        case 'onboarding':
+          return onboardingToItem(row, details.employee.get(row.item_id));
+      }
+    };
+  }, [details]);
+
+  // Preserve the RPC's order (newest first); enrichment only fills in detail.
+  const items = useMemo(
+    () => (pending.data ?? []).map(enrich),
+    [pending.data, enrich],
+  );
 
   const visible =
-    tab === 'all' ? pending : pending.filter((item) => item.kind === tab);
+    tab === 'all' ? items : items.filter((item) => item.kind === tab);
 
-  const decide = (item: ApprovalItem, decision: Decision) => {
-    setDecisions((prev) => ({ ...prev, [item.id]: decision }));
-    setSelected(null);
-    toast.success(
-      `${item.title} from ${item.employeeName} ${decision === 'approved' ? 'approved' : 'rejected'}`,
-    );
-  };
+  // Re-derived each render so the actioned row's sheet closes on its own once the
+  // invalidated queue drops it — no stale snapshot to reconcile.
+  const selected = items.find((item) => item.id === selectedId) ?? null;
 
-  if (isLoading) {
+  if (pending.isPending) {
     return (
       <div className='flex flex-col gap-3'>
         <Skeleton className='h-9 w-72 rounded-lg' />
@@ -77,11 +108,11 @@ export function ApprovalsQueue() {
     <div className='flex flex-col gap-4'>
       <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
         <TabsList>
-          <TabsTrigger value='all'>All ({pending.length})</TabsTrigger>
+          <TabsTrigger value='all'>All ({items.length})</TabsTrigger>
           {(Object.keys(approvalKindLabels) as ApprovalKind[]).map((kind) => (
             <TabsTrigger key={kind} value={kind}>
               {approvalKindLabels[kind]} (
-              {pending.filter((i) => i.kind === kind).length})
+              {items.filter((i) => i.kind === kind).length})
             </TabsTrigger>
           ))}
         </TabsList>
@@ -101,24 +132,29 @@ export function ApprovalsQueue() {
               className='flex flex-wrap items-center justify-between gap-3 px-4 py-3'
             >
               <div className='flex min-w-0 flex-col gap-0.5'>
-                <p className='truncate text-sm font-medium'>
-                  {item.employeeName}
-                  <span className='text-muted-foreground'> · {item.title}</span>
-                </p>
+                <div className='flex items-center gap-2'>
+                  <p className='truncate text-sm font-medium'>
+                    {item.employeeName}
+                    <span className='text-muted-foreground'>
+                      {' '}
+                      · {item.title}
+                    </span>
+                  </p>
+                  <Badge variant='outline' className='shrink-0'>
+                    {approvalKindLabels[item.kind]}
+                  </Badge>
+                </div>
                 <p className='truncate text-xs text-muted-foreground'>
                   {item.summary}
                 </p>
               </div>
-              <div className='flex items-center gap-2'>
-                <Badge variant='outline'>{approvalKindLabels[item.kind]}</Badge>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={() => setSelected(item)}
-                >
-                  Review
-                </Button>
-              </div>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setSelectedId(item.id)}
+              >
+                Review
+              </Button>
             </li>
           ))}
         </ul>
@@ -127,7 +163,7 @@ export function ApprovalsQueue() {
       {!!selected && (
         <DetailSheet
           open={!!selected}
-          onOpenChange={(open) => !open && setSelected(null)}
+          onOpenChange={(open) => !open && setSelectedId(null)}
           title={selected.title}
           description={`Requested by ${selected.employeeName}`}
           fields={[
@@ -138,26 +174,42 @@ export function ApprovalsQueue() {
             },
           ]}
           footer={
-            <div className='flex w-full gap-2'>
-              <ConfirmDialog
-                trigger={
-                  <Button variant='destructive' className='flex-1'>
-                    Reject
-                  </Button>
-                }
-                title={`Reject this ${approvalKindLabels[selected.kind].toLowerCase()} request?`}
-                description={`${selected.employeeName} will see the request as rejected.`}
-                confirmLabel='Reject request'
-                destructive
-                onConfirm={() => decide(selected, 'rejected')}
+            selected.kind === 'leave' ? (
+              // Leave is backed by the real reviewLeaveRequest action (required
+              // reason on reject + employee email); its invalidation refreshes
+              // the queue.
+              <LeaveReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={() => setSelectedId(null)}
               />
-              <Button
-                className='flex-1'
-                onClick={() => decide(selected, 'approved')}
-              >
-                Approve
-              </Button>
-            </div>
+            ) : selected.kind === 'medical' ? (
+              // Medical is backed by the real reviewMedicalClaim action
+              // (server-side balance bound on approve, required reason + email
+              // on reject); its invalidation refreshes the queue.
+              <MedicalReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={() => setSelectedId(null)}
+              />
+            ) : selected.kind === 'overtime' ? (
+              // Overtime is backed by the real reviewOvertimeLog action (required
+              // reason on reject + employee email); its invalidation refreshes
+              // the queue.
+              <OvertimeReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={() => setSelectedId(null)}
+              />
+            ) : (
+              // Onboarding dispatches to approveEmployee / returnOnboarding —
+              // "reject" returns the submission with a required note.
+              <OnboardingReviewActions
+                itemId={selected.id}
+                employeeName={selected.employeeName}
+                onReviewed={() => setSelectedId(null)}
+              />
+            )
           }
         >
           {selected.kind === 'medical' && (

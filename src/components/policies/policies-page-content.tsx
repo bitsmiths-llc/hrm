@@ -3,12 +3,14 @@
 import { AlertCircle, CheckCircle2, FileText, FileX2 } from 'lucide-react';
 import Link from 'next/link';
 
-import { useMyContract } from '@/hooks/queries/contracts';
 import {
-  currentVersion,
-  latestAcknowledgment,
+  currentContractVersion,
+  useMyContract,
+} from '@/hooks/queries/contracts';
+import {
+  hasAcknowledged,
+  useActivePolicies,
   useMyPolicyAcknowledgments,
-  usePolicies,
 } from '@/hooks/queries/policies';
 
 import { ContractVersionList } from '@/components/employees/contract-version-list';
@@ -20,7 +22,9 @@ import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
 export function PoliciesPageContent() {
-  const { data: policies, isLoading: policiesLoading } = usePolicies();
+  // Employees only ever see the current version of each policy — this reads
+  // the active `policy_versions` rows, never the history behind them.
+  const { data: policies, isLoading: policiesLoading } = useActivePolicies();
   const { data: acknowledgments, isLoading: acksLoading } =
     useMyPolicyAcknowledgments();
   const { data: contract, isLoading: contractLoading } = useMyContract();
@@ -44,9 +48,7 @@ export function PoliciesPageContent() {
             description="Contact admin if you're expecting one."
           />
         ) : (
-          <ContractVersionList
-            versions={[contract.versions[contract.versions.length - 1]]}
-          />
+          <ContractVersionList versions={[currentContractVersion(contract)]} />
         )}
       </div>
 
@@ -62,14 +64,15 @@ export function PoliciesPageContent() {
       ) : (
         <ul className='flex flex-col divide-y divide-border rounded-lg border border-border'>
           {policies.map((policy) => {
-            const latest = currentVersion(policy);
-            const ack = latestAcknowledgment(acknowledgments ?? [], policy.id);
-            const upToDate = !!ack && ack.acknowledgedVersion >= latest.version;
+            const upToDate = hasAcknowledged(
+              acknowledgments ?? [],
+              policy.versionId,
+            );
 
             return (
               <li key={policy.id}>
                 <Link
-                  href={`${paths.employee.policies}/${policy.id}`}
+                  href={paths.employee.policyDetail(policy.id)}
                   className='flex w-full items-center justify-between gap-3 px-4 py-3 hover:bg-accent hover:text-accent-foreground'
                 >
                   <div className='flex min-w-0 flex-col gap-0.5'>
@@ -78,7 +81,7 @@ export function PoliciesPageContent() {
                     </p>
                     <p className='truncate text-xs text-muted-foreground'>
                       {policyCategoryLabels[policy.category]} · Version{' '}
-                      {latest.version}
+                      {policy.version}
                     </p>
                   </div>
                   {upToDate ? (

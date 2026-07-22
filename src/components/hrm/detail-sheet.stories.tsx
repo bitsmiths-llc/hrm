@@ -14,7 +14,7 @@ const meta = {
     open: true,
     onOpenChange: () => {},
     title: 'Leave Request',
-    description: 'Submitted by Ayesha Khan on 05/07/26',
+    description: 'Submitted by John Doe on 05/07/26',
     fields: [
       { label: 'Type', value: 'Sick Leave' },
       { label: 'Dates', value: '2 days from 08/07/26' },
