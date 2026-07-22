@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { ExternalLink, FolderKanban, Plus, X } from 'lucide-react';
+import { ExternalLink, FolderKanban, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -16,6 +16,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -187,14 +198,36 @@ function ProjectRow({
             project.active ? 'inactive' : 'active'
           }`}
         />
-        <button
-          type='button'
-          onClick={() => onRemove(project)}
-          className='flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
-          aria-label={`Remove ${project.name}`}
-        >
-          <X className='size-3.5' />
-        </button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              type='button'
+              className='flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive'
+              aria-label={`Delete ${project.name}`}
+            >
+              <Trash2 className='size-3.5' />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {project.name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {project.name}? This can’t be
+                undone, and employees will no longer be able to log overtime
+                against it.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => onRemove(project)}
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </li>
   );
