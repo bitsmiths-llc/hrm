@@ -72,11 +72,12 @@ export function PolicyVersionHistory({
     null,
   );
 
-  const ackFor = (employeeId: string, versionNumber: number) =>
+  // Matched on the version *id*: a version number is only unique within a
+  // policy, and these acknowledgments arrive pre-filtered to one.
+  const ackFor = (employeeId: string, versionId: string) =>
     acknowledgments.find(
       (ack) =>
-        ack.employeeId === employeeId &&
-        ack.acknowledgedVersion === versionNumber,
+        ack.employeeId === employeeId && ack.policyVersionId === versionId,
     );
   const latestFor = (employeeId: string) =>
     acknowledgments
@@ -119,7 +120,7 @@ export function PolicyVersionHistory({
         {newestFirst.map((version) => {
           const isCurrent = version.version === currentVersionNumber;
           const ackedEmployees = employees.filter(
-            (employee) => !!ackFor(employee.id, version.version),
+            (employee) => !!ackFor(employee.id, version.id),
           );
 
           return (
@@ -185,7 +186,7 @@ export function PolicyVersionHistory({
               <AccordionContent>
                 <ul className='divide-y divide-border overflow-hidden rounded-md border border-border'>
                   {employees.map((employee) => {
-                    const ackOfThis = ackFor(employee.id, version.version);
+                    const ackOfThis = ackFor(employee.id, version.id);
                     // Past versions list everyone who acknowledged them at the
                     // time (even if they've since moved on); the current
                     // version shows every employee's present standing.

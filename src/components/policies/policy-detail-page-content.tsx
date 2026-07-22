@@ -1,13 +1,14 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ArrowLeft, FileX2, Megaphone } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+import { useAcknowledgePolicy } from '@/hooks/actions/use-acknowledge-policy';
 import {
   currentVersion,
+  hasAcknowledged,
   latestAcknowledgment,
   useMyPolicyAcknowledgments,
   usePolicy,
@@ -22,14 +23,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { highlightChangedBlocks } from '@/lib/policy-diff';
 
 import { policyCategoryLabels } from '@/constants/hrm-labels';
-import { mockCurrentEmployee } from '@/constants/mock/employees';
 import { paths } from '@/constants/paths';
-import { QueryKeys } from '@/constants/query-keys';
 
 import { DownloadPolicyButton } from './download-policy-button';
 import { PolicyContent } from './policy-content';
-
-import { PolicyAcknowledgment } from '@/types/hrm';
 
 type PolicyDetailPageContentProps = {
   policyId: string;
@@ -38,10 +35,10 @@ type PolicyDetailPageContentProps = {
 export function PolicyDetailPageContent({
   policyId,
 }: PolicyDetailPageContentProps) {
-  const queryClient = useQueryClient();
   const { data: policy, isLoading: policyLoading } = usePolicy(policyId);
   const { data: acknowledgments, isLoading: acksLoading } =
     useMyPolicyAcknowledgments();
+  const { executeAsync, isPending } = useAcknowledgePolicy();
 
   if (policyLoading || acksLoading)
     return <Skeleton className='h-96 rounded-xl' />;
@@ -58,7 +55,9 @@ export function PolicyDetailPageContent({
 
   const latest = currentVersion(policy);
   const ack = latestAcknowledgment(acknowledgments ?? [], policy.id);
-  const upToDate = !!ack && ack.acknowledgedVersion >= latest.version;
+  // Compliance is per version id, not "at least version N" — only an
+  // acknowledgment of the version on screen counts.
+  const upToDate = hasAcknowledged(acknowledgments ?? [], latest.id);
 
   // Diffed against whatever version the employee last acknowledged (not
   // necessarily the immediately-previous one, if they skipped an update),
@@ -74,33 +73,9 @@ export function PolicyDetailPageContent({
         )
       : latest.contentHtml;
 
-  const handleAcknowledge = () => {
-    queryClient.setQueryData<PolicyAcknowledgment[]>(
-      [QueryKeys.POLICY_ACKNOWLEDGMENTS],
-      (old) => {
-        // Append-only history: earlier-version records stay (they feed the
-        // admin's per-version acknowledgment lists); only a duplicate for
-        // this exact version is replaced.
-        const withoutThisVersion = (old ?? []).filter(
-          (a) =>
-            !(
-              a.policyId === policy.id &&
-              a.employeeId === mockCurrentEmployee.id &&
-              a.acknowledgedVersion === latest.version
-            ),
-        );
-        return [
-          ...withoutThisVersion,
-          {
-            policyId: policy.id,
-            employeeId: mockCurrentEmployee.id,
-            acknowledgedVersion: latest.version,
-            acknowledgedAt: new Date().toISOString().slice(0, 10),
-          },
-        ];
-      },
-    );
-    toast.success(`${policy.title} acknowledged`);
+  const handleAcknowledge = async () => {
+    const result = await executeAsync({ policyVersionId: latest.id });
+    if (result?.data) toast.success(`${policy.title} acknowledged`);
   };
 
   return (
@@ -136,7 +111,11 @@ export function PolicyDetailPageContent({
                 </p>
               </div>
             </div>
-            <Button onClick={handleAcknowledge} className='shrink-0'>
+            <Button
+              onClick={handleAcknowledge}
+              isLoading={isPending}
+              className='shrink-0'
+            >
               I've read and acknowledge this
             </Button>
           </CardContent>

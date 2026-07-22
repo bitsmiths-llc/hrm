@@ -6,6 +6,7 @@ import { sanitizeHtml } from '@/lib/sanitize-html';
 import { authActionClient } from '@/lib/server/safe-action';
 
 import {
+  acknowledgePolicySchema,
   createPolicySchema,
   DUPLICATE_SLUG_MESSAGE,
   publishPolicyVersionSchema,
@@ -69,4 +70,39 @@ export const publishPolicyVersion = authActionClient
     if (error) throw new Error(error.message);
 
     return data;
+  });
+
+/** A repeat acknowledgment trips `unique (employee_id, policy_version_id)`.
+ *  That's the intended outcome, not a failure: the employee's signature against
+ *  this version is already on file, so the row we'd insert is the row that
+ *  exists. Swallowed here to keep double-clicking "I acknowledge" harmless. */
+const DUPLICATE_ACKNOWLEDGMENT = '23505';
+
+/**
+ * Record the signed-in employee's acknowledgment of a policy version (PRD §6.3).
+ * Idempotent, and self-scoped in two independent places:
+ *
+ *   * `employee_id` is taken from the session here — the input schema has no
+ *     such field, so there is nothing for a caller to forge.
+ *   * the `ack_insert_own` RLS `with check` re-derives it from `auth.uid()` and
+ *     additionally requires the version to still be active, so a stale prompt
+ *     can't record an acknowledgment against a superseded version.
+ *
+ * Neither guard depends on the other holding.
+ */
+export const acknowledgePolicy = authActionClient
+  .schema(acknowledgePolicySchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    const employeeId = authUser.user?.id;
+    if (!employeeId) throw new Error('Unauthorized');
+
+    const { error } = await supabase.from('policy_acknowledgments').insert({
+      employee_id: employeeId,
+      policy_version_id: parsedInput.policyVersionId,
+    });
+    if (error && error.code !== DUPLICATE_ACKNOWLEDGMENT) {
+      throw new Error(error.message);
+    }
+
+    return { success: true };
   });

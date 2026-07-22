@@ -47,3 +47,12 @@ export const publishPolicyVersionSchema = z.object({
 export type PublishPolicyVersionInput = z.infer<
   typeof publishPolicyVersionSchema
 >;
+
+/** Acknowledgment targets a *version*, not a policy — acknowledging v1 says
+ *  nothing about v2, which is what makes a published update re-raise the
+ *  prompt. Note the absence of an `employeeId`: the action takes it from the
+ *  session, so there is no field here for a caller to forge. */
+export const acknowledgePolicySchema = z.object({
+  policyVersionId: z.string().uuid(),
+});
+export type AcknowledgePolicyInput = z.infer<typeof acknowledgePolicySchema>;

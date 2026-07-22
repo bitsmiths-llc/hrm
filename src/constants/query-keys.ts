@@ -26,7 +26,8 @@ export enum QueryKeys {
   RUN_EXPORTS = 'run-exports', // Payoneer export artifacts for one run (BIT-16)
   POLICIES = 'policies', // admin repository: policies + full version history (BIT-21)
   ACTIVE_POLICIES = 'active-policies', // employee view: one active version per policy (BIT-21)
-  POLICY_ACKNOWLEDGMENTS = 'policy-acknowledgments',
+  POLICY_ACKNOWLEDGMENTS = 'policy-acknowledgments', // the caller's own acknowledgments (BIT-23)
+  POLICY_COMPLIANCE = 'policy-compliance', // admin roster: every employee × active policy (BIT-23)
   CONTRACTS = 'contracts', // admin view: one employee's full version history (BIT-22)
   MY_CONTRACT = 'my-contract', // employee view: own active contract only (BIT-22)
   CONTRACT_FILE_URLS = 'contract-file-urls', // signed URLs for contract PDFs

@@ -269,6 +269,8 @@ export type Project = {
 export type PolicyCategory = 'leave' | 'medical' | 'overtime' | 'general';
 
 export type PolicyVersion = {
+  /** The `policy_versions` row id — what an acknowledgment points at. */
+  id: string;
   version: number;
   /** Rich-text content authored in CKEditor, stored as HTML — not a PDF —
    *  so a diff against the previous version can highlight exactly what
@@ -296,17 +298,63 @@ export type ActivePolicy = {
   title: string;
   slug: string;
   category: PolicyCategory;
+  /** The `policy_versions` row id of the active version — what an
+   *  acknowledgment actually points at. The version *number* below is for
+   *  display and for comparing against what the employee last acknowledged. */
+  versionId: string;
   version: number;
   publishedAt: string;
 };
 
 /** One employee's acknowledgment of a policy — separate from `Policy`
- *  itself since each employee can be at a different acknowledged version. */
+ *  itself since each employee can be at a different acknowledged version.
+ *  Rows are append-only: acknowledging v2 does not replace the v1 record, so
+ *  the admin's per-version roster can still show who signed what, when. */
 export type PolicyAcknowledgment = {
   policyId: string;
   employeeId: string;
+  /** The acknowledged `policy_versions` row. Carried alongside the version
+   *  number because the number is only unique *within* a policy. */
+  policyVersionId: string;
   acknowledgedVersion: number;
   acknowledgedAt: string;
+};
+
+/** One employee's standing against one policy's currently-active version, as
+ *  returned by the `policy_compliance()` RPC. */
+export type PolicyComplianceEmployee = {
+  employeeId: string;
+  fullName: string;
+  acknowledged: boolean;
+  /** Null exactly when `acknowledged` is false. */
+  acknowledgedAt: string | null;
+};
+
+/** A policy's compliance roster, rolled up from `policy_compliance()`. Measured
+ *  against the active version only — a prior-version acknowledgment does not
+ *  count, which is why publishing an update drops the percentage. */
+export type PolicyCompliance = {
+  policyId: string;
+  title: string;
+  /** The active version everyone is measured against — shown next to the title
+   *  so the grid names what "acknowledged" refers to. */
+  version: number;
+  employees: PolicyComplianceEmployee[];
+  acknowledgedCount: number;
+  totalCount: number;
+};
+
+/** One row of the admin compliance grid. The grid is a two-level tree — a
+ *  policy rollup with its employees as expandable sub-rows — and TanStack Table
+ *  needs a single row type for both levels, so `employee` is what distinguishes
+ *  a child row from its parent. */
+export type PolicyComplianceRow = {
+  /** Unique across both levels: the policy id, or `<policyId>:<employeeId>`. */
+  id: string;
+  policy: PolicyCompliance;
+  /** Set on employee rows, absent on the policy rollup row. */
+  employee?: PolicyComplianceEmployee;
+  subRows?: PolicyComplianceRow[];
 };
 
 export type ContractVersion = {

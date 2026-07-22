@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { FileText } from 'lucide-react';
+import { ClipboardCheck, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -39,7 +39,12 @@ export function AdminPoliciesPageContent() {
         </TabsList>
 
         <TabsContent value='documents' className='flex flex-col gap-4'>
-          <div className='flex justify-end'>
+          <div className='flex justify-end gap-2'>
+            <Link href={paths.admin.policyCompliance}>
+              <Button variant='outline' iconLeft={ClipboardCheck}>
+                Compliance
+              </Button>
+            </Link>
             <Button onClick={() => setCreateOpen(true)}>New Policy</Button>
           </div>
           {isLoading ? (

@@ -8,7 +8,7 @@ import {
   useMyContract,
 } from '@/hooks/queries/contracts';
 import {
-  latestAcknowledgment,
+  hasAcknowledged,
   useActivePolicies,
   useMyPolicyAcknowledgments,
 } from '@/hooks/queries/policies';
@@ -64,8 +64,10 @@ export function PoliciesPageContent() {
       ) : (
         <ul className='flex flex-col divide-y divide-border rounded-lg border border-border'>
           {policies.map((policy) => {
-            const ack = latestAcknowledgment(acknowledgments ?? [], policy.id);
-            const upToDate = !!ack && ack.acknowledgedVersion >= policy.version;
+            const upToDate = hasAcknowledged(
+              acknowledgments ?? [],
+              policy.versionId,
+            );
 
             return (
               <li key={policy.id}>

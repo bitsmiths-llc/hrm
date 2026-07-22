@@ -5,28 +5,25 @@ import { useEmployees } from '@/hooks/queries/employees';
 
 import { authQuery } from '@/lib/client/auth-query';
 
-import { mockCurrentEmployee } from '@/constants/mock/employees';
-import { mockPolicyAcknowledgments } from '@/constants/mock/policies';
 import { QueryKeys } from '@/constants/query-keys';
 
 import {
   ActivePolicy,
   Policy,
   PolicyAcknowledgment,
+  PolicyCompliance,
   PolicyVersion,
 } from '@/types/hrm';
-
-const mockDelay = (ms = 500) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Both tables are readable by any authenticated user
  *  (`policies_select_authenticated` / `policy_versions_select_authenticated`);
  *  writes go through the admin-guarded RPCs, so nothing here needs a role
  *  check of its own. */
 const POLICY_COLUMNS = 'id, title, slug, category';
-const VERSION_COLUMNS = 'version, body_html, published_at';
+const VERSION_COLUMNS = 'id, version, body_html, published_at';
 
 type PolicyVersionRow = {
+  id: string;
   version: number;
   body_html: string;
   published_at: string;
@@ -34,6 +31,7 @@ type PolicyVersionRow = {
 
 const toVersion = (row: PolicyVersionRow) =>
   ({
+    id: row.id,
     version: row.version,
     contentHtml: row.body_html,
     publishedAt: row.published_at,
@@ -89,7 +87,7 @@ const fetchPolicy = authQuery(
 const fetchActivePolicies = authQuery(async ({ supabase }) => {
   const { data, error } = await supabase
     .from('policy_versions')
-    .select(`version, published_at, policies(${POLICY_COLUMNS})`)
+    .select(`id, version, published_at, policies(${POLICY_COLUMNS})`)
     .eq('is_active', true)
     .order('published_at', { ascending: false });
   if (error) throw new Error(error.message);
@@ -101,11 +99,103 @@ const fetchActivePolicies = authQuery(async ({ supabase }) => {
         title: row.policies.title,
         slug: row.policies.slug,
         category: row.policies.category,
+        versionId: row.id,
         version: row.version,
         publishedAt: row.published_at,
       }) satisfies ActivePolicy,
   );
 });
+
+/** An acknowledgment row points at a *version*, so the policy it belongs to and
+ *  the version number an employee signed both come from the embedded parent. */
+const ACKNOWLEDGMENT_COLUMNS =
+  'employee_id, policy_version_id, acknowledged_at, policy_versions(version, policy_id)';
+
+type AcknowledgmentRow = {
+  employee_id: string;
+  policy_version_id: string;
+  acknowledged_at: string;
+  policy_versions: { version: number; policy_id: string };
+};
+
+const toAcknowledgment = (row: AcknowledgmentRow) =>
+  ({
+    policyId: row.policy_versions.policy_id,
+    employeeId: row.employee_id,
+    policyVersionId: row.policy_version_id,
+    acknowledgedVersion: row.policy_versions.version,
+    acknowledgedAt: row.acknowledged_at,
+  }) satisfies PolicyAcknowledgment;
+
+/** The caller's own acknowledgment history. The `employee_id` filter is
+ *  redundant under `ack_select_own` but matters for an admin, whose
+ *  `ack_select_admin` policy exposes everyone's rows. */
+const fetchMyAcknowledgments = authQuery(
+  async ({ supabase, user }): Promise<PolicyAcknowledgment[]> => {
+    const { data, error } = await supabase
+      .from('policy_acknowledgments')
+      .select(ACKNOWLEDGMENT_COLUMNS)
+      .eq('employee_id', user.id);
+    if (error) throw new Error(error.message);
+
+    return data.map(toAcknowledgment);
+  },
+);
+
+/** Every employee's acknowledgments — admin only in practice, since
+ *  `ack_select_own` narrows this to the caller's own rows for anyone else.
+ *  Feeds the per-version roster in the policy editor's version history. */
+const fetchAllAcknowledgments = authQuery(
+  async ({ supabase }): Promise<PolicyAcknowledgment[]> => {
+    const { data, error } = await supabase
+      .from('policy_acknowledgments')
+      .select(ACKNOWLEDGMENT_COLUMNS);
+    if (error) throw new Error(error.message);
+
+    return data.map(toAcknowledgment);
+  },
+);
+
+/** The admin compliance roster. The RPC returns one flat row per active policy
+ *  × active employee, already ordered by policy title then employee name; this
+ *  only rolls those rows up per policy, preserving that order. Compliance math
+ *  itself stays in the database — M4's widget calls the same RPC. */
+const fetchPolicyCompliance = authQuery(
+  async ({ supabase }): Promise<PolicyCompliance[]> => {
+    const { data, error } = await supabase.rpc('policy_compliance');
+    if (error) throw new Error(error.message);
+
+    const byPolicy = new Map<string, PolicyCompliance>();
+    for (const row of data) {
+      let policy = byPolicy.get(row.policy_id);
+      if (!policy) {
+        policy = {
+          policyId: row.policy_id,
+          title: row.title,
+          version: row.version,
+          employees: [],
+          acknowledgedCount: 0,
+          totalCount: 0,
+        };
+        byPolicy.set(row.policy_id, policy);
+      }
+
+      policy.employees.push({
+        employeeId: row.employee_id,
+        fullName: row.full_name,
+        acknowledged: row.acknowledged,
+        // Null whenever `acknowledged` is false — the generated RPC types
+        // widen every returned column to non-null, so this is only ever read
+        // behind that flag.
+        acknowledgedAt: row.acknowledged_at,
+      });
+      policy.totalCount += 1;
+      if (row.acknowledged) policy.acknowledgedCount += 1;
+    }
+
+    return [...byPolicy.values()];
+  },
+);
 
 /** Admin repository: every policy with its full version history. */
 export const usePolicies = () =>
@@ -130,39 +220,45 @@ export const useActivePolicies = () =>
     queryFn: () => fetchActivePolicies(),
   });
 
-/** TODO(BIT-23): acknowledgments are still mock-backed — the
- *  `policy_acknowledgments` table, the `acknowledgePolicy` action, and the
- *  admin compliance roster all land in M3.2. Until then these records point at
- *  mock policy/employee ids, so nothing matches the real repository and every
- *  policy reads as unacknowledged. */
-export const useAllPolicyAcknowledgments = () => {
-  return useQuery({
-    queryKey: [QueryKeys.POLICY_ACKNOWLEDGMENTS],
-    queryFn: async (): Promise<PolicyAcknowledgment[]> => {
-      await mockDelay(300);
-      return mockPolicyAcknowledgments;
-    },
-    staleTime: Infinity,
-  });
-};
-
-export const usePolicyAcknowledgments = (employeeId: string) => {
-  const { data, isLoading } = useAllPolicyAcknowledgments();
-  return {
-    data: (data ?? []).filter((ack) => ack.employeeId === employeeId),
-    isLoading,
-  };
-};
-
+/** The signed-in employee's acknowledgments. Both this and the admin variant
+ *  below sit under the same key prefix, so one invalidation after an
+ *  acknowledgment refreshes whichever of them is mounted. */
 export const useMyPolicyAcknowledgments = () =>
-  usePolicyAcknowledgments(mockCurrentEmployee.id);
+  useQuery({
+    queryKey: [QueryKeys.POLICY_ACKNOWLEDGMENTS, 'mine'],
+    queryFn: () => fetchMyAcknowledgments(),
+  });
+
+export const useAllPolicyAcknowledgments = () =>
+  useQuery({
+    queryKey: [QueryKeys.POLICY_ACKNOWLEDGMENTS, 'all'],
+    queryFn: () => fetchAllAcknowledgments(),
+  });
+
+/** Admin compliance grid: per active policy, who has and hasn't acknowledged
+ *  the version that is active right now. */
+export const usePolicyCompliance = () =>
+  useQuery({
+    queryKey: [QueryKeys.POLICY_COMPLIANCE],
+    queryFn: () => fetchPolicyCompliance(),
+  });
 
 export const currentVersion = (policy: Policy) =>
   policy.versions[policy.versions.length - 1];
 
+/** Whether a specific version has been acknowledged. This — not a version
+ *  number comparison — is the compliance test: acknowledgments are stored
+ *  against a version id, and only the *active* version counts. */
+export const hasAcknowledged = (
+  acknowledgments: PolicyAcknowledgment[],
+  policyVersionId: string,
+) => acknowledgments.some((ack) => ack.policyVersionId === policyVersionId);
+
 /** Acknowledgments are append-only history (one record per version an
  *  employee acknowledged), so "where does this employee stand" means the
- *  record with the highest version for the policy. */
+ *  record with the highest version for the policy. Drives the "Behind (on v1)"
+ *  label and the diff base on the employee detail page — both of which need
+ *  the *previous* acknowledgment, not the current one. */
 export const latestAcknowledgment = (
   acknowledgments: PolicyAcknowledgment[],
   policyId: string,
@@ -173,18 +269,29 @@ export const latestAcknowledgment = (
       PolicyAcknowledgment | undefined
     >((best, ack) => (!best || ack.acknowledgedVersion > best.acknowledgedVersion ? ack : best), undefined);
 
+/** Active versions the signed-in employee still owes an acknowledgment on —
+ *  the re-ack prompt's source. Derived from the two queries already in cache
+ *  rather than fetched separately, so publishing a new version (which flips
+ *  `is_active` and therefore changes `useActivePolicies`) re-raises the prompt
+ *  without any extra invalidation. */
+export const usePendingAcknowledgments = () => {
+  const { data: policies, isLoading: policiesLoading } = useActivePolicies();
+  const { data: acknowledgments, isLoading: acksLoading } =
+    useMyPolicyAcknowledgments();
+
+  return {
+    data: (policies ?? []).filter(
+      (policy) => !hasAcknowledged(acknowledgments ?? [], policy.versionId),
+    ),
+    isLoading: policiesLoading || acksLoading,
+  };
+};
+
 /** How many policies the signed-in employee still has to acknowledge —
  *  missing acknowledgments and stale ones (older version) both count.
  *  Drives the dashboard banner and the sidebar notification pill. */
-export const useUnacknowledgedPolicyCount = () => {
-  const { data: policies } = useActivePolicies();
-  const { data: acknowledgments } = useMyPolicyAcknowledgments();
-
-  return (policies ?? []).filter((policy) => {
-    const ack = latestAcknowledgment(acknowledgments, policy.id);
-    return !ack || ack.acknowledgedVersion < policy.version;
-  }).length;
-};
+export const useUnacknowledgedPolicyCount = () =>
+  usePendingAcknowledgments().data.length;
 
 /** Active employees only — invited/onboarding accounts don't have
  *  self-service access yet, so acknowledgment doesn't apply to them. */

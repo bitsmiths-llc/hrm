@@ -733,6 +733,42 @@ export type Database = {
         }
         Relationships: []
       }
+      policy_acknowledgments: {
+        Row: {
+          acknowledged_at: string
+          employee_id: string
+          id: string
+          policy_version_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          employee_id: string
+          id?: string
+          policy_version_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          employee_id?: string
+          id?: string
+          policy_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_acknowledgments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_acknowledgments_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "policy_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       policy_versions: {
         Row: {
           body_html: string
@@ -946,6 +982,19 @@ export type Database = {
           kind: string
           submitted_at: string
           summary: string
+        }[]
+      }
+      policy_compliance: {
+        Args: never
+        Returns: {
+          acknowledged: boolean
+          acknowledged_at: string
+          employee_id: string
+          full_name: string
+          policy_id: string
+          policy_version_id: string
+          title: string
+          version: number
         }[]
       }
       publish_policy_version: {
