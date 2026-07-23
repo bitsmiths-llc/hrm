@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
 
-import { AdminPoliciesPageContent } from '@/components/policies/admin-policies-page-content';
+import { AdminPoliciesPageContentSuspense } from '@/components/policies/admin-policies-page-content-suspense';
 
 export const metadata: Metadata = { title: 'Policies' };
 
 export default function AdminPoliciesPage() {
-  return <AdminPoliciesPageContent />;
+  return <AdminPoliciesPageContentSuspense />;
 }

@@ -2,7 +2,7 @@
 
 import { Github, Mail } from 'lucide-react';
 
-import { useEmployees } from '@/hooks/queries/employees';
+import { useCurrentEmployee, useEmployees } from '@/hooks/queries/employees';
 
 import { CopyButton } from '@/components/hrm/copy-button';
 import { EmptyState } from '@/components/hrm/empty-state';
@@ -13,12 +13,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { getInitials, githubHandle } from '@/lib/team';
 
-import { mockCurrentEmployee } from '@/constants/mock/employees';
-
 import { EmployeeListItem } from '@/types/hrm';
 
 export function TeamDirectory() {
   const { data: employees, isLoading } = useEmployees();
+  const { data: currentEmployee } = useCurrentEmployee();
 
   if (isLoading) {
     return (
@@ -49,14 +48,18 @@ export function TeamDirectory() {
   return (
     <div className='grid gap-4 sm:grid-cols-2 xl:grid-cols-3'>
       {members.map((member) => (
-        <TeamMemberCard key={member.id} member={member} />
+        <TeamMemberCard
+          key={member.id}
+          member={member}
+          currentEmployee={currentEmployee}
+        />
       ))}
     </div>
   );
 }
 
-function TeamMemberCard({ member }: { member: EmployeeListItem }) {
-  const isYou = member.id === mockCurrentEmployee.id;
+function TeamMemberCard({ member, currentEmployee }: { member: EmployeeListItem; currentEmployee?: { id: string } | null }) {
+  const isYou = currentEmployee?.id === member.id;
   const github = member.social?.github;
 
   return (
