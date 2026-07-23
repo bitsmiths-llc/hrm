@@ -187,10 +187,6 @@ export function PolicyVersionHistory({
                 <ul className='divide-y divide-border overflow-hidden rounded-md border border-border'>
                   {employees.map((employee) => {
                     const ackOfThis = ackFor(employee.id, version.id);
-                    // Past versions list everyone who acknowledged them at the
-                    // time (even if they've since moved on); the current
-                    // version shows every employee's present standing.
-                    if (!isCurrent && !ackOfThis) return null;
                     const latest = latestFor(employee.id);
 
                     return (
@@ -226,11 +222,6 @@ export function PolicyVersionHistory({
                       </li>
                     );
                   })}
-                  {!isCurrent && ackedEmployees.length === 0 && (
-                    <li className='bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground'>
-                      No one acknowledged this version.
-                    </li>
-                  )}
                 </ul>
               </AccordionContent>
             </AccordionItem>

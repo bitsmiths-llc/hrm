@@ -128,9 +128,14 @@ export function PolicyDetailPageContent({
         </CardContent>
       </Card>
 
-      {upToDate && !!ack && (
+      {!!ack && (
         <p className='text-xs text-muted-foreground'>
-          Acknowledged on {format(ack.acknowledgedAt, 'MMM d, yyyy')}
+          {upToDate
+            ? `Acknowledged on ${format(ack.acknowledgedAt, 'MMM d, yyyy')}`
+            : `Last acknowledged version ${ack.acknowledgedVersion} on ${format(
+                ack.acknowledgedAt,
+                'MMM d, yyyy',
+              )}`}
         </p>
       )}
     </>
