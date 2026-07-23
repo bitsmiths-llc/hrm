@@ -5,10 +5,7 @@ import { Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import {
-  useMarkAllRead,
-  useMarkNotificationRead,
-} from '@/hooks/actions/use-mark-notification-read';
+import { useMarkNotificationRead } from '@/hooks/actions/use-mark-notification-read';
 import { useNotifications, useUnreadCount } from '@/hooks/queries/notifications';
 
 import { Button } from '@/components/ui/button';
@@ -18,8 +15,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
-
-import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { Notification } from '@/types/hrm';
 
@@ -41,7 +37,6 @@ export function NotificationBell() {
   const { data: notifications, isLoading } = useNotifications();
   const { data: unreadCount = 0 } = useUnreadCount();
   const markRead = useMarkNotificationRead();
-  const markAll = useMarkAllRead();
 
   const handleSelect = (notification: Notification) => {
     if (!notification.readAt) markRead.execute({ id: notification.id });
@@ -73,75 +68,109 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align='end' className='w-80 p-0'>
-        <div className='flex items-center justify-between border-b border-border px-3 py-2'>
-          <p className='text-sm font-semibold'>Notifications</p>
-          <Button
-            variant='link'
-            size='sm'
-            className='h-auto p-0 text-xs'
-            disabled={unreadCount === 0 || markAll.isPending}
-            onClick={() => markAll.execute({})}
-          >
-            Mark all read
-          </Button>
-        </div>
+      <PopoverContent align='end' className='w-96 p-0'>
+        <Tabs defaultValue='unread' className='h-full'>
+          <div className='border-b border-border px-3 py-2'>
+            <TabsList>
+              <TabsTrigger value='unread'>Unread</TabsTrigger>
+              <TabsTrigger value='read'>Read</TabsTrigger>
+            </TabsList>
+          </div>
 
-        <div className='max-h-80 overflow-y-auto'>
-          {isLoading ? (
-            <div className='flex flex-col gap-2 p-3'>
-              <Skeleton className='h-12 rounded-md' />
-              <Skeleton className='h-12 rounded-md' />
-              <Skeleton className='h-12 rounded-md' />
-            </div>
-          ) : !notifications?.length ? (
-            <p className='px-3 py-8 text-center text-sm text-muted-foreground'>
-              No notifications yet.
-            </p>
-          ) : (
-            <ul className='flex flex-col divide-y divide-border'>
-              {notifications.map((notification) => {
-                const isUnread = !notification.readAt;
-                return (
-                  <li key={notification.id}>
-                    <button
-                      type='button'
-                      onClick={() => handleSelect(notification)}
-                      className={cn(
-                        'flex w-full gap-2 px-3 py-2.5 text-left transition-colors hover:bg-accent',
-                        isUnread && 'bg-primary/5',
-                      )}
-                    >
-                      <span
-                        aria-hidden
-                        className={cn(
-                          'mt-1.5 size-2 shrink-0 rounded-full',
-                          isUnread ? 'bg-primary' : 'bg-transparent',
-                        )}
-                      />
-                      <span className='flex min-w-0 flex-col gap-0.5'>
-                        <span className='truncate text-sm font-medium'>
-                          {notification.title}
-                        </span>
-                        {notification.body && (
-                          <span className='line-clamp-2 text-xs text-muted-foreground'>
-                            {notification.body}
-                          </span>
-                        )}
-                        <span className='text-xs text-muted-foreground'>
+          <div className='h-80 overflow-hidden p-3'>
+            {isLoading ? (
+              <div className='flex h-full items-center justify-center'>
+                <Skeleton className='h-12 w-full rounded-md' />
+              </div>
+            ) : !notifications?.length ? (
+              <p className='px-3 py-8 text-center text-sm text-muted-foreground'>
+                No notifications yet.
+              </p>
+            ) : (
+              <>
+                <TabsContent value='unread' className='h-full overflow-hidden'>
+                <div className='flex h-full flex-col gap-3 overflow-y-auto pr-2 pb-2'>
+                  {notifications
+                    .filter((notification) => !notification.readAt)
+                    .map((notification) => (
+                      <article
+                        key={notification.id}
+                        className='w-full rounded-xl border border-border bg-background p-4 shadow-sm'
+                      >
+                        <div className='flex items-start justify-between gap-3'>
+                          <div className='flex flex-col gap-1'>
+                            <p className='text-sm font-semibold'>
+                              {notification.title}
+                            </p>
+                            {notification.body && (
+                              <p className='line-clamp-3 text-xs text-muted-foreground'>
+                                {notification.body}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            variant='link'
+                            size='sm'
+                            className='h-auto p-0 text-xs'
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              markRead.execute({ id: notification.id });
+                            }}
+                            disabled={!!notification.readAt}
+                          >
+                            Mark as read
+                          </Button>
+                        </div>
+                        <p className='mt-4 text-xs text-muted-foreground'>
                           {formatDistanceToNow(new Date(notification.createdAt), {
                             addSuffix: true,
                           })}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+                        </p>
+                      </article>
+                    ))}
+                  {!notifications.some((notification) => !notification.readAt) && (
+                    <p className='text-sm text-muted-foreground'>
+                      No unread notifications.
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value='read' className='h-full overflow-hidden'>
+                <div className='flex h-full flex-col gap-3 overflow-y-auto pr-2 pb-2'>
+                  {notifications
+                    .filter((notification) => !!notification.readAt)
+                    .map((notification) => (
+                      <article
+                        key={notification.id}
+                        className='w-full rounded-xl border border-border bg-background p-4 shadow-sm'
+                      >
+                        <p className='text-sm font-semibold'>{notification.title}</p>
+                        {notification.body && (
+                          <p className='mt-2 line-clamp-3 text-xs text-muted-foreground'>
+                            {notification.body}
+                          </p>
+                        )}
+                        <p className='mt-4 text-xs text-muted-foreground'>
+                          {formatDistanceToNow(new Date(notification.createdAt), {
+                            addSuffix: true,
+                          })}
+                        </p>
+                      </article>
+                    ))}
+                  {!notifications.some((notification) => !!notification.readAt) && (
+                    <p className='text-sm text-muted-foreground'>
+                      No read notifications.
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+            </>
           )}
         </div>
+      </Tabs>
       </PopoverContent>
     </Popover>
   );
+
 }
