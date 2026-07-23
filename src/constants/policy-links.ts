@@ -33,7 +33,7 @@ export type PolicyLink = {
 export const POLICY_LINKS: Record<string, PolicyLink> = {
   'leave-policy': {
     label: 'Leave Policy',
-    moduleRoute: paths.admin.settings,
+    moduleRoute: `${paths.admin.policies}?tab=configuration`,
     rules: [
       'One pool shared by Paid, Sick, and Half Day leave (half day = 0.5).',
       'Unpaid leave is separate, uncapped, and requires admin approval.',
@@ -42,7 +42,7 @@ export const POLICY_LINKS: Record<string, PolicyLink> = {
   },
   'medical-policy': {
     label: 'Medical Allowance Policy',
-    moduleRoute: paths.admin.settings,
+    moduleRoute: `${paths.admin.policies}?tab=configuration`,
     rules: [
       'Monthly accrual added to each eligible balance.',
       'Accrual stops once a balance reaches the cap.',
@@ -51,7 +51,7 @@ export const POLICY_LINKS: Record<string, PolicyLink> = {
   },
   'overtime-policy': {
     label: 'Overtime Policy',
-    moduleRoute: paths.admin.settings,
+    moduleRoute: `${paths.admin.policies}?tab=configuration`,
     rules: [
       'Rate = Base Salary × Multiplier ÷ Working Hours.',
       'Applied to approved overtime hours on each payroll run.',

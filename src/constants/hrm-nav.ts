@@ -61,7 +61,6 @@ export const adminNav: NavConfig = {
       icon: Wallet,
       requiresFlag: 'reimbursementsEnabled',
     },
-    { label: 'Settings', href: paths.admin.settings, icon: Settings },
     { label: 'Profile', href: paths.admin.profile, icon: UserCircle },
   ],
 };

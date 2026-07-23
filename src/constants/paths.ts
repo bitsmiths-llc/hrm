@@ -32,7 +32,6 @@ export const paths = {
     policyCompliance: '/admin/policies/compliance',
     policyDetail: (id: string) => `/admin/policies/${id}`,
     reimbursements: '/admin/reimbursements',
-    settings: '/admin/settings',
     profile: '/admin/profile',
   },
 } as const;

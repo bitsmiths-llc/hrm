@@ -135,14 +135,7 @@ Answers: "What rules are published, who has agreed, and are contracts current?"
 - Policy list with versions; upload new version
 - Compliance matrix: employee × policy acknowledgment status
 - Contracts: per-employee contract upload/replace, version history
-
-### Settings `/admin/settings`
-
-Answers: "What are the system-wide rules?"
-
-- Payroll: global overtime multiplier, medical accrual amount + cap, leave pool size
-- Onboarding email template (rich text)
-- Module toggles (hide Reimbursements until Phase 2)
+- System-wide rules and onboarding email configuration moved into this section
 
 ---
 
