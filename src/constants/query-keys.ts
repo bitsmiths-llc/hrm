@@ -24,8 +24,34 @@ export enum QueryKeys {
   PAYROLL_RUNS = 'payroll-runs', // admin run list / a run by month (BIT-15)
   RUN_PAYSLIPS = 'run-payslips', // draft/frozen payslips for one run (BIT-15)
   RUN_EXPORTS = 'run-exports', // Payoneer export artifacts for one run (BIT-16)
-  POLICIES = 'policies',
+  POLICIES = 'policies', // admin repository: policies + full version history (BIT-21)
+  ACTIVE_POLICIES = 'active-policies', // employee view: one active version per policy (BIT-21)
+  POLICY_ACKNOWLEDGMENTS = 'policy-acknowledgments', // the caller's own acknowledgments (BIT-23)
+  POLICY_COMPLIANCE = 'policy-compliance', // admin roster: every employee × active policy (BIT-23)
+  POLICY_LINKAGE = 'policy-linkage', // admin: active policy version vs reconciled marker + drift (BIT-25)
+  CONTRACTS = 'contracts', // admin view: one employee's full version history (BIT-22)
+  MY_CONTRACT = 'my-contract', // employee view: own active contract only (BIT-22)
+  CONTRACT_FILE_URLS = 'contract-file-urls', // signed URLs for contract PDFs
   HRM_SETTINGS = 'hrm-settings',
   PROJECTS = 'projects',
+  ONBOARDING_EMAIL_TEMPLATE = 'onboarding-email-template',
   FX_RATES = 'fx-rates', // live exchange rates, keyed by base currency (BIT-16)
+
+  // In-app notifications (BIT-26)
+  NOTIFICATIONS = 'notifications', // caller's own notification feed (bell dropdown)
+  NOTIFICATIONS_UNREAD = 'notifications-unread', // caller's unread count (bell badge)
+
+  // System configuration & module toggles (BIT-20)
+  SYSTEM_CONFIG = 'system-config', // singleton system_config row (feature flags)
+
+  // Admin dashboard aggregations (BIT-17)
+  DASHBOARD_SUMMARY = 'dashboard-summary', // guarded jsonb bundle for the admin home
+  EMPLOYEES_BY_STATUS = 'employees-by-status', // count per account_status
+
+  // Admin approvals (BIT-18)
+  PENDING_APPROVALS = 'pending-approvals', // guarded pending_approvals() union across the four sources
+
+  // Admin dashboard widgets (BIT-19)
+  PAYROLL_CYCLE_COST = 'payroll-cycle-cost', // guarded sum(payslips.total_pay) for a run
+  LEAVE_BALANCES_ALL = 'leave-balances-all', // guarded per-active-employee leave rollup by year
 }

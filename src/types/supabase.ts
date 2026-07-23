@@ -55,6 +55,57 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          employee_id: string
+          file_name: string
+          id: string
+          is_active: boolean
+          note: string | null
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          employee_id: string
+          file_name: string
+          id?: string
+          is_active?: boolean
+          note?: string | null
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version: number
+        }
+        Update: {
+          employee_id?: string
+          file_name?: string
+          id?: string
+          is_active?: boolean
+          note?: string | null
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           doc_type: string
@@ -378,6 +429,79 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read_at: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_email_template: {
+        Row: {
+          body_html: string
+          id: boolean
+          subject: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body_html: string
+          id?: boolean
+          subject: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body_html?: string
+          id?: boolean
+          subject?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_email_template_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       overtime_logs: {
         Row: {
           created_at: string
@@ -609,7 +733,7 @@ export type Database = {
           overtime_pay?: number
           overtime_rate?: number
           payroll_run_id: string
-          period_month?: string
+          period_month: string
           tax_deduction?: number
           total_base: number
           total_pay: number
@@ -651,6 +775,147 @@ export type Database = {
             columns: ["payroll_run_id"]
             isOneToOne: false
             referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policies: {
+        Row: {
+          category: Database["public"]["Enums"]["policy_category"]
+          created_at: string
+          id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["policy_category"]
+          created_at?: string
+          id?: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["policy_category"]
+          created_at?: string
+          id?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      policy_acknowledgments: {
+        Row: {
+          acknowledged_at: string
+          employee_id: string
+          id: string
+          policy_version_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          employee_id: string
+          id?: string
+          policy_version_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          employee_id?: string
+          id?: string
+          policy_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_acknowledgments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_acknowledgments_policy_version_id_fkey"
+            columns: ["policy_version_id"]
+            isOneToOne: false
+            referencedRelation: "policy_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_reconciliations: {
+        Row: {
+          policy_id: string
+          reconciled_at: string
+          reconciled_by: string | null
+          reconciled_version_id: string
+        }
+        Insert: {
+          policy_id: string
+          reconciled_at?: string
+          reconciled_by?: string | null
+          reconciled_version_id: string
+        }
+        Update: {
+          policy_id?: string
+          reconciled_at?: string
+          reconciled_by?: string | null
+          reconciled_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_reconciliations_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: true
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_reconciliations_reconciled_by_fkey"
+            columns: ["reconciled_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_reconciliations_reconciled_version_id_fkey"
+            columns: ["reconciled_version_id"]
+            isOneToOne: false
+            referencedRelation: "policy_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_versions: {
+        Row: {
+          body_html: string
+          id: string
+          is_active: boolean
+          policy_id: string
+          published_at: string
+          version: number
+        }
+        Insert: {
+          body_html: string
+          id?: string
+          is_active?: boolean
+          policy_id: string
+          published_at?: string
+          version: number
+        }
+        Update: {
+          body_html?: string
+          id?: string
+          is_active?: boolean
+          policy_id?: string
+          published_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_versions_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
             referencedColumns: ["id"]
           },
         ]
@@ -714,6 +979,24 @@ export type Database = {
           },
         ]
       }
+      system_config: {
+        Row: {
+          id: boolean
+          reimbursements_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          reimbursements_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          reimbursements_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -721,6 +1004,58 @@ export type Database = {
     Functions: {
       accept_onboarding: { Args: never; Returns: undefined }
       calculate_payroll: { Args: { p_run_id: string }; Returns: undefined }
+      create_policy: {
+        Args: {
+          p_body_html: string
+          p_category: Database["public"]["Enums"]["policy_category"]
+          p_slug: string
+          p_title: string
+        }
+        Returns: {
+          category: Database["public"]["Enums"]["policy_category"]
+          created_at: string
+          id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "policies"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      // Hand-typed: dashboard_summary() returns jsonb, which the generator
+      // widens to `Json`. The shape is fixed by the RPC (see
+      // 20260720120000_m4_dashboard_rpcs.sql) — keep this block when
+      // regenerating.
+      dashboard_summary: {
+        Args: never
+        Returns: {
+          pending_leave: number
+          pending_medical: number
+          pending_overtime: number
+          pending_onboarding: number
+          active_employees: number
+          payroll_cycle: Database["public"]["Enums"]["payroll_status"] | null
+        }
+      }
+      employees_by_status: {
+        Args: never
+        Returns: {
+          count: number
+          status: string
+        }[]
+      }
+      employees_near_medical_cap: {
+        Args: { threshold?: number }
+        Returns: {
+          employee_id: string
+          full_name: string
+          spent: number
+        }[]
+      }
       ensure_current_run: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
       leave_balance: {
@@ -731,8 +1066,17 @@ export type Database = {
           used: number
         }[]
       }
+      leave_balances_all: {
+        Args: { year?: number }
+        Returns: {
+          employee_id: string
+          full_name: string
+          pool: number
+          remaining: number
+          used: number
+        }[]
+      }
       lock_payroll: { Args: { p_run_id: string }; Returns: undefined }
-      unlock_payroll: { Args: { p_run_id: string }; Returns: undefined }
       medical_balance: {
         Args: { p_employee: string }
         Returns: {
@@ -743,7 +1087,77 @@ export type Database = {
           spent: number
         }[]
       }
+      payroll_cycle_cost: { Args: { run_id: string }; Returns: number }
+      pending_approvals: {
+        Args: never
+        Returns: {
+          amount: number
+          employee_id: string
+          employee_name: string
+          item_id: string
+          kind: string
+          submitted_at: string
+          summary: string
+        }[]
+      }
+      policy_compliance: {
+        Args: never
+        Returns: {
+          acknowledged: boolean
+          acknowledged_at: string
+          employee_id: string
+          full_name: string
+          policy_id: string
+          policy_version_id: string
+          title: string
+          version: number
+        }[]
+      }
+      publish_policy_version: {
+        Args: { p_body_html: string; p_policy_id: string }
+        Returns: {
+          body_html: string
+          id: string
+          is_active: boolean
+          policy_id: string
+          published_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "policy_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      run_is_locked: { Args: { p_run_id: string }; Returns: boolean }
       submit_onboarding: { Args: never; Returns: undefined }
+      unlock_payroll: { Args: { p_run_id: string }; Returns: undefined }
+      upload_contract: {
+        Args: {
+          p_employee_id: string
+          p_file_name: string
+          p_note?: string
+          p_storage_path: string
+        }
+        Returns: {
+          employee_id: string
+          file_name: string
+          id: string
+          is_active: boolean
+          note: string | null
+          storage_path: string
+          uploaded_at: string
+          uploaded_by: string | null
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       account_status: "invited" | "onboarding" | "submitted" | "active"
@@ -751,6 +1165,7 @@ export type Database = {
       leave_type: "paid" | "sick" | "unpaid" | "half_day"
       medical_for: "self" | "parent" | "spouse" | "child"
       payroll_status: "open" | "locked"
+      policy_category: "leave" | "medical" | "overtime" | "general"
       request_status: "pending" | "approved" | "rejected"
       service_type:
         | "consultation"
@@ -893,6 +1308,7 @@ export const Constants = {
       leave_type: ["paid", "sick", "unpaid", "half_day"],
       medical_for: ["self", "parent", "spouse", "child"],
       payroll_status: ["open", "locked"],
+      policy_category: ["leave", "medical", "overtime", "general"],
       request_status: ["pending", "approved", "rejected"],
       service_type: [
         "consultation",

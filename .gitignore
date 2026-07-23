@@ -40,6 +40,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase CLI local state — link/branch bookkeeping that the CLI rewrites on
+# every `supabase link` (and on `supabase gen types`), not project source
+supabase/.temp/
+supabase/.branches/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -8,4 +8,8 @@ export const hrmConfig = {
   /** Accepted proof MIME types — mirrors the `medical-proofs` bucket's
    *  server-side allow-list so the client rejects the same set up front. */
   proofMimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'application/pdf'],
+  maxContractFileSizeMb: 10,
+  /** A contract is a finished, signed document — mirrors the `contracts`
+   *  bucket's server-side allow-list (BIT-22). */
+  contractMimeTypes: ['application/pdf'],
 } as const;

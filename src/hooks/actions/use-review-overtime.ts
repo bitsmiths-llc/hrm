@@ -29,6 +29,10 @@ export function useReviewOvertime(onSuccess?: () => void) {
     const result = await action.executeAsync(input);
     if (result?.data) {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.OVERTIME_LOGS] });
+      // The unified approvals queue (pending_approvals()) and the admin
+      // dashboard's pending-approvals tile both count this row.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.PENDING_APPROVALS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.DASHBOARD_SUMMARY] });
       onSuccess?.();
     }
     return result;

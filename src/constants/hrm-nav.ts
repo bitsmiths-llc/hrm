@@ -10,6 +10,7 @@ import {
   Settings,
   UserCircle,
   Users,
+  Wallet,
 } from 'lucide-react';
 
 import { paths } from '@/constants/paths';
@@ -48,6 +49,15 @@ export const adminNav: NavConfig = {
       label: 'Policies & Contracts',
       href: paths.admin.policies,
       icon: FileText,
+    },
+    // Reimbursements ships dark (Phase 2): the entry only appears once an admin
+    // enables it in Settings → Module Toggles (`system_config`), gated in the
+    // sidebar via its `requiresFlag`.
+    {
+      label: 'Reimbursements',
+      href: paths.admin.reimbursements,
+      icon: Wallet,
+      requiresFlag: 'reimbursementsEnabled',
     },
     { label: 'Settings', href: paths.admin.settings, icon: Settings },
     { label: 'Profile', href: paths.admin.profile, icon: UserCircle },

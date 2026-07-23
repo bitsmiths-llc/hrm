@@ -28,10 +28,10 @@ import { paths } from '@/constants/paths';
 import { CancelInviteDialog } from './cancel-invite-dialog';
 import { ReturnOnboardingDialog } from './return-onboarding-dialog';
 
-import { Employee } from '@/types/hrm';
+import { EmployeeListItem } from '@/types/hrm';
 
 type EmployeesTableRowActionsProps = {
-  employee: Employee;
+  employee: EmployeeListItem;
 };
 
 /** Per-row directory controls: a primary "View" button plus a trailing overflow
@@ -57,7 +57,7 @@ export function EmployeesTableRowActions({
 
   return (
     <div className='flex items-center justify-end gap-1'>
-      <Link href={`${paths.admin.employees}/${employee.id}`}>
+      <Link href={paths.admin.employeeDetail(employee.id)}>
         <Button variant='ghost' size='sm' icon={ArrowRight}>
           View
         </Button>

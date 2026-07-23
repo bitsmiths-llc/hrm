@@ -4,6 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { useUnacknowledgedPolicyCount } from '@/hooks/queries/policies';
+import { useSystemConfig } from '@/hooks/queries/system-config';
+
 import {
   Sidebar,
   SidebarContent,
@@ -40,11 +43,27 @@ const exactMatchHrefs: string[] = [
 export function AppSidebar({ role }: AppSidebarProps) {
   const config = role === 'admin' ? adminNav : employeeNav;
   const pathname = usePathname();
+  const unacknowledgedPolicies = useUnacknowledgedPolicyCount();
+  const { data: systemConfig } = useSystemConfig();
+
+  // Feature-flagged entries (e.g. Reimbursements) stay hidden until their
+  // `system_config` toggle is on. Config is unknown while the query loads, so
+  // gated items default to hidden — matching "Phase 2 stays dark".
+  const items = config.items.filter(
+    (item) => !item.requiresFlag || !!systemConfig?.[item.requiresFlag],
+  );
 
   const isActive = (href: string) =>
     exactMatchHrefs.includes(href)
       ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
+
+  /** Static badges come from the nav config; the employee Policies item
+   *  gets a live "needs acknowledgment" count instead. */
+  const badgeFor = (item: { href: string; badge?: number }) =>
+    role === 'employee' && item.href === paths.employee.policies
+      ? unacknowledgedPolicies || undefined
+      : item.badge;
 
   return (
     <Sidebar collapsible='icon' variant='inset'>
@@ -67,7 +86,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
           <SidebarGroupLabel>{config.roleLabel}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {config.items.map((item) => (
+              {items.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
@@ -79,8 +98,10 @@ export function AppSidebar({ role }: AppSidebarProps) {
                       <span>{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
-                  {!!item.badge && (
-                    <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                  {!!badgeFor(item) && (
+                    <SidebarMenuBadge className='rounded-full bg-primary px-1.5 text-primary-foreground'>
+                      {badgeFor(item)}
+                    </SidebarMenuBadge>
                   )}
                 </SidebarMenuItem>
               ))}

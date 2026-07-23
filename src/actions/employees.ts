@@ -1,6 +1,6 @@
 'use server';
 
-import { sendInviteEmail } from '@/lib/resend/send-invite-email';
+import { sendOnboardingInvite } from '@/lib/email/send-onboarding-invite';
 import {
   sendOnboardingApprovedEmail,
   sendOnboardingReturnedEmail,
@@ -96,10 +96,10 @@ export const inviteEmployee = authActionClient
     inviteUrl.searchParams.set('type', 'invite');
 
     try {
-      await sendInviteEmail({
+      await sendOnboardingInvite({
         to: normalizedEmail,
-        fullName: name,
-        inviteUrl: inviteUrl.toString(),
+        employeeName: name ?? '',
+        onboardingLink: inviteUrl.toString(),
       });
     } catch {
       // The auth user exists but nobody can ever receive the link — roll back.
@@ -173,10 +173,10 @@ export const resendInvite = authActionClient
     inviteUrl.searchParams.set('type', 'magiclink');
 
     try {
-      await sendInviteEmail({
+      await sendOnboardingInvite({
         to: employee.email,
-        fullName: employee.full_name,
-        inviteUrl: inviteUrl.toString(),
+        employeeName: employee.full_name ?? '',
+        onboardingLink: inviteUrl.toString(),
       });
     } catch {
       throw new Error('Could not resend the invitation. Please try again.');

@@ -20,6 +20,8 @@ export function useLockPayroll(onSuccess?: () => void) {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.RUN_PAYSLIPS] });
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PAYROLL_RUNS] });
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PAYSLIPS] });
+      // The admin dashboard's payroll-cycle badge reads the latest run's status.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.DASHBOARD_SUMMARY] });
       onSuccess?.();
     },
     onError,

@@ -152,3 +152,67 @@ body {
     width: 0;
   }
 }
+
+/* CKEditor ships light-theme-only by default, which reads as broken against
+ * a dark surface. Remap its own CSS custom properties onto our semantic
+ * tokens rather than fighting its internals with !important overrides. */
+.dark .rich-text-editor {
+  --ck-color-base-background: hsl(var(--card));
+  --ck-color-base-foreground: hsl(var(--foreground));
+  --ck-color-base-border: hsl(var(--border));
+  --ck-color-base-text: hsl(var(--foreground));
+  --ck-color-text: hsl(var(--foreground));
+  --ck-color-toolbar-background: hsl(var(--card));
+  --ck-color-toolbar-border: hsl(var(--border));
+  --ck-color-button-default-background: transparent;
+  --ck-color-button-default-hover-background: hsl(var(--accent));
+  --ck-color-button-default-active-background: hsl(var(--accent));
+  --ck-color-button-on-background: hsl(var(--accent));
+  --ck-color-button-on-color: hsl(var(--accent-foreground));
+  --ck-color-button-on-hover-background: hsl(var(--accent));
+  --ck-color-dropdown-panel-background: hsl(var(--popover));
+  --ck-color-dropdown-panel-border: hsl(var(--border));
+  --ck-color-input-background: hsl(var(--background));
+  --ck-color-input-border: hsl(var(--border));
+  --ck-color-input-text: hsl(var(--foreground));
+  --ck-color-list-background: hsl(var(--popover));
+  --ck-color-list-button-hover-background: hsl(var(--accent));
+  --ck-color-panel-background: hsl(var(--popover));
+  --ck-color-panel-border: hsl(var(--border));
+}
+
+/* The custom properties above don't reach the editable content itself —
+ * CKEditor's bundled ckeditor5-content.css sets its own (light-theme) text
+ * color there, so it has to be overridden directly. */
+.dark .rich-text-editor .ck-content,
+.dark .rich-text-editor .ck-content * {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Sizing lives here rather than in Tailwind arbitrary selectors: `__` in a
+ * class like [&_.ck-editor__editable] compiles underscores to spaces, so
+ * those variants silently never match CKEditor's BEM class names. */
+.rich-text-editor .ck-editor__editable {
+  min-height: 12rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-inline: 0.75rem;
+}
+
+/* Fill mode: the editor stretches to its flex parent's height (e.g. the
+ * create-policy sheet) — toolbar stays fixed, the editable area grows and
+ * scrolls internally. */
+.rich-text-editor--fill .ck-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.rich-text-editor--fill .ck-editor__main {
+  flex: 1;
+  min-height: 0;
+}
+.rich-text-editor--fill .ck-editor__editable {
+  height: 100%;
+  max-height: none;
+}

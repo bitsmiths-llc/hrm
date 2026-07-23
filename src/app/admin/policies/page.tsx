@@ -1,14 +1,9 @@
 import { Metadata } from 'next';
 
-import { ComingSoon } from '@/components/hrm/coming-soon';
+import { AdminPoliciesPageContent } from '@/components/policies/admin-policies-page-content';
 
-export const metadata: Metadata = { title: 'Policies & Contracts' };
+export const metadata: Metadata = { title: 'Policies' };
 
 export default function AdminPoliciesPage() {
-  return (
-    <ComingSoon
-      title='Policies & Contracts'
-      description='Manage policy documents, versions, contracts, and acknowledgment compliance.'
-    />
-  );
+  return <AdminPoliciesPageContent />;
 }

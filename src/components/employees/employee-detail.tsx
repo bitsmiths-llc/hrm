@@ -21,6 +21,7 @@ import { paths } from '@/constants/paths';
 import { AdminBankDialog } from './admin-bank-dialog';
 import { AdminContactDialog } from './admin-contact-dialog';
 import { AdminSocialsDialog } from './admin-socials-dialog';
+import { EmployeeContractTab } from './employee-contract-tab';
 import { EmployeeDocuments } from './employee-documents';
 import { EmployeeLeaveTab } from './employee-leave-tab';
 import { EmployeeMedicalTab } from './employee-medical-tab';
@@ -107,6 +108,7 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
           <TabsTrigger value='medical'>Medical</TabsTrigger>
           <TabsTrigger value='overtime'>Overtime</TabsTrigger>
           <TabsTrigger value='payroll'>Payroll</TabsTrigger>
+          <TabsTrigger value='contract'>Contract</TabsTrigger>
         </TabsList>
 
         <TabsContent value='profile' className='flex flex-col gap-6'>
@@ -205,6 +207,10 @@ export function EmployeeDetail({ employeeId }: EmployeeDetailProps) {
 
         <TabsContent value='payroll'>
           <EmployeePayrollTab employeeId={employee.id} />
+        </TabsContent>
+
+        <TabsContent value='contract'>
+          <EmployeeContractTab employeeId={employee.id} />
         </TabsContent>
       </Tabs>
     </>

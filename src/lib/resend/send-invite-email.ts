@@ -3,37 +3,35 @@ import 'server-only';
 import { resend } from '@/lib/resend/client';
 
 import { appConfig } from '@/config/app';
-import { InviteEmail } from '@/emails/invite-email';
 
 type SendInviteEmailInput = {
   to: string;
-  fullName?: string | null;
-  inviteUrl: string;
+  /** Fully rendered subject line (tokens already substituted). */
+  subject: string;
+  /** Fully rendered, sanitized HTML body (tokens already substituted). */
+  html: string;
 };
 
 /**
  * Sends the invite email through Resend. Supabase's own mailer only supports
  * the implicit-hash link flow; sending it ourselves lets the link point at
- * `/auth/accept-invitation` with a `token_hash` (see `inviteEmployee`) and lets
- * us render our branded React Email template (`@/emails/invite-email`).
+ * `/auth/accept-invitation` with a `token_hash` (see `inviteEmployee`).
+ *
+ * The subject and body come from the admin-editable onboarding template,
+ * already rendered by `sendOnboardingInvite` (BIT-24) — this function only
+ * hands the finished HTML to Resend.
  */
 export async function sendInviteEmail({
   to,
-  fullName,
-  inviteUrl,
+  subject,
+  html,
 }: SendInviteEmailInput) {
   const { error } = await resend.emails.send({
     from: appConfig.emails.sender,
     replyTo: appConfig.emails.support,
     to,
-    subject: `You're invited to join ${appConfig.appName}`,
-    react: InviteEmail({
-      fullName,
-      inviteUrl,
-      appName: appConfig.appName,
-      baseUrl: appConfig.appUrl,
-      supportEmail: appConfig.emails.support,
-    }),
+    subject,
+    html,
   });
 
   if (error) {

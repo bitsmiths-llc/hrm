@@ -1,35 +1,54 @@
 import { Metadata } from 'next';
 
 import { PageHeader } from '@/components/hrm/page-header';
-import { LeaveSettingsForm } from '@/components/settings/leave-settings-form';
-import { MedicalSettingsForm } from '@/components/settings/medical-settings-form';
-import { OvertimeSettingsForm } from '@/components/settings/overtime-settings-form';
+import { HrmSettingsForm } from '@/components/settings/hrm-settings-form';
+import { ModuleTogglesTab } from '@/components/settings/module-toggles-tab';
+import { OnboardingEmailPlaceholder } from '@/components/settings/onboarding-email-placeholder';
+import { PolicyManagementLink } from '@/components/settings/policy-management-link';
 import { ProjectsSettingsCard } from '@/components/settings/projects-settings-card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const metadata: Metadata = { title: 'Settings' };
 
+/** Settings hub (BIT-20). A Tabs shell that AGGREGATES existing editors rather
+ *  than rebuilding them: Payroll Settings imports the M2 `payroll_settings`
+ *  editor, Onboarding Email is the M3.4 CKEditor slot, and Policy Management
+ *  links into the M3 Policies workspace. Only Module Toggles is new here. */
 export default function SettingsPage() {
   return (
     <>
       <PageHeader
         title='Settings'
-        description='Module-wide configuration for leave, medical allowance, and payroll.'
+        description='System configuration and module toggles.'
       />
-      {/* Two independent stacked columns (masonry-style) so cards pack tightly
-          top-to-bottom within each column — a short card never leaves a gap
-          beside a taller neighbour the way an aligned grid row does. Payroll and
-          Medical (the two-field cards) anchor a column each; Leave and Projects
-          fill the remaining space beneath them. */}
-      <div className='grid max-w-4xl grid-cols-1 items-start gap-6 md:grid-cols-2'>
-        <div className='flex flex-col gap-6'>
-          <OvertimeSettingsForm />
-          <LeaveSettingsForm />
-        </div>
-        <div className='flex flex-col gap-6'>
-          <MedicalSettingsForm />
-          <ProjectsSettingsCard />
-        </div>
-      </div>
+
+      <Tabs defaultValue='payroll'>
+        <TabsList>
+          <TabsTrigger value='payroll'>Payroll Settings</TabsTrigger>
+          <TabsTrigger value='toggles'>Module Toggles</TabsTrigger>
+          <TabsTrigger value='email'>Onboarding Email</TabsTrigger>
+          <TabsTrigger value='policies'>Policy Management</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value='payroll'>
+          <div className='grid items-start gap-4 lg:grid-cols-2'>
+            <HrmSettingsForm />
+            <ProjectsSettingsCard />
+          </div>
+        </TabsContent>
+
+        <TabsContent value='toggles'>
+          <ModuleTogglesTab />
+        </TabsContent>
+
+        <TabsContent value='email'>
+          <OnboardingEmailPlaceholder />
+        </TabsContent>
+
+        <TabsContent value='policies'>
+          <PolicyManagementLink />
+        </TabsContent>
+      </Tabs>
     </>
   );
 }
