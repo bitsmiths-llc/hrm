@@ -1,8 +1,10 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
+import { useUploadContract } from '@/hooks/actions/use-upload-contract';
 
 import { FileUpload } from '@/components/hrm/file-upload';
 import { Button } from '@/components/ui/button';
@@ -14,119 +16,115 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
-import { QueryKeys } from '@/constants/query-keys';
+import { hrmConfig } from '@/constants/hrm-config';
+import {
+  type UploadContractFormInput,
+  uploadContractFormSchema,
+} from '@/schema/contract';
 
-import { EmployeeContract } from '@/types/hrm';
+const CONTRACT_ACCEPT = hrmConfig.contractMimeTypes.join(',');
 
 type UploadContractDialogProps = {
   employeeId: string;
-  currentVersion: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
 export function UploadContractDialog({
   employeeId,
-  currentVersion,
   open,
   onOpenChange,
 }: UploadContractDialogProps) {
-  const queryClient = useQueryClient();
-  const [files, setFiles] = useState<File[]>([]);
-  const [note, setNote] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const form = useForm<UploadContractFormInput>({
+    resolver: zodResolver(uploadContractFormSchema),
+    defaultValues: { files: [], note: '' },
+  });
 
-  const handleSubmit = async () => {
-    if (!files.length) return;
-    setSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    queryClient.setQueryData<EmployeeContract[]>(
-      [QueryKeys.CONTRACTS],
-      (old) => {
-        const existing = old ?? [];
-        const hasRecord = existing.some((c) => c.employeeId === employeeId);
-        const newVersion = {
-          version: currentVersion + 1,
-          fileName: files[0].name,
-          uploadedAt: new Date().toISOString().slice(0, 10),
-          note: note.trim() || null,
-        };
-        if (!hasRecord) {
-          return [...existing, { employeeId, versions: [newVersion] }];
-        }
-        return existing.map((c) =>
-          c.employeeId === employeeId
-            ? { ...c, versions: [...c.versions, newVersion] }
-            : c,
-        );
-      },
-    );
-
+  const { mutate, isPending } = useUploadContract(employeeId, () => {
     toast.success('Contract uploaded');
-    setSubmitting(false);
-    setFiles([]);
-    setNote('');
+    form.reset();
     onOpenChange(false);
-  };
+  });
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
         onOpenChange(next);
-        if (!next) {
-          setFiles([]);
-          setNote('');
-        }
+        if (!next) form.reset();
       }}
     >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Upload contract</DialogTitle>
           <DialogDescription>
-            This replaces the current contract. The previous version stays in
-            history.
+            This becomes the employee&apos;s current contract. The previous
+            version stays in history.
           </DialogDescription>
         </DialogHeader>
-        <div className='flex flex-col gap-4'>
-          <FileUpload
-            value={files}
-            onChange={setFiles}
-            maxFiles={1}
-            accept='.pdf'
-            label='Upload PDF'
-          />
-          <div className='flex flex-col gap-2'>
-            <Label htmlFor='contract-note'>Note (optional)</Label>
-            <Input
-              id='contract-note'
-              placeholder='e.g. Annual renewal'
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((values) => mutate(values))}
+            className='flex flex-col gap-4'
+          >
+            <FormField
+              control={form.control}
+              name='files'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Signed contract</FormLabel>
+                  <FormControl>
+                    <FileUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      maxFiles={1}
+                      maxSizeMb={hrmConfig.maxContractFileSizeMb}
+                      accept={CONTRACT_ACCEPT}
+                      allowedMimeTypes={hrmConfig.contractMimeTypes}
+                      label='Upload PDF'
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            type='button'
-            disabled={!files.length}
-            isLoading={submitting}
-            onClick={handleSubmit}
-          >
-            Upload
-          </Button>
-        </DialogFooter>
+            <FormField
+              control={form.control}
+              name='note'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Note (optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder='e.g. Annual renewal' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type='submit' isLoading={isPending}>
+                Upload
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

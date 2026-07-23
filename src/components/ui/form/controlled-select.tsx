@@ -32,6 +32,15 @@ type ControlledSelectProps<TFieldValues extends FieldValues> = {
   label?: string;
 };
 
+function isLabelValueOptions(
+  options: string[] | { label: string; value: string }[],
+): options is { label: string; value: string }[] {
+  // An empty array isn't a label/value list (there's no non-string element to
+  // key on), so it falls through to the raw-value branch rather than a doomed
+  // .find() that always returns undefined.
+  return options.length > 0 && typeof options[0] !== 'string';
+}
+
 export function ControlledSelect<TFieldValues extends FieldValues>({
   options,
   placeholder,
@@ -56,7 +65,11 @@ export function ControlledSelect<TFieldValues extends FieldValues>({
             <FormControl>
               <SelectTrigger
                 className={cn(
-                  'w-full gap-2.5 focus:ring-0 focus:ring-white md:min-w-28',
+                  // Match Input's focus treatment: no ring on pointer/auto
+                  // focus (kills the leftover ring-offset that showed as corner
+                  // marks when the dialog auto-focuses the trigger), clean ring
+                  // on keyboard focus only.
+                  'w-full gap-2.5 focus:ring-0 focus:ring-offset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:min-w-28',
                   className,
                 )}
               >
@@ -64,19 +77,15 @@ export function ControlledSelect<TFieldValues extends FieldValues>({
                   className='truncate text-sm'
                   title={
                     field.value
-                      ? Array.isArray(options) && typeof options[0] !== 'string'
-                        ? (options as { label: string; value: string }[]).find(
-                            (o) => o.value === field.value,
-                          )?.label
+                      ? isLabelValueOptions(options)
+                        ? options.find((o) => o.value === field.value)?.label
                         : field.value
                       : undefined
                   }
                 >
                   {field.value ? (
-                    Array.isArray(options) && typeof options[0] !== 'string' ? (
-                      (options as { label: string; value: string }[]).find(
-                        (o) => o.value === field.value,
-                      )?.label
+                    isLabelValueOptions(options) ? (
+                      options.find((o) => o.value === field.value)?.label
                     ) : (
                       field.value
                     )

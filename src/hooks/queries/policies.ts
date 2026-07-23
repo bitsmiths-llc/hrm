@@ -1,69 +1,312 @@
 import { useQuery } from '@tanstack/react-query';
+import { z } from 'zod';
 
 import { useEmployees } from '@/hooks/queries/employees';
 
-import { mockCurrentEmployee } from '@/constants/mock/employees';
-import {
-  mockPolicies,
-  mockPolicyAcknowledgments,
-} from '@/constants/mock/policies';
+import { authQuery } from '@/lib/client/auth-query';
+
 import { QueryKeys } from '@/constants/query-keys';
 
-import { Policy, PolicyAcknowledgment } from '@/types/hrm';
+import {
+  ActivePolicy,
+  Policy,
+  PolicyAcknowledgment,
+  PolicyCompliance,
+  PolicyLinkage,
+  PolicyVersion,
+} from '@/types/hrm';
 
-const mockDelay = (ms = 500) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+/** Both tables are readable by any authenticated user
+ *  (`policies_select_authenticated` / `policy_versions_select_authenticated`);
+ *  writes go through the admin-guarded RPCs, so nothing here needs a role
+ *  check of its own. */
+const POLICY_COLUMNS = 'id, title, slug, category';
+const VERSION_COLUMNS = 'id, version, body_html, published_at';
 
-/** Publishing a version or acknowledging a policy mutates these caches
- *  directly via `setQueryData`, so both use `staleTime: Infinity` — same
- *  reasoning as payroll cycles/payslips (see payroll.ts). */
-export const usePolicies = () => {
-  return useQuery({
+type PolicyVersionRow = {
+  id: string;
+  version: number;
+  body_html: string;
+  published_at: string;
+};
+
+const toVersion = (row: PolicyVersionRow) =>
+  ({
+    id: row.id,
+    version: row.version,
+    contentHtml: row.body_html,
+    publishedAt: row.published_at,
+  }) satisfies PolicyVersion;
+
+/** Oldest first — the `Policy.versions` contract every consumer relies on
+ *  (`currentVersion` reads the last entry). */
+const byVersionAscending = (a: PolicyVersion, b: PolicyVersion) =>
+  a.version - b.version;
+
+const fetchPolicies = authQuery(async ({ supabase }) => {
+  const { data, error } = await supabase
+    .from('policies')
+    .select(`${POLICY_COLUMNS}, policy_versions(${VERSION_COLUMNS})`)
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(error.message);
+
+  return data.map(
+    (row) =>
+      ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        category: row.category,
+        versions: row.policy_versions.map(toVersion).sort(byVersionAscending),
+      }) satisfies Policy,
+  );
+});
+
+const fetchPolicy = authQuery(
+  async ({ supabase, params }): Promise<Policy | null> => {
+    const { data, error } = await supabase
+      .from('policies')
+      .select(`${POLICY_COLUMNS}, policy_versions(${VERSION_COLUMNS})`)
+      .eq('id', params.policyId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      title: data.title,
+      slug: data.slug,
+      category: data.category,
+      versions: data.policy_versions.map(toVersion).sort(byVersionAscending),
+    };
+  },
+  { paramsSchema: z.object({ policyId: z.string().uuid() }) },
+);
+
+/** Exactly one row per policy — the active version — enforced by the
+ *  `policy_versions_one_active_idx` partial unique index. */
+const fetchActivePolicies = authQuery(async ({ supabase }) => {
+  const { data, error } = await supabase
+    .from('policy_versions')
+    .select(`id, version, published_at, policies(${POLICY_COLUMNS})`)
+    .eq('is_active', true)
+    .order('published_at', { ascending: false });
+  if (error) throw new Error(error.message);
+
+  return data.map(
+    (row) =>
+      ({
+        id: row.policies.id,
+        title: row.policies.title,
+        slug: row.policies.slug,
+        category: row.policies.category,
+        versionId: row.id,
+        version: row.version,
+        publishedAt: row.published_at,
+      }) satisfies ActivePolicy,
+  );
+});
+
+/** An acknowledgment row points at a *version*, so the policy it belongs to and
+ *  the version number an employee signed both come from the embedded parent. */
+const ACKNOWLEDGMENT_COLUMNS =
+  'employee_id, policy_version_id, acknowledged_at, policy_versions(version, policy_id)';
+
+type AcknowledgmentRow = {
+  employee_id: string;
+  policy_version_id: string;
+  acknowledged_at: string;
+  policy_versions: { version: number; policy_id: string };
+};
+
+const toAcknowledgment = (row: AcknowledgmentRow) =>
+  ({
+    policyId: row.policy_versions.policy_id,
+    employeeId: row.employee_id,
+    policyVersionId: row.policy_version_id,
+    acknowledgedVersion: row.policy_versions.version,
+    acknowledgedAt: row.acknowledged_at,
+  }) satisfies PolicyAcknowledgment;
+
+/** The caller's own acknowledgment history. The `employee_id` filter is
+ *  redundant under `ack_select_own` but matters for an admin, whose
+ *  `ack_select_admin` policy exposes everyone's rows. */
+const fetchMyAcknowledgments = authQuery(
+  async ({ supabase, user }): Promise<PolicyAcknowledgment[]> => {
+    const { data, error } = await supabase
+      .from('policy_acknowledgments')
+      .select(ACKNOWLEDGMENT_COLUMNS)
+      .eq('employee_id', user.id);
+    if (error) throw new Error(error.message);
+
+    return data.map(toAcknowledgment);
+  },
+);
+
+/** Every employee's acknowledgments — admin only in practice, since
+ *  `ack_select_own` narrows this to the caller's own rows for anyone else.
+ *  Feeds the per-version roster in the policy editor's version history. */
+const fetchAllAcknowledgments = authQuery(
+  async ({ supabase }): Promise<PolicyAcknowledgment[]> => {
+    const { data, error } = await supabase
+      .from('policy_acknowledgments')
+      .select(ACKNOWLEDGMENT_COLUMNS);
+    if (error) throw new Error(error.message);
+
+    return data.map(toAcknowledgment);
+  },
+);
+
+/** The admin compliance roster. The RPC returns one flat row per active policy
+ *  × active employee, already ordered by policy title then employee name; this
+ *  only rolls those rows up per policy, preserving that order. Compliance math
+ *  itself stays in the database — M4's widget calls the same RPC. */
+const fetchPolicyCompliance = authQuery(
+  async ({ supabase }): Promise<PolicyCompliance[]> => {
+    const { data, error } = await supabase.rpc('policy_compliance');
+    if (error) throw new Error(error.message);
+
+    const byPolicy = new Map<string, PolicyCompliance>();
+    for (const row of data) {
+      let policy = byPolicy.get(row.policy_id);
+      if (!policy) {
+        policy = {
+          policyId: row.policy_id,
+          title: row.title,
+          version: row.version,
+          employees: [],
+          acknowledgedCount: 0,
+          totalCount: 0,
+        };
+        byPolicy.set(row.policy_id, policy);
+      }
+
+      policy.employees.push({
+        employeeId: row.employee_id,
+        fullName: row.full_name,
+        acknowledged: row.acknowledged,
+        // Null whenever `acknowledged` is false — the generated RPC types
+        // widen every returned column to non-null, so this is only ever read
+        // behind that flag.
+        acknowledgedAt: row.acknowledged_at,
+      });
+      policy.totalCount += 1;
+      if (row.acknowledged) policy.acknowledgedCount += 1;
+    }
+
+    return [...byPolicy.values()];
+  },
+);
+
+/** The admin linkage panel (BIT-25): each policy's current active version
+ *  alongside the version an admin last reconciled, so the panel can flag drift.
+ *  The slug→rule map itself is app-level (`POLICY_LINKS`); this only supplies the
+ *  version-comparison inputs. Live enforced values come from `useHrmSettings`. */
+const fetchPolicyLinkage = authQuery(
+  async ({ supabase }): Promise<PolicyLinkage[]> => {
+    const { data, error } = await supabase
+      .from('policies')
+      .select(
+        'id, title, slug, policy_versions!inner(id, version, is_active), policy_reconciliations(reconciled_version_id)',
+      )
+      .eq('policy_versions.is_active', true)
+      .order('created_at', { ascending: true });
+    if (error) throw new Error(error.message);
+
+    return data.map((row) => {
+      // `!inner` filtered to the active version leaves exactly one row.
+      const active = row.policy_versions[0];
+      // `policy_id` is the reconciliation table's PK, so there is at most one
+      // marker; tolerate either embed shape (object vs single-element array).
+      const reconciled = Array.isArray(row.policy_reconciliations)
+        ? row.policy_reconciliations[0]
+        : row.policy_reconciliations;
+      const reconciledVersionId = reconciled?.reconciled_version_id ?? null;
+
+      return {
+        policyId: row.id,
+        title: row.title,
+        slug: row.slug,
+        activeVersionId: active.id,
+        activeVersion: active.version,
+        reconciledVersionId,
+        // Drift = never reconciled, or reconciled against an older version.
+        hasDrift: reconciledVersionId !== active.id,
+      } satisfies PolicyLinkage;
+    });
+  },
+);
+
+/** Admin repository: every policy with its full version history. */
+export const usePolicies = () =>
+  useQuery({
     queryKey: [QueryKeys.POLICIES],
-    queryFn: async (): Promise<Policy[]> => {
-      await mockDelay();
-      return mockPolicies;
-    },
-    staleTime: Infinity,
+    queryFn: () => fetchPolicies(),
   });
-};
 
-export const usePolicy = (policyId: string) => {
-  const { data: policies, isLoading } = usePolicies();
-  return {
-    data: policies?.find((policy) => policy.id === policyId),
-    isLoading,
-  };
-};
-
-export const useAllPolicyAcknowledgments = () => {
-  return useQuery({
-    queryKey: [QueryKeys.POLICY_ACKNOWLEDGMENTS],
-    queryFn: async (): Promise<PolicyAcknowledgment[]> => {
-      await mockDelay(300);
-      return mockPolicyAcknowledgments;
-    },
-    staleTime: Infinity,
+/** One policy with its history — the admin editor and the employee detail
+ *  view (which diffs the active body against an earlier version). */
+export const usePolicy = (policyId: string) =>
+  useQuery({
+    queryKey: [QueryKeys.POLICIES, policyId],
+    queryFn: () => fetchPolicy({ policyId }),
+    enabled: !!policyId,
   });
-};
 
-export const usePolicyAcknowledgments = (employeeId: string) => {
-  const { data, isLoading } = useAllPolicyAcknowledgments();
-  return {
-    data: (data ?? []).filter((ack) => ack.employeeId === employeeId),
-    isLoading,
-  };
-};
+/** Employee-facing list: the current version of each policy, nothing else. */
+export const useActivePolicies = () =>
+  useQuery({
+    queryKey: [QueryKeys.ACTIVE_POLICIES],
+    queryFn: () => fetchActivePolicies(),
+  });
 
+/** The signed-in employee's acknowledgments. Both this and the admin variant
+ *  below sit under the same key prefix, so one invalidation after an
+ *  acknowledgment refreshes whichever of them is mounted. */
 export const useMyPolicyAcknowledgments = () =>
-  usePolicyAcknowledgments(mockCurrentEmployee.id);
+  useQuery({
+    queryKey: [QueryKeys.POLICY_ACKNOWLEDGMENTS, 'mine'],
+    queryFn: () => fetchMyAcknowledgments(),
+  });
+
+export const useAllPolicyAcknowledgments = () =>
+  useQuery({
+    queryKey: [QueryKeys.POLICY_ACKNOWLEDGMENTS, 'all'],
+    queryFn: () => fetchAllAcknowledgments(),
+  });
+
+/** Admin compliance grid: per active policy, who has and hasn't acknowledged
+ *  the version that is active right now. */
+export const usePolicyCompliance = () =>
+  useQuery({
+    queryKey: [QueryKeys.POLICY_COMPLIANCE],
+    queryFn: () => fetchPolicyCompliance(),
+  });
+
+/** Admin linkage panel: per policy, its active version vs the reconciled marker,
+ *  the inputs the panel turns into a drift badge. */
+export const usePolicyLinkage = () =>
+  useQuery({
+    queryKey: [QueryKeys.POLICY_LINKAGE],
+    queryFn: () => fetchPolicyLinkage(),
+  });
 
 export const currentVersion = (policy: Policy) =>
   policy.versions[policy.versions.length - 1];
 
+/** Whether a specific version has been acknowledged. This — not a version
+ *  number comparison — is the compliance test: acknowledgments are stored
+ *  against a version id, and only the *active* version counts. */
+export const hasAcknowledged = (
+  acknowledgments: PolicyAcknowledgment[],
+  policyVersionId: string,
+) => acknowledgments.some((ack) => ack.policyVersionId === policyVersionId);
+
 /** Acknowledgments are append-only history (one record per version an
  *  employee acknowledged), so "where does this employee stand" means the
- *  record with the highest version for the policy. */
+ *  record with the highest version for the policy. Drives the "Behind (on v1)"
+ *  label and the diff base on the employee detail page — both of which need
+ *  the *previous* acknowledgment, not the current one. */
 export const latestAcknowledgment = (
   acknowledgments: PolicyAcknowledgment[],
   policyId: string,
@@ -74,19 +317,29 @@ export const latestAcknowledgment = (
       PolicyAcknowledgment | undefined
     >((best, ack) => (!best || ack.acknowledgedVersion > best.acknowledgedVersion ? ack : best), undefined);
 
+/** Active versions the signed-in employee still owes an acknowledgment on —
+ *  the re-ack prompt's source. Derived from the two queries already in cache
+ *  rather than fetched separately, so publishing a new version (which flips
+ *  `is_active` and therefore changes `useActivePolicies`) re-raises the prompt
+ *  without any extra invalidation. */
+export const usePendingAcknowledgments = () => {
+  const { data: policies, isLoading: policiesLoading } = useActivePolicies();
+  const { data: acknowledgments, isLoading: acksLoading } =
+    useMyPolicyAcknowledgments();
+
+  return {
+    data: (policies ?? []).filter(
+      (policy) => !hasAcknowledged(acknowledgments ?? [], policy.versionId),
+    ),
+    isLoading: policiesLoading || acksLoading,
+  };
+};
+
 /** How many policies the signed-in employee still has to acknowledge —
  *  missing acknowledgments and stale ones (older version) both count.
  *  Drives the dashboard banner and the sidebar notification pill. */
-export const useUnacknowledgedPolicyCount = () => {
-  const { data: policies } = usePolicies();
-  const { data: acknowledgments } = useMyPolicyAcknowledgments();
-
-  return (policies ?? []).filter((policy) => {
-    const latest = currentVersion(policy);
-    const ack = latestAcknowledgment(acknowledgments, policy.id);
-    return !ack || ack.acknowledgedVersion < latest.version;
-  }).length;
-};
+export const useUnacknowledgedPolicyCount = () =>
+  usePendingAcknowledgments().data.length;
 
 /** Active employees only — invited/onboarding accounts don't have
  *  self-service access yet, so acknowledgment doesn't apply to them. */

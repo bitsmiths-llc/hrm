@@ -6,38 +6,23 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useUpdateMyBank } from '@/hooks/actions/use-update-my-profile';
+
+import { ControlledTextField } from '@/components/hrm/form-fields';
+import { ScrollableDialogContent } from '@/components/hrm/scrollable-dialog-content';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
 
+import { bankInfoFields } from '@/constants/profile';
 import { type BankInfoInput, bankInfoSchema } from '@/schema/onboarding';
-
-const fields: {
-  name: keyof BankInfoInput;
-  label: string;
-}[] = [
-  { name: 'bankName', label: 'Bank name' },
-  { name: 'accountHolderName', label: 'Account holder name' },
-  { name: 'accountNumber', label: 'Account number' },
-  { name: 'iban', label: 'IBAN' },
-  { name: 'branch', label: 'Bank branch (optional)' },
-];
 
 type BankInfoDialogProps = {
   defaultValues: BankInfoInput;
@@ -51,11 +36,10 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
     defaultValues,
   });
 
-  const onSubmit = async (_values: BankInfoInput) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+  const { execute, isPending } = useUpdateMyBank(() => {
     toast.success('Bank information updated');
     setOpen(false);
-  };
+  });
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -64,7 +48,7 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
           Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-md'>
+      <ScrollableDialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Edit bank information</DialogTitle>
           <DialogDescription>
@@ -74,23 +58,14 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit((values) => execute(values))}
             className='flex flex-col gap-4'
           >
-            {fields.map(({ name, label }) => (
-              <FormField
-                key={name}
+            {bankInfoFields.map((config) => (
+              <ControlledTextField
+                key={config.name}
                 control={form.control}
-                name={name}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{label}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                config={config}
               />
             ))}
             <DialogFooter>
@@ -101,13 +76,13 @@ export function BankInfoDialog({ defaultValues }: BankInfoDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type='submit' isLoading={form.formState.isSubmitting}>
+              <Button type='submit' isLoading={isPending}>
                 Save changes
               </Button>
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
+      </ScrollableDialogContent>
     </Dialog>
   );
 }

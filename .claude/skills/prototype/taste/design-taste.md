@@ -1,6 +1,6 @@
 # Design Taste — The Anti-Slop Doctrine
 
-Tokens, components, and accessibility make a design *correct*. **Taste** makes it *great*. This file is the judgment layer: how to make an interface look intentional, expensive, and human instead of templated and machine-generated.
+Tokens, components, and accessibility make a design _correct_. **Taste** makes it _great_. This file is the judgment layer: how to make an interface look intentional, expensive, and human instead of templated and machine-generated.
 
 > Taste serves the **Aesthetics** tier of the Decision Framework (priority 4). It may sharpen anything below it, but it must **never** override User Needs, Accessibility, or Consistency. A beautiful design that fails contrast or breaks a pattern is a failed design.
 
@@ -25,19 +25,19 @@ Write these down, then generate to them. If you can't name the mood and the layo
 
 A model left to its defaults regresses to the mean — and the mean is mediocre. These are the recurring "tells" of machine-generated UI. Treat each as a **defect to actively break**, not a starting point.
 
-| The Slop Default | Why it looks cheap | The Taste Move |
-|------------------|--------------------|----------------|
-| 6-line wrapped headings in a narrow column | Reads as a paragraph, kills impact | Wide measure for display type (`max-width` ~18–24ch for headlines), short and punchy |
-| Same Left-text / Right-image row, repeated | Monotonous rhythm, obviously templated | Vary composition per section (see Variance Mandate) |
-| Everything centered | No tension, no hierarchy | Use asymmetry and a real grid; center sparingly and deliberately |
-| Three identical feature cards, equal weight | Flat, boring, no focal point | Break symmetry — one hero item, bento sizing, editorial captions |
-| Cheap meta-labels ("SECTION 01", "FEATURE") | Filler that says nothing | Real, specific microcopy or none at all |
-| Invisible/low-contrast button text | Looks broken, fails a11y | Solid contrast, deliberate button hierarchy |
-| Generic drop shadow on every box | Muddy, dated depth | Restrained, layered elevation (`tokens/shadows.json`); most things are flat |
-| Pure black `#000` on pure white `#fff` | Harsh, amateur | Off-black / warm-white surfaces (`semantic.text.primary`, `semantic.surface.page`) |
-| Rainbow of accent colors | No discipline | One primary, one accent max; neutrals carry the weight |
-| Cramped vertical spacing | Feels dense and anxious | Generous macro-whitespace between sections (see Spatial Rhythm) |
-| Default system spacing (8px everywhere) | No rhythm | Intentional spacing scale with large jumps at section level |
+| The Slop Default                                      | Why it looks cheap                            | The Taste Move                                                                                                                             |
+| ----------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| 6-line wrapped headings in a narrow column            | Reads as a paragraph, kills impact            | Wide measure for display type (`max-width` ~18–24ch for headlines), short and punchy                                                       |
+| Same Left-text / Right-image row, repeated            | Monotonous rhythm, obviously templated        | Vary composition per section (see Variance Mandate)                                                                                        |
+| Everything centered                                   | No tension, no hierarchy                      | Use asymmetry and a real grid; center sparingly and deliberately                                                                           |
+| Three identical feature cards, equal weight           | Flat, boring, no focal point                  | Break symmetry — one hero item, bento sizing, editorial captions                                                                           |
+| Cheap meta-labels ("SECTION 01", "FEATURE")           | Filler that says nothing                      | Real, specific microcopy or none at all                                                                                                    |
+| Invisible/low-contrast button text                    | Looks broken, fails a11y                      | Solid contrast, deliberate button hierarchy                                                                                                |
+| Generic drop shadow on every box                      | Muddy, dated depth                            | Restrained, layered elevation (`tokens/shadows.json`); most things are flat                                                                |
+| Pure black `#000` on pure white `#fff`                | Harsh, amateur                                | Off-black / warm-white surfaces (`semantic.text.primary`, `semantic.surface.page`)                                                         |
+| Rainbow of accent colors                              | No discipline                                 | One primary, one accent max; neutrals carry the weight                                                                                     |
+| Cramped vertical spacing                              | Feels dense and anxious                       | Generous macro-whitespace between sections (see Spatial Rhythm)                                                                            |
+| Default system spacing (8px everywhere)               | No rhythm                                     | Intentional spacing scale with large jumps at section level                                                                                |
 | Emoji anywhere in product UI (icons, labels, toggles) | Reads as a toy; inconsistent across platforms | Real icon set (**lucide**) as inline SVG with `currentColor`, consistent grid and weight — never emoji, including in JS that swaps a label |
 
 ---
@@ -61,12 +61,13 @@ The fastest way a UI reads as machine-generated is the writing and the rhythm, n
 
 ## The Variance Mandate
 
-**Never generate the same layout twice in a row.** Sameness is the loudest slop signal. Before building a multi-section page, decide a *layout sequence* that varies deliberately.
+**Never generate the same layout twice in a row.** Sameness is the loudest slop signal. Before building a multi-section page, decide a _layout sequence_ that varies deliberately.
 
 Pick from distinct section archetypes and avoid repeating one back-to-back:
+
 - **Full-bleed hero** — oversized type, lots of air, single focal element
 - **Asymmetric split** — uneven columns (e.g. 7/5 or 8/4), not a clean 50/50
-- **Bento grid** — mixed tile sizes, *gapless or tight*, no empty dead cells
+- **Bento grid** — mixed tile sizes, _gapless or tight_, no empty dead cells
 - **Editorial stack** — centered narrow measure for prose, wide for media
 - **Offset / overlap** — elements break the grid edge for depth
 - **Marquee / full-width band** — color or media block that resets rhythm
@@ -82,7 +83,7 @@ Pages are built one block at a time, often across turns. Each new block must rea
 
 - **Same tokens, same scale** — reuse the established type scale, spacing rhythm, radius language, and the one primary + one accent. A new block never introduces a new color, font, or radius.
 - **Same primitives** — reuse the existing `Button`/`Card`/`Input` components; don't hand-roll a parallel version with different padding or states.
-- **Vary composition, not vocabulary** — the *layout* should differ from the previous block (Variance Mandate), but the *materials* (color, type, depth, motion) stay constant.
+- **Vary composition, not vocabulary** — the _layout_ should differ from the previous block (Variance Mandate), but the _materials_ (color, type, depth, motion) stay constant.
 - **Density continuity** — keep the same information density and whitespace hierarchy as adjacent blocks; a sudden dense table after airy hero bands reads as bolted-on.
 - **State + a11y parity** — every interactive block carries the same hover/focus/press/disabled treatment and the same dark-mode behavior as the rest.
 
@@ -92,7 +93,7 @@ Pages are built one block at a time, often across turns. Each new block must rea
 
 ## Typography Taste
 
-Type is 90% of taste. Tokens live in `tokens/typography.json`; here is how to *wield* them.
+Type is 90% of taste. Tokens live in `tokens/typography.json`; here is how to _wield_ them.
 
 - **Display type is short and wide.** Headlines get a wide measure and a tight line-height (1.05–1.15). Never let a headline wrap to 5+ lines — shorten the copy or widen the container.
 - **Extreme scale contrast.** The jump from display to body should be dramatic (e.g. `7xl`/`6xl` headline over `base` body). Timid contrast (`2xl` over `lg`) reads as a template.
@@ -120,7 +121,7 @@ Whitespace is not empty — it is the most reliable signal of confidence.
 - **Off-black, warm-white.** Avoid `#000`/`#fff`. Use the semantic surface/text tokens — slightly warm or cool neutrals read as designed.
 - **Neutrals do the work; accent is a spice.** One primary action color, optionally one accent. Everything else is the neutral ramp.
 - **Calibrated, not saturated.** Dial chroma down for large surfaces; reserve high saturation for small, intentional highlights.
-- **Depth through layering, not shadows alone.** Combine subtle surface elevation, hairline borders (`border.subtle`), and *restrained* shadow. Most surfaces are flat.
+- **Depth through layering, not shadows alone.** Combine subtle surface elevation, hairline borders (`border.subtle`), and _restrained_ shadow. Most surfaces are flat.
 - **Dark mode is designed, not inverted.** Re-balance: dark surfaces, slightly desaturated accents, elevation via lighter surfaces rather than heavier shadows.
 
 ---
@@ -129,7 +130,7 @@ Whitespace is not empty — it is the most reliable signal of confidence.
 
 - **Hairline borders** (`1px`, low-contrast) separate surfaces more elegantly than shadows in most cases.
 - **Radius consistency.** Pick a radius language (sharp / soft / pill) and apply it system-wide via `tokens/borders.json`. Mixing radii randomly looks accidental.
-- **Micro-detail earns trust:** focus rings, hover transitions, selection states, empty states, loading skeletons. The presence of these states *is* the taste.
+- **Micro-detail earns trust:** focus rings, hover transitions, selection states, empty states, loading skeletons. The presence of these states _is_ the taste.
 - **Restraint with effects.** Glass/blur, gradients, glow — each used once, intentionally, never stacked.
 
 ---
@@ -139,7 +140,7 @@ Whitespace is not empty — it is the most reliable signal of confidence.
 (Full motion guidance in `taste/motion-choreography.md` and `tokens/motion.json`.)
 
 - Every interactive element responds — hover, focus, press — within `duration.fast`.
-- Motion has *purpose*: guide attention, show connection, confirm an action. No motion for decoration's sake.
+- Motion has _purpose_: guide attention, show connection, confirm an action. No motion for decoration's sake.
 - Easing carries meaning: `ease-out` for entrances, `ease-in` for exits.
 - Always honor `prefers-reduced-motion` — replace travel with opacity, keep the feedback.
 

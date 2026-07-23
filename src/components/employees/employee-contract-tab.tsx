@@ -22,10 +22,6 @@ export function EmployeeContractTab({ employeeId }: EmployeeContractTabProps) {
 
   if (isLoading) return <Skeleton className='h-48 rounded-xl' />;
 
-  const currentVersion = contract?.versions.length
-    ? contract.versions[contract.versions.length - 1].version
-    : 0;
-
   return (
     <div className='flex flex-col gap-4'>
       <div className='flex justify-end'>
@@ -46,7 +42,6 @@ export function EmployeeContractTab({ employeeId }: EmployeeContractTabProps) {
 
       <UploadContractDialog
         employeeId={employeeId}
-        currentVersion={currentVersion}
         open={uploadOpen}
         onOpenChange={setUploadOpen}
       />

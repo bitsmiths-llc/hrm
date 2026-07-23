@@ -1,13 +1,16 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQueryClient } from '@tanstack/react-query';
 import { ExternalLink, FolderKanban, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
+import {
+  useCreateProject,
+  useDeactivateProject,
+  useToggleProjectActive,
+} from '@/hooks/actions/use-manage-projects';
 import { useProjects } from '@/hooks/queries/projects';
 
 import {
@@ -51,44 +54,29 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
-import { QueryKeys } from '@/constants/query-keys';
-
 import { SettingsCard } from './settings-card';
 
 import { Project } from '@/types/hrm';
-
-const addProjectSchema = z.object({
-  name: z.string().min(2, 'Enter a project name'),
-  description: z.string().min(4, 'Enter a short description'),
-  techStack: z.string().min(1, 'Enter at least one technology'),
-  url: z.string().url('Enter a valid URL').optional().or(z.literal('')),
-});
-type AddProjectInput = z.infer<typeof addProjectSchema>;
+import { type CreateProjectInput, createProjectSchema } from '@/schema/project';
 
 /** Employees pick from this list when logging overtime (see
- *  log-overtime-dialog.tsx) instead of typing a free-text project name.
- *  Only active projects are offered there and during onboarding. */
+ *  log-overtime-dialog.tsx). Admins add or remove entries here; "remove" is a
+ *  soft delete, so existing logs that reference a project still resolve it. */
 export function ProjectsSettingsCard() {
-  const queryClient = useQueryClient();
   const { data: projects, isLoading } = useProjects();
 
-  const handleToggle = (project: Project) => {
-    queryClient.setQueryData<Project[]>([QueryKeys.PROJECTS], (old) =>
-      (old ?? []).map((p) =>
-        p.id === project.id ? { ...p, active: !p.active } : p,
-      ),
-    );
-  };
+  const { execute: deactivateProject } = useDeactivateProject(() =>
+    toast.success('Project removed from the overtime list'),
+  );
 
-  const handleRemove = (project: Project) => {
-    queryClient.setQueryData<Project[]>([QueryKeys.PROJECTS], (old) =>
-      (old ?? []).filter((p) => p.id !== project.id),
-    );
-    toast.success(`${project.name} removed`);
+  const { execute: toggleProject } = useToggleProjectActive();
+
+  const handleToggle = (project: Project) => {
+    toggleProject({ projectId: project.id, active: !project.active });
   };
 
   if (isLoading || !projects) {
-    return <Skeleton className='h-64 rounded-xl' />;
+    return <Skeleton className='h-64 w-full rounded-xl' />;
   }
 
   const activeProjects = projects.filter((project) => project.active);
@@ -109,7 +97,7 @@ export function ProjectsSettingsCard() {
                 key={project.id}
                 project={project}
                 onToggle={handleToggle}
-                onRemove={handleRemove}
+                onRemove={(p) => deactivateProject({ projectId: p.id })}
               />
             ))}
           </ul>
@@ -132,7 +120,7 @@ export function ProjectsSettingsCard() {
                       key={project.id}
                       project={project}
                       onToggle={handleToggle}
-                      onRemove={handleRemove}
+                      onRemove={(p) => deactivateProject({ projectId: p.id })}
                     />
                   ))}
                 </ul>
@@ -235,32 +223,20 @@ function ProjectRow({
 
 /** "New project" button that opens a side sheet capturing all fields. */
 function AddProjectDialog() {
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const form = useForm<AddProjectInput>({
-    resolver: zodResolver(addProjectSchema),
+  const form = useForm<CreateProjectInput>({
+    resolver: zodResolver(createProjectSchema),
     defaultValues: { name: '', description: '', techStack: '', url: '' },
   });
 
-  const onSubmit = (values: AddProjectInput) => {
-    const newProject: Project = {
-      id: `proj-${Date.now()}`,
-      name: values.name.trim(),
-      description: values.description.trim(),
-      techStack: values.techStack
-        .split(',')
-        .map((tech) => tech.trim())
-        .filter(Boolean),
-      url: values.url?.trim() ?? '',
-      active: true,
-    };
-    queryClient.setQueryData<Project[]>([QueryKeys.PROJECTS], (old) => [
-      ...(old ?? []),
-      newProject,
-    ]);
-    toast.success(`${newProject.name} added`);
+  const { execute: createProject, isPending } = useCreateProject(() => {
+    toast.success('Project added');
     setOpen(false);
+  });
+
+  const onSubmit = (values: CreateProjectInput) => {
+    createProject(values);
   };
 
   return (
@@ -323,7 +299,7 @@ function AddProjectDialog() {
               name='techStack'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tech stack</FormLabel>
+                  <FormLabel>Tech stack (comma separated)</FormLabel>
                   <FormControl>
                     <Input
                       placeholder='Next.js, TypeScript, Supabase'
@@ -355,7 +331,9 @@ function AddProjectDialog() {
               >
                 Cancel
               </Button>
-              <Button type='submit'>Add project</Button>
+              <Button type='submit' isLoading={isPending}>
+                Add project
+              </Button>
             </SheetFooter>
           </form>
         </Form>

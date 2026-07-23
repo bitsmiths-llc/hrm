@@ -2,21 +2,22 @@
 
 import { useState } from 'react';
 
+import { useCurrentEmployee } from '@/hooks/queries/employees';
+
 import { MonthFilter } from '@/components/hrm/month-filter';
 import { PageHeader } from '@/components/hrm/page-header';
 import { SubmitClaimDialog } from '@/components/medical/submit-claim-dialog';
 
-import { getMedicalIneligibilityReason } from '@/lib/medical-eligibility';
-
-import { mockCurrentEmployee } from '@/constants/mock/employees';
+import { currentYear } from '@/utils/date-functions';
 
 import { MedicalBalanceCards } from './medical-balance-cards';
 import { MedicalHistoryTable } from './medical-history-table';
 
 export function MedicalPageContent() {
-  const [month, setMonth] = useState('all');
-  const ineligibilityReason =
-    getMedicalIneligibilityReason(mockCurrentEmployee);
+  // Default the claim history to the current year; the filter can widen it.
+  // (The balance cards are a lifetime rolling accrual and ignore this.)
+  const [month, setMonth] = useState(currentYear());
+  const { data: me } = useCurrentEmployee();
 
   return (
     <>
@@ -25,15 +26,10 @@ export function MedicalPageContent() {
         description='Submit claims against your accrued allowance and track your balance.'
       >
         <MonthFilter value={month} onChange={setMonth} />
-        <SubmitClaimDialog disabled={!!ineligibilityReason} />
+        <SubmitClaimDialog employeeId={me?.id} />
       </PageHeader>
-      {!!ineligibilityReason && (
-        <div className='rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground'>
-          {ineligibilityReason}
-        </div>
-      )}
-      <MedicalBalanceCards employeeId={mockCurrentEmployee.id} month={month} />
-      <MedicalHistoryTable month={month} />
+      <MedicalBalanceCards employeeId={me?.id} />
+      <MedicalHistoryTable employeeId={me?.id} month={month} />
     </>
   );
 }

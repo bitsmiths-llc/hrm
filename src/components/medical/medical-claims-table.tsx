@@ -12,7 +12,7 @@ import { HeartPulse } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/hrm/empty-state';
-import { StatusBadge } from '@/components/hrm/status-badge';
+import { StatusCell } from '@/components/hrm/status-cell';
 import { DataTable } from '@/components/ui/data-table';
 import { CenteredCell } from '@/components/ui/data-table/centered-cell';
 import { DataTableColumnHeader } from '@/components/ui/data-table/column-header';
@@ -102,16 +102,13 @@ function useMedicalClaimsColumns() {
       {
         accessorKey: 'status',
         header: ({ column }) => (
-          <DataTableColumnHeader
-            column={column}
-            title='Status'
-            align='center'
-          />
+          <DataTableColumnHeader column={column} title='Status' />
         ),
         cell: ({ row }) => (
-          <div className='flex justify-center'>
-            <StatusBadge status={row.original.status} />
-          </div>
+          <StatusCell
+            status={row.original.status}
+            rejectionReason={row.original.rejectionReason}
+          />
         ),
       },
     ],
@@ -137,14 +134,17 @@ export function MedicalClaimsTable({
   month,
 }: MedicalClaimsTableProps) {
   const columns = useMedicalClaimsColumns();
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'expenseDate', desc: true },
-  ]);
+  // Default to newest-submitted first (createdAt), not a data column, so a claim
+  // keeps its place regardless of status — approved/rejected rows stay
+  // latest-first. Empty initial sorting preserves this order until the user
+  // clicks a column header.
+  const [sorting, setSorting] = useState<SortingState>([]);
   const filtered = useMemo(() => {
-    if (month === 'all') return claims ?? [];
-    return (claims ?? []).filter((claim) =>
-      claim.expenseDate.startsWith(month),
-    );
+    const scoped =
+      month === 'all'
+        ? (claims ?? [])
+        : (claims ?? []).filter((claim) => claim.expenseDate.startsWith(month));
+    return [...scoped].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [claims, month]);
 
   const table = useReactTable({

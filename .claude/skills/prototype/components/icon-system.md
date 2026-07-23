@@ -13,25 +13,25 @@ Icons are a token-governed subsystem, not loose SVGs. Consistency in grid, strok
 
 ## Sizing & color (tokens)
 
-| Token | Size | Use |
-|-------|------|-----|
-| `sizing.icon.xs` | 12px | Dense inline / badge |
+| Token            | Size | Use                                  |
+| ---------------- | ---- | ------------------------------------ |
+| `sizing.icon.xs` | 12px | Dense inline / badge                 |
 | `sizing.icon.sm` | 16px | Default inline icon (with body text) |
-| `sizing.icon.md` | 20px | Buttons, inputs |
-| `sizing.icon.lg` | 24px | Standalone / nav |
-| `sizing.icon.xl` | 32px | Feature / empty-state accent |
+| `sizing.icon.md` | 20px | Buttons, inputs                      |
+| `sizing.icon.lg` | 24px | Standalone / nav                     |
+| `sizing.icon.xl` | 32px | Feature / empty-state accent         |
 
 - Color via `currentColor` — the icon inherits `text.*` / state tokens automatically (incl. forced-colors mode, `accessibility/vision.md`). Never hard-code icon hex.
 - Pair icon size with text size for optical balance; keep stroke legible at the smallest used size.
 
 ## Delivery
 
-| Method | When |
-|--------|------|
-| **Inline `<svg>`** | Default — stylable (`currentColor`), no extra request, supports `aria-*`. Best for forced-colors and theming. |
-| **SVG sprite** (`<use href="#id">`) | Large sets, cache one file, reference by id. |
-| **Icon font** | Legacy only — avoid (a11y + rendering issues; can't do duotone/forced-colors well). |
-| Component wrapper | An `<Icon name size>` component enforces size tokens + a11y props across frameworks (`frameworks/adapter-protocol.md`). |
+| Method                              | When                                                                                                                    |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Inline `<svg>`**                  | Default — stylable (`currentColor`), no extra request, supports `aria-*`. Best for forced-colors and theming.           |
+| **SVG sprite** (`<use href="#id">`) | Large sets, cache one file, reference by id.                                                                            |
+| **Icon font**                       | Legacy only — avoid (a11y + rendering issues; can't do duotone/forced-colors well).                                     |
+| Component wrapper                   | An `<Icon name size>` component enforces size tokens + a11y props across frameworks (`frameworks/adapter-protocol.md`). |
 
 ## Accessibility
 
@@ -45,6 +45,7 @@ Icons are a token-governed subsystem, not loose SVGs. Consistency in grid, strok
 Icons participate in component states via inherited color: default (`text.secondary`), hover/active (inherit control state), selected (`action.primary` or solid variant), disabled (`opacity.disabled`), loading (animated spinner icon + `aria-busy`).
 
 ## Verification
+
 - Single grid + single stroke weight across the whole set?
 - All icons use `currentColor` and `sizing.icon.*` (zero hard-coded hex/px)?
 - Every icon-only control has an accessible name and a ≥ 24px target?

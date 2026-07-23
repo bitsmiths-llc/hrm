@@ -3,6 +3,8 @@ import type {
   TextItem,
 } from 'pdfjs-dist/types/src/display/api';
 
+import { escapeHtml } from '@/lib/escape-html';
+
 /** One visual line of the PDF, reassembled from positioned glyph runs. */
 type PdfLine = {
   text: string;
@@ -16,14 +18,6 @@ const BULLET_PATTERN = /^[•·▪●◦\-–*]\s+/;
 const ORDERED_PATTERN = /^\d{1,2}[.)]\s+/;
 /** Bare page numbers / "Page 3 of 4" furniture — never policy content. */
 const PAGE_FURNITURE_PATTERN = /^(\d{1,3}|page\s+\d+(\s+of\s+\d+)?)$/i;
-
-const escapeHtml = (text: string) =>
-  text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
 
 /** Extracts a PDF's text in the browser (pdf.js) and reconstructs simple
  *  policy HTML from layout heuristics: larger lines become headings, bullet/
@@ -48,10 +42,18 @@ export async function pdfToPolicyHtml(file: File): Promise<string> {
 export async function documentToPolicyHtml(
   doc: PDFDocumentProxy,
 ): Promise<string> {
+  // Every page's text is fetched up front and in parallel — the pages are
+  // independent, and pdf.js resolves them off the same worker either way. The
+  // parse below still walks them in page order, so `lines` stays in document
+  // order.
+  const contents = await Promise.all(
+    Array.from({ length: doc.numPages }, (_, index) =>
+      doc.getPage(index + 1).then((page) => page.getTextContent()),
+    ),
+  );
+
   const lines: PdfLine[] = [];
-  for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber += 1) {
-    const page = await doc.getPage(pageNumber);
-    const content = await page.getTextContent();
+  for (const content of contents) {
     const items = content.items.filter(
       (item): item is TextItem => 'str' in item,
     );

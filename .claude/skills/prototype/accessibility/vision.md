@@ -37,6 +37,7 @@ Windows High Contrast / `forced-colors: active` overrides author colors with a s
 - Test: icons drawn with CSS background-images can vanish — use real `<svg>` with `currentColor` so they pick up the forced color.
 
 ## Verification
+
 - Grayscale the screen — is any status/required/series still distinguishable?
 - Zoom to 400% — does content reflow to one column with nothing lost or overlapping?
 - Toggle Windows High Contrast / emulate `forced-colors` — do borders, focus, and icons survive?

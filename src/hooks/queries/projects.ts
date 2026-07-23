@@ -1,23 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { mockProjects } from '@/constants/mock/projects';
+import { authQuery } from '@/lib/client/auth-query';
+
 import { QueryKeys } from '@/constants/query-keys';
 
 import { Project } from '@/types/hrm';
 
-const mockDelay = (ms = 300) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+// The admin-managed list employees pick from when logging overtime. Only active
+// projects are returned — deactivating one (soft delete) removes it from the
+// dropdown, while existing logs still resolve their name through the FK. Any
+// authenticated user can read (RLS projects_select_authenticated).
+const fetchProjects = authQuery(async ({ supabase }) => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id, name, description, tech_stack, url, is_active')
+    .order('name', { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data as any[]).map(
+    (row) =>
+      ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        techStack: row.tech_stack,
+        url: row.url || '',
+        active: row.is_active,
+      }) satisfies Project,
+  );
+});
 
-/** Admin-managed list employees pick from when logging overtime — adding or
- *  removing a project (in Policies → Configuration) mutates this cache
- *  directly, same pattern as settings.ts. */
-export const useProjects = () => {
-  return useQuery({
+export const useProjects = () =>
+  useQuery({
     queryKey: [QueryKeys.PROJECTS],
-    queryFn: async (): Promise<Project[]> => {
-      await mockDelay();
-      return mockProjects;
-    },
-    staleTime: Infinity,
+    queryFn: () => fetchProjects(),
   });
-};

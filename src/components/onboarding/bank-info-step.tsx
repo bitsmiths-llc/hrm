@@ -3,46 +3,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 
+import { ControlledTextField } from '@/components/hrm/form-fields';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
 
+import { bankInfoFields } from '@/constants/onboarding';
 import { type BankInfoInput, bankInfoSchema } from '@/schema/onboarding';
 
-const fields: {
-  name: keyof BankInfoInput;
-  label: string;
-  placeholder: string;
-}[] = [
-  { name: 'bankName', label: 'Bank name', placeholder: 'Meezan Bank' },
-  {
-    name: 'accountHolderName',
-    label: 'Account holder name',
-    placeholder: 'Ayesha Khan',
-  },
-  {
-    name: 'accountNumber',
-    label: 'Account number',
-    placeholder: '01234567890123',
-  },
-  { name: 'iban', label: 'IBAN', placeholder: 'PK36MEZN0001234567890123' },
-  {
-    name: 'branch',
-    label: 'Bank branch (optional)',
-    placeholder: 'F-8 Markaz, Islamabad',
-  },
-];
-
 type BankInfoStepProps = {
-  defaultValues?: BankInfoInput;
-  onNext: (values: BankInfoInput) => void;
+  defaultValues: BankInfoInput;
+  onNext: (values: BankInfoInput) => void | Promise<void>;
   onBack: () => void;
 };
 
@@ -53,13 +23,7 @@ export function BankInfoStep({
 }: BankInfoStepProps) {
   const form = useForm<BankInfoInput>({
     resolver: zodResolver(bankInfoSchema),
-    defaultValues: defaultValues ?? {
-      bankName: '',
-      accountHolderName: '',
-      accountNumber: '',
-      iban: '',
-      branch: '',
-    },
+    defaultValues,
   });
 
   return (
@@ -68,27 +32,20 @@ export function BankInfoStep({
         onSubmit={form.handleSubmit(onNext)}
         className='grid gap-4 sm:grid-cols-2'
       >
-        {fields.map(({ name, label, placeholder }) => (
-          <FormField
-            key={name}
+        {bankInfoFields.map((config) => (
+          <ControlledTextField
+            key={config.name}
             control={form.control}
-            name={name}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{label}</FormLabel>
-                <FormControl>
-                  <Input placeholder={placeholder} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            config={config}
           />
         ))}
         <div className='flex justify-between sm:col-span-2'>
           <Button type='button' variant='outline' onClick={onBack}>
             Back
           </Button>
-          <Button type='submit'>Continue</Button>
+          <Button type='submit' isLoading={form.formState.isSubmitting}>
+            Continue
+          </Button>
         </div>
       </form>
     </Form>

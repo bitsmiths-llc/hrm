@@ -23,6 +23,7 @@ Transient, non-blocking message about a completed action or event.
 **States (8):** enter (`transition.enter` slide-up+fade), default, hover (pause timer), focus (within), dismissing (`transition.exit`), action-pressed, loading (in-toast progress), error.
 
 **Accessibility:**
+
 - Container `role="region" aria-label="Notifications"`; messages in a live region — `aria-live="polite"` (info/success), `role="alert"`/`aria-live="assertive"` (errors).
 - Dismiss is a real button with `aria-label`. Never auto-dismiss content the user must act on.
 - Elevation `shadow.elevation.2xl`.
@@ -40,6 +41,7 @@ Persistent, contextual message tied to a region or page (not transient).
 **States:** default, hover/focus on interactive parts, dismissing, disabled action.
 
 **Accessibility:**
+
 - Informational: `role="status"`. Critical/error: `role="alert"`.
 - Color + icon + text (never color alone). Dismiss = labeled button.
 
@@ -58,6 +60,7 @@ Structural placeholder that mirrors final content while loading.
 **States:** loading (animated) → resolved (swap to content) / error (replace with error state).
 
 **Accessibility:**
+
 - Wrap loading region with `aria-busy="true"`; mark skeletons `aria-hidden="true"`.
 - Reduced motion: disable shimmer, show static placeholder.
 
@@ -76,6 +79,7 @@ Communicate determinate or indeterminate progress.
 **States:** in-progress (value 0–100), indeterminate (animated), success (complete), error (failed fill `feedback.error`).
 
 **Accessibility:**
+
 - `role="progressbar"` with `aria-valuenow/min/max` (omit `valuenow` when indeterminate).
 - Label via `aria-label`/`aria-labelledby`; announce milestones politely, not every tick.
 
@@ -94,6 +98,7 @@ Guide the user when there is no content yet.
 **Copy:** value → action (`content/voice-tone.md`). Never bare "No data".
 
 **Accessibility:**
+
 - Headline is a real heading in the page hierarchy.
 - Illustration decorative (`aria-hidden`) unless it conveys meaning.
 - Primary action is the natural next focus target.

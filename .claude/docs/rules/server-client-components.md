@@ -4,7 +4,7 @@
   truly needs browser APIs, event handlers, or React state/effects — never "because
   it's easier."
 - Page-level data fetching belongs in the RSC page component (`async function
-  Page()`), not in a client hook triggered on mount.
+Page()`), not in a client hook triggered on mount.
 - Keep client-only logic in leaf components so `"use client"` doesn't pull an entire
   subtree into the client bundle.
 
@@ -17,7 +17,7 @@ export default async function EmployeesPage() {
 }
 
 // ✅ Client component only for interactivity
-'use client';
+('use client');
 export function EmployeesClient({ initialData }: { initialData: Employee[] }) {
   const { data } = useEmployees(initialData);
   return <EmployeeTable data={data} />;

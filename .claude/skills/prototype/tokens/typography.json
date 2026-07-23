@@ -5,7 +5,16 @@
   "fontFamily": {
     "sans": {
       "$type": "fontFamily",
-      "$value": ["Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+      "$value": [
+        "Inter",
+        "system-ui",
+        "-apple-system",
+        "Segoe UI",
+        "Roboto",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ],
       "$description": "Primary — UI text, body copy"
     },
     "serif": {
@@ -15,49 +24,57 @@
     },
     "mono": {
       "$type": "fontFamily",
-      "$value": ["JetBrains Mono", "Fira Code", "SF Mono", "Consolas", "Liberation Mono", "Menlo", "monospace"],
+      "$value": [
+        "JetBrains Mono",
+        "Fira Code",
+        "SF Mono",
+        "Consolas",
+        "Liberation Mono",
+        "Menlo",
+        "monospace"
+      ],
       "$description": "Code — snippets, data, technical values"
     }
   },
 
   "fontSize": {
     "$description": "Major Third scale (1.25). Base = 16px.",
-    "xs":   { "$type": "dimension", "$value": "12px" },
-    "sm":   { "$type": "dimension", "$value": "14px" },
+    "xs": { "$type": "dimension", "$value": "12px" },
+    "sm": { "$type": "dimension", "$value": "14px" },
     "base": { "$type": "dimension", "$value": "16px" },
-    "lg":   { "$type": "dimension", "$value": "18px" },
-    "xl":   { "$type": "dimension", "$value": "20px" },
-    "2xl":  { "$type": "dimension", "$value": "24px" },
-    "3xl":  { "$type": "dimension", "$value": "30px" },
-    "4xl":  { "$type": "dimension", "$value": "36px" },
-    "5xl":  { "$type": "dimension", "$value": "48px" },
-    "6xl":  { "$type": "dimension", "$value": "60px" },
-    "7xl":  { "$type": "dimension", "$value": "72px" }
+    "lg": { "$type": "dimension", "$value": "18px" },
+    "xl": { "$type": "dimension", "$value": "20px" },
+    "2xl": { "$type": "dimension", "$value": "24px" },
+    "3xl": { "$type": "dimension", "$value": "30px" },
+    "4xl": { "$type": "dimension", "$value": "36px" },
+    "5xl": { "$type": "dimension", "$value": "48px" },
+    "6xl": { "$type": "dimension", "$value": "60px" },
+    "7xl": { "$type": "dimension", "$value": "72px" }
   },
 
   "fontWeight": {
-    "regular":  { "$type": "number", "$value": 400 },
-    "medium":   { "$type": "number", "$value": 500 },
+    "regular": { "$type": "number", "$value": 400 },
+    "medium": { "$type": "number", "$value": 500 },
     "semibold": { "$type": "number", "$value": 600 },
-    "bold":     { "$type": "number", "$value": 700 }
+    "bold": { "$type": "number", "$value": 700 }
   },
 
   "lineHeight": {
-    "none":    { "$type": "number", "$value": 1 },
-    "tight":   { "$type": "number", "$value": 1.25 },
-    "snug":    { "$type": "number", "$value": 1.375 },
-    "normal":  { "$type": "number", "$value": 1.5 },
+    "none": { "$type": "number", "$value": 1 },
+    "tight": { "$type": "number", "$value": 1.25 },
+    "snug": { "$type": "number", "$value": 1.375 },
+    "normal": { "$type": "number", "$value": 1.5 },
     "relaxed": { "$type": "number", "$value": 1.625 },
-    "loose":   { "$type": "number", "$value": 2 }
+    "loose": { "$type": "number", "$value": 2 }
   },
 
   "letterSpacing": {
     "tighter": { "$type": "dimension", "$value": "-0.05em" },
-    "tight":   { "$type": "dimension", "$value": "-0.025em" },
-    "normal":  { "$type": "dimension", "$value": "0em" },
-    "wide":    { "$type": "dimension", "$value": "0.025em" },
-    "wider":   { "$type": "dimension", "$value": "0.05em" },
-    "widest":  { "$type": "dimension", "$value": "0.1em" }
+    "tight": { "$type": "dimension", "$value": "-0.025em" },
+    "normal": { "$type": "dimension", "$value": "0em" },
+    "wide": { "$type": "dimension", "$value": "0.025em" },
+    "wider": { "$type": "dimension", "$value": "0.05em" },
+    "widest": { "$type": "dimension", "$value": "0.1em" }
   },
 
   "textStyle": {

@@ -10,7 +10,7 @@ Every async UI surface must handle all three explicitly — never leave one impl
   mutation, action) — never swap the button's text for "Loading...".
 
 ```tsx
-if (isLoading) return <Skeleton className="h-32 w-full rounded-xl" />;
+if (isLoading) return <Skeleton className='h-32 w-full rounded-xl' />;
 ```
 
 ### Empty
@@ -21,7 +21,7 @@ if (isLoading) return <Skeleton className="h-32 w-full rounded-xl" />;
 ```tsx
 if (!items.length) {
   return (
-    <div className="py-12 text-center text-muted-foreground">
+    <div className='py-12 text-center text-muted-foreground'>
       <p>No items yet.</p>
     </div>
   );

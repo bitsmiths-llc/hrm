@@ -1,6 +1,5 @@
 'use client';
 
-import { pdf } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { CheckCircle2, CircleDashed, Eye, History } from 'lucide-react';
 import { useState } from 'react';
@@ -11,29 +10,38 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-import { PolicyPdfDocument } from './policy-pdf-document';
+import { PolicyContent } from './policy-content';
 
 import {
-  Employee,
+  EmployeeListItem,
   Policy,
   PolicyAcknowledgment,
   PolicyVersion,
 } from '@/types/hrm';
 
 type PolicyVersionHistoryProps = {
-  policy: Pick<Policy, 'title' | 'category'>;
+  /** Only the title is needed — it heads the preview dialog. */
+  policy: Pick<Policy, 'title'>;
   versions: PolicyVersion[];
   currentVersionNumber: number;
   /** Active employees — acknowledgment status inside each version panel is
    *  reported against these. */
-  employees: Employee[];
+  employees: EmployeeListItem[];
   /** Append-only acknowledgment history for this policy: one record per
    *  version each employee acknowledged. */
   acknowledgments: PolicyAcknowledgment[];
@@ -57,24 +65,19 @@ export function PolicyVersionHistory({
   onRevert,
 }: PolicyVersionHistoryProps) {
   const newestFirst = [...versions].reverse();
-  const [viewingVersion, setViewingVersion] = useState<number | null>(null);
+  /** The version currently open in the preview dialog, if any. Policy bodies
+   *  are sanitized HTML in the database, so any version renders in-app through
+   *  the same component employees read — no file, no new tab. */
+  const [previewVersion, setPreviewVersion] = useState<PolicyVersion | null>(
+    null,
+  );
 
-  /** Opens the version as a PDF in a new tab — same document employees get
-   *  from the Download button, so what you preview is what ships. */
-  const handleView = async (version: PolicyVersion) => {
-    setViewingVersion(version.version);
-    const blob = await pdf(
-      <PolicyPdfDocument policy={policy} version={version} />,
-    ).toBlob();
-    window.open(URL.createObjectURL(blob), '_blank', 'noopener,noreferrer');
-    setViewingVersion(null);
-  };
-
-  const ackFor = (employeeId: string, versionNumber: number) =>
+  // Matched on the version *id*: a version number is only unique within a
+  // policy, and these acknowledgments arrive pre-filtered to one.
+  const ackFor = (employeeId: string, versionId: string) =>
     acknowledgments.find(
       (ack) =>
-        ack.employeeId === employeeId &&
-        ack.acknowledgedVersion === versionNumber,
+        ack.employeeId === employeeId && ack.policyVersionId === versionId,
     );
   const latestFor = (employeeId: string) =>
     acknowledgments
@@ -84,57 +87,68 @@ export function PolicyVersionHistory({
       >((best, ack) => (!best || ack.acknowledgedVersion > best.acknowledgedVersion ? ack : best), undefined);
 
   return (
-    <Accordion
-      type='single'
-      collapsible
-      defaultValue={`v${currentVersionNumber}`}
-      className='rounded-lg border border-border'
-    >
-      {newestFirst.map((version) => {
-        const isCurrent = version.version === currentVersionNumber;
-        const ackedEmployees = employees.filter(
-          (employee) => !!ackFor(employee.id, version.version),
-        );
+    <>
+      <Dialog
+        open={!!previewVersion}
+        onOpenChange={(next) => !next && setPreviewVersion(null)}
+      >
+        <DialogContent className='max-h-[85vh] max-w-3xl overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle>
+              {policy.title} · Version {previewVersion?.version}
+            </DialogTitle>
+            <DialogDescription>
+              {previewVersion &&
+                `Published ${format(previewVersion.publishedAt, 'MMM d, yyyy')}`}
+              {previewVersion?.version === currentVersionNumber
+                ? ' · Active version'
+                : ' · Superseded — kept for audit'}
+            </DialogDescription>
+          </DialogHeader>
+          {previewVersion && (
+            <PolicyContent html={previewVersion.contentHtml} />
+          )}
+        </DialogContent>
+      </Dialog>
 
-        return (
-          <AccordionItem
-            key={version.version}
-            value={`v${version.version}`}
-            className='px-4 last:border-b-0'
-          >
-            <div className='relative'>
-              <AccordionTrigger className='pr-24 hover:no-underline'>
-                <span className='flex flex-1 items-center justify-between gap-3 pr-3'>
-                  <span className='text-sm font-medium'>
-                    Version {version.version}
-                    {isCurrent && ' (current)'}
+      <Accordion
+        type='single'
+        collapsible
+        defaultValue={`v${currentVersionNumber}`}
+        className='rounded-lg border border-border'
+      >
+        {newestFirst.map((version) => {
+          const isCurrent = version.version === currentVersionNumber;
+          const ackedEmployees = employees.filter(
+            (employee) => !!ackFor(employee.id, version.id),
+          );
+
+          return (
+            <AccordionItem
+              key={version.version}
+              value={`v${version.version}`}
+              className='px-4 last:border-b-0'
+            >
+              <div className='relative'>
+                <AccordionTrigger className='pr-24 hover:no-underline'>
+                  <span className='flex flex-1 items-center justify-between gap-3 pr-3'>
+                    <span className='flex items-center gap-2 text-sm font-medium'>
+                      Version {version.version}
+                      {isCurrent && (
+                        <Badge variant='secondary' className='font-normal'>
+                          Active
+                        </Badge>
+                      )}
+                    </span>
+                    <span className='text-xs font-normal text-muted-foreground'>
+                      {format(version.publishedAt, 'MMM d, yyyy')} ·{' '}
+                      {isCurrent
+                        ? `${ackedEmployees.length} of ${employees.length} acknowledged`
+                        : `${ackedEmployees.length} acknowledged`}
+                    </span>
                   </span>
-                  <span className='text-xs font-normal text-muted-foreground'>
-                    {format(version.publishedAt, 'MMM d, yyyy')} ·{' '}
-                    {isCurrent
-                      ? `${ackedEmployees.length} of ${employees.length} acknowledged`
-                      : `${ackedEmployees.length} acknowledged`}
-                  </span>
-                </span>
-              </AccordionTrigger>
-              <div className='absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-2'>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      size='icon'
-                      className='size-7'
-                      isLoading={viewingVersion === version.version}
-                      onClick={() => handleView(version)}
-                      aria-label={`View version ${version.version} PDF`}
-                    >
-                      <Eye className='size-3.5' />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>View this version</TooltipContent>
-                </Tooltip>
-                {!isCurrent && !!onRevert && (
+                </AccordionTrigger>
+                <div className='absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-2'>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -142,70 +156,87 @@ export function PolicyVersionHistory({
                         variant='outline'
                         size='icon'
                         className='size-7'
-                        onClick={() => onRevert(version)}
-                        aria-label={`Revert to version ${version.version}`}
+                        onClick={() => setPreviewVersion(version)}
+                        aria-label={`Preview version ${version.version}`}
                       >
-                        <History className='size-3.5' />
+                        <Eye className='size-3.5' />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Revert to this version</TooltipContent>
+                    <TooltipContent>Preview this version</TooltipContent>
                   </Tooltip>
-                )}
+                  {!isCurrent && !!onRevert && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='icon'
+                          className='size-7'
+                          onClick={() => onRevert(version)}
+                          aria-label={`Revert to version ${version.version}`}
+                        >
+                          <History className='size-3.5' />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Revert to this version</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
-            </div>
-            <AccordionContent>
-              <ul className='divide-y divide-border overflow-hidden rounded-md border border-border'>
-                {employees.map((employee) => {
-                  const ackOfThis = ackFor(employee.id, version.version);
-                  // Past versions list everyone who acknowledged them at the
-                  // time (even if they've since moved on); the current
-                  // version shows every employee's present standing.
-                  if (!isCurrent && !ackOfThis) return null;
-                  const latest = latestFor(employee.id);
+              <AccordionContent>
+                <ul className='divide-y divide-border overflow-hidden rounded-md border border-border'>
+                  {employees.map((employee) => {
+                    const ackOfThis = ackFor(employee.id, version.id);
+                    // Past versions list everyone who acknowledged them at the
+                    // time (even if they've since moved on); the current
+                    // version shows every employee's present standing.
+                    if (!isCurrent && !ackOfThis) return null;
+                    const latest = latestFor(employee.id);
 
-                  return (
-                    <li
-                      key={employee.id}
-                      className='flex items-center justify-between gap-3 bg-muted/30 px-3 py-2.5'
-                    >
-                      <span className='flex items-center gap-2.5'>
-                        <span className='flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground'>
-                          {initialsOf(employee.fullName)}
+                    return (
+                      <li
+                        key={employee.id}
+                        className='flex items-center justify-between gap-3 bg-muted/30 px-3 py-2.5'
+                      >
+                        <span className='flex items-center gap-2.5'>
+                          <span className='flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground'>
+                            {initialsOf(employee.fullName)}
+                          </span>
+                          <span className='text-sm font-medium'>
+                            {employee.fullName}
+                          </span>
                         </span>
-                        <span className='text-sm font-medium'>
-                          {employee.fullName}
-                        </span>
-                      </span>
-                      {ackOfThis ? (
-                        <span className='flex items-center gap-1.5 text-xs text-muted-foreground'>
-                          <CheckCircle2
-                            className='size-4 text-primary'
-                            aria-hidden
-                          />
-                          Acknowledged{' '}
-                          {format(ackOfThis.acknowledgedAt, 'MMM d, yyyy')}
-                        </span>
-                      ) : (
-                        <span className='flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400'>
-                          <CircleDashed className='size-4' aria-hidden />
-                          {latest
-                            ? `Behind (on v${latest.acknowledgedVersion})`
-                            : 'Not acknowledged'}
-                        </span>
-                      )}
+                        {ackOfThis ? (
+                          <span className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+                            <CheckCircle2
+                              className='size-4 text-primary'
+                              aria-hidden
+                            />
+                            Acknowledged{' '}
+                            {format(ackOfThis.acknowledgedAt, 'MMM d, yyyy')}
+                          </span>
+                        ) : (
+                          <span className='flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400'>
+                            <CircleDashed className='size-4' aria-hidden />
+                            {latest
+                              ? `Behind (on v${latest.acknowledgedVersion})`
+                              : 'Not acknowledged'}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                  {!isCurrent && ackedEmployees.length === 0 && (
+                    <li className='bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground'>
+                      No one acknowledged this version.
                     </li>
-                  );
-                })}
-                {!isCurrent && ackedEmployees.length === 0 && (
-                  <li className='bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground'>
-                    No one acknowledged this version.
-                  </li>
-                )}
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-        );
-      })}
-    </Accordion>
+                  )}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    </>
   );
 }

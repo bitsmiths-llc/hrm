@@ -2,10 +2,11 @@ type PolicyContentProps = {
   html: string;
 };
 
-/** Renders admin-authored policy HTML read-only. This is trusted content
- *  (written by admins via CKEditor, not user-submitted), so it's rendered
- *  directly rather than sanitized — a real backend should still sanitize
- *  on write once this is wired to Supabase.
+/** Renders admin-authored policy HTML read-only. The stored markup is already
+ *  safe: `actions/policies.ts` runs `sanitizeHtml()` over the CKEditor output
+ *  before it reaches the database, so nothing outside the allow-list can ever
+ *  be persisted. That sanitize-at-write boundary — not this component — is the
+ *  security guarantee behind `dangerouslySetInnerHTML`.
  *
  *  Blocks carrying `POLICY_DIFF_HIGHLIGHT_CLASS` (see policy-diff.ts) get a
  *  highlight so employees can spot exactly what changed instead of
