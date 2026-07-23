@@ -1,12 +1,10 @@
 'use client';
 
 import {
-  ArrowUpRight,
   CheckCircle2,
   GitCompareArrows,
   Link2Off,
 } from 'lucide-react';
-import Link from 'next/link';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -138,11 +136,6 @@ function PolicyLinkageRow({
           </p>
         </div>
         <div className='flex shrink-0 items-center gap-2'>
-          <Link href={link.moduleRoute}>
-            <Button variant='outline' size='sm' icon={ArrowUpRight}>
-              Configure
-            </Button>
-          </Link>
           {policy.hasDrift && (
             <Button size='sm' onClick={handleReview} isLoading={isReviewing}>
               Mark reviewed

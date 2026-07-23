@@ -22,8 +22,6 @@ export type PolicySettingKey = Extract<
  *  the join keys — stable across title edits by design. */
 export type PolicyLink = {
   label: string;
-  /** Where the enforced values are configured. Empty = no linked rule. */
-  moduleRoute: string;
   /** Human-readable rule descriptions shown beneath the live values. */
   rules: string[];
   /** Live `payroll_settings`-backed values surfaced next to the policy. */
@@ -33,7 +31,6 @@ export type PolicyLink = {
 export const POLICY_LINKS: Record<string, PolicyLink> = {
   'leave-policy': {
     label: 'Leave Policy',
-    moduleRoute: `${paths.admin.policies}?tab=configuration`,
     rules: [
       'One pool shared by Paid, Sick, and Half Day leave (half day = 0.5).',
       'Unpaid leave is separate, uncapped, and requires admin approval.',
@@ -42,7 +39,6 @@ export const POLICY_LINKS: Record<string, PolicyLink> = {
   },
   'medical-policy': {
     label: 'Medical Allowance Policy',
-    moduleRoute: `${paths.admin.policies}?tab=configuration`,
     rules: [
       'Monthly accrual added to each eligible balance.',
       'Accrual stops once a balance reaches the cap.',
@@ -51,7 +47,6 @@ export const POLICY_LINKS: Record<string, PolicyLink> = {
   },
   'overtime-policy': {
     label: 'Overtime Policy',
-    moduleRoute: `${paths.admin.policies}?tab=configuration`,
     rules: [
       'Rate = Base Salary × Multiplier ÷ Working Hours.',
       'Applied to approved overtime hours on each payroll run.',
@@ -61,7 +56,6 @@ export const POLICY_LINKS: Record<string, PolicyLink> = {
   'code-of-conduct': {
     label: 'Code of Conduct',
     // No enforced numeric rule — renders as "no linked rule".
-    moduleRoute: '',
     rules: [],
     settingKeys: [],
   },
