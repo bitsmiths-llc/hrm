@@ -70,9 +70,6 @@ async function dispatchInvoices(payslipIds: string[]) {
         to,
         fullName: payslip.employeeName || null,
         cycleLabel: format(`${payslip.cycleMonth}-01`, 'MMMM yyyy'),
-        // `formatCurrency` renders a falsy amount as '' — a zero-net payslip
-        // still deserves a figure rather than a blank callout.
-        netPayLabel: formatCurrency(payslip.total) || 'Rs 0',
         payslipsUrl,
         pdf: { filename: payslipFileName(payslip), content },
       });

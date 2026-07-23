@@ -19,8 +19,6 @@ type SendInvoiceEmailInput = {
   fullName?: string | null;
   /** Human-readable pay period, e.g. "June 2026". */
   cycleLabel: string;
-  /** Pre-formatted net pay, e.g. "Rs 245,000". */
-  netPayLabel: string;
   payslipsUrl: string;
   /** The rendered payslip PDF, attached to the message. */
   pdf: { filename: string; content: Buffer };
@@ -31,7 +29,6 @@ export async function sendInvoiceEmail({
   to,
   fullName,
   cycleLabel,
-  netPayLabel,
   payslipsUrl,
   pdf,
 }: SendInvoiceEmailInput) {
@@ -43,7 +40,6 @@ export async function sendInvoiceEmail({
     react: InvoiceEmail({
       fullName,
       cycleLabel,
-      netPayLabel,
       payslipsUrl,
       appName: appConfig.appName,
       baseUrl: appConfig.appUrl,

@@ -8,9 +8,6 @@ export type InvoiceEmailProps = {
   fullName?: string | null;
   /** Human-readable pay period, e.g. "June 2026". */
   cycleLabel: string;
-  /** Pre-formatted net pay, e.g. "Rs 245,000" — formatting stays with the
-   *  caller so this template never reaches for a locale/currency helper. */
-  netPayLabel: string;
   /** Deep link back to the employee's payslips page. */
   payslipsUrl: string;
   /** Product name, e.g. "Bitsmiths HRM". */
@@ -31,7 +28,6 @@ export type InvoiceEmailProps = {
 export function InvoiceEmail({
   fullName,
   cycleLabel,
-  netPayLabel,
   payslipsUrl,
   appName,
   baseUrl,
@@ -54,20 +50,10 @@ export function InvoiceEmail({
           is attached to this email as a PDF.
         </Text>
 
-        <Section
-          style={{
-            ...emailStyles.callout,
-            borderLeftColor: brand.green,
-            backgroundColor: brand.greenBg,
-          }}
-        >
-          <Text style={{ ...emailStyles.calloutLabel, color: brand.greenDark }}>
-            Net salary · {cycleLabel}
-          </Text>
-          <Text style={{ ...emailStyles.calloutText, margin: 0 }}>
-            {netPayLabel}
-          </Text>
-        </Section>
+        <Text style={emailStyles.paragraph}>
+          The attached PDF itemizes every earning and deduction that made up
+          your pay for <strong>{cycleLabel}</strong>.
+        </Text>
 
         <Text style={emailStyles.paragraph}>
           The attached PDF itemizes every earning and deduction that made up
@@ -93,7 +79,6 @@ export function InvoiceEmail({
 InvoiceEmail.PreviewProps = {
   fullName: 'Ayesha Khan',
   cycleLabel: 'June 2026',
-  netPayLabel: 'Rs 245,000',
   payslipsUrl: 'http://localhost:3000/payslips',
   appName: 'Bitsmiths HRM',
   baseUrl: 'http://localhost:3000',
