@@ -49,7 +49,7 @@ export function CompanyProjects() {
             </div>
             {project.techStack.length > 0 && (
               <div className='flex flex-wrap gap-1'>
-                {project.techStack.map((tech) => (
+                {project.techStack.map((tech: string) => (
                   <Badge key={tech} variant='secondary'>
                     {tech}
                   </Badge>

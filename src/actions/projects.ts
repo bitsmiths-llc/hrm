@@ -77,3 +77,29 @@ export const deactivateProject = authActionClient
 
     return { id: parsedInput.projectId };
   });
+
+/**
+ * Hard-delete a project (admin-only). The FK from overtime_logs prevents
+ * deleting a project that has been referenced by a log — Postgres returns
+ * error code 23503. We surface that as a user-friendly message so admins know
+ * to deactivate rather than delete.
+ */
+export const deleteProject = authActionClient
+  .schema(projectIdSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', parsedInput.projectId);
+    if (error) {
+      throw new Error(
+        error.code === '23503'
+          ? 'This project has overtime logs and cannot be deleted — deactivate it instead.'
+          : error.message,
+      );
+    }
+
+    return { id: parsedInput.projectId };
+  });

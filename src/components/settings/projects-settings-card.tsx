@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 import {
   useCreateProject,
-  useDeactivateProject,
+  useDeleteProject,
   useToggleProjectActive,
 } from '@/hooks/actions/use-manage-projects';
 import { useProjects } from '@/hooks/queries/projects';
@@ -65,8 +65,8 @@ import { type CreateProjectInput, createProjectSchema } from '@/schema/project';
 export function ProjectsSettingsCard() {
   const { data: projects, isLoading } = useProjects();
 
-  const { execute: deactivateProject } = useDeactivateProject(() =>
-    toast.success('Project removed from the overtime list'),
+  const { execute: deleteProject } = useDeleteProject(() =>
+    toast.success('Project deleted'),
   );
 
   const { execute: toggleProject } = useToggleProjectActive();
@@ -97,7 +97,7 @@ export function ProjectsSettingsCard() {
                 key={project.id}
                 project={project}
                 onToggle={handleToggle}
-                onRemove={(p) => deactivateProject({ projectId: p.id })}
+                onRemove={(p) => deleteProject({ projectId: p.id })}
               />
             ))}
           </ul>
@@ -120,7 +120,7 @@ export function ProjectsSettingsCard() {
                       key={project.id}
                       project={project}
                       onToggle={handleToggle}
-                      onRemove={(p) => deactivateProject({ projectId: p.id })}
+                      onRemove={(p) => deleteProject({ projectId: p.id })}
                     />
                   ))}
                 </ul>

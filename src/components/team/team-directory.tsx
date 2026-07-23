@@ -15,7 +15,7 @@ import { getInitials, githubHandle } from '@/lib/team';
 
 import { mockCurrentEmployee } from '@/constants/mock/employees';
 
-import { Employee } from '@/types/hrm';
+import { EmployeeListItem } from '@/types/hrm';
 
 export function TeamDirectory() {
   const { data: employees, isLoading } = useEmployees();
@@ -55,7 +55,7 @@ export function TeamDirectory() {
   );
 }
 
-function TeamMemberCard({ member }: { member: Employee }) {
+function TeamMemberCard({ member }: { member: EmployeeListItem }) {
   const isYou = member.id === mockCurrentEmployee.id;
   const github = member.social?.github;
 

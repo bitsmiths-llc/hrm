@@ -3,7 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useAction } from 'next-safe-action/hooks';
 
-import { createProject, deactivateProject, toggleProject } from '@/actions/projects';
+import { createProject, deactivateProject, deleteProject, toggleProject } from '@/actions/projects';
 
 import { onError } from '@/lib/show-error-toast';
 
@@ -38,6 +38,19 @@ export function useDeactivateProject(onSuccess?: () => void) {
 export function useToggleProjectActive(onSuccess?: () => void) {
   const queryClient = useQueryClient();
   return useAction(toggleProject, {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.PROJECTS] });
+      onSuccess?.();
+    },
+    onError,
+  });
+}
+
+/** Hard-delete a project (admin). Invalidates the project list on success.
+ *  If the project has overtime logs the server returns a user-friendly error. */
+export function useDeleteProject(onSuccess?: () => void) {
+  const queryClient = useQueryClient();
+  return useAction(deleteProject, {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.PROJECTS] });
       onSuccess?.();

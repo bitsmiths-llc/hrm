@@ -97,6 +97,7 @@ export type EmployeeListItem = Pick<
   | 'employmentType'
   | 'status'
   | 'invitedAt'
+  | 'social'
 >;
 
 export type LeaveRequest = {

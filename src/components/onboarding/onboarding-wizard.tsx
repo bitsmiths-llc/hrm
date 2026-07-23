@@ -1,7 +1,6 @@
 'use client';
 
 import { RotateCcw } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { PageHeader } from '@/components/hrm/page-header';
@@ -19,7 +18,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
-import { paths } from '@/constants/paths';
 import { onboardingSteps } from '@/constants/onboarding';
 import {
   type BankInfoInput,
@@ -42,7 +40,6 @@ const succeeded = (result?: {
 }) => !!result && !result.serverError && !result.validationErrors;
 
 export function OnboardingWizard() {
-  const router = useRouter();
   const [step, setStep] = useState(0);
 
   const { data: user } = useUser();
@@ -79,9 +76,16 @@ export function OnboardingWizard() {
       // refreshed app_metadata.account_status. Pull a new access token so the
       // middleware funnel sees `submitted` and routes to the pending page.
       await createSupabaseBrowserClient().auth.refreshSession();
-      router.replace(paths.employee.pending);
+      // Show the welcome/intro screen before leaving the wizard.
+      setStep(5);
     }
   };
+
+  // Step 5 is the completion screen — no header, no step indicator, no card wrapper.
+  if (step === 5) {
+    const firstName = onboarding.personal?.fullName?.split(' ')[0];
+    return <OnboardingComplete firstName={firstName} />;
+  }
 
   return (
     <div className='flex flex-col gap-6'>
