@@ -18,7 +18,7 @@ export function useMarkPolicyReviewed(onSuccess?: () => void) {
     onSuccess: () => {
       // Invalidate broader policy caches so UI reflects the updated marker.
       queryClient.invalidateQueries({ queryKey: [QueryKeys.POLICIES] });
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.POLICY_COMPLIANCE] });
+      // No policy compliance grid remains to refresh.
       onSuccess?.();
     },
     onError,

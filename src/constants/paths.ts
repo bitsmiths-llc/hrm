@@ -29,7 +29,6 @@ export const paths = {
     payrollRun: (month: string) => `/admin/payroll/${month}`,
     policies: '/admin/policies',
     // Static, so it wins over `policyDetail`'s [id] segment.
-    policyCompliance: '/admin/policies/compliance',
     policyDetail: (id: string) => `/admin/policies/${id}`,
     reimbursements: '/admin/reimbursements',
     profile: '/admin/profile',

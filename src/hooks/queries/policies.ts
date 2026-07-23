@@ -11,7 +11,6 @@ import {
   ActivePolicy,
   Policy,
   PolicyAcknowledgment,
-  PolicyCompliance,
   PolicyLinkage,
   PolicyVersion,
 } from '@/types/hrm';
@@ -157,46 +156,7 @@ const fetchAllAcknowledgments = authQuery(
   },
 );
 
-/** The admin compliance roster. The RPC returns one flat row per active policy
- *  × active employee, already ordered by policy title then employee name; this
- *  only rolls those rows up per policy, preserving that order. Compliance math
- *  itself stays in the database — M4's widget calls the same RPC. */
-const fetchPolicyCompliance = authQuery(
-  async ({ supabase }): Promise<PolicyCompliance[]> => {
-    const { data, error } = await supabase.rpc('policy_compliance');
-    if (error) throw new Error(error.message);
-
-    const byPolicy = new Map<string, PolicyCompliance>();
-    for (const row of data) {
-      let policy = byPolicy.get(row.policy_id);
-      if (!policy) {
-        policy = {
-          policyId: row.policy_id,
-          title: row.title,
-          version: row.version,
-          employees: [],
-          acknowledgedCount: 0,
-          totalCount: 0,
-        };
-        byPolicy.set(row.policy_id, policy);
-      }
-
-      policy.employees.push({
-        employeeId: row.employee_id,
-        fullName: row.full_name,
-        acknowledged: row.acknowledged,
-        // Null whenever `acknowledged` is false — the generated RPC types
-        // widen every returned column to non-null, so this is only ever read
-        // behind that flag.
-        acknowledgedAt: row.acknowledged_at,
-      });
-      policy.totalCount += 1;
-      if (row.acknowledged) policy.acknowledgedCount += 1;
-    }
-
-    return [...byPolicy.values()];
-  },
-);
+/* Policy compliance query removed with the admin compliance UI. */
 
 /* Policy linkage query removed with Linkage UI — reconciliation markers are
    still written by the `markPolicyReviewed` action, but the linkage list was
@@ -238,14 +198,6 @@ export const useAllPolicyAcknowledgments = () =>
   useQuery({
     queryKey: [QueryKeys.POLICY_ACKNOWLEDGMENTS, 'all'],
     queryFn: () => fetchAllAcknowledgments(),
-  });
-
-/** Admin compliance grid: per active policy, who has and hasn't acknowledged
- *  the version that is active right now. */
-export const usePolicyCompliance = () =>
-  useQuery({
-    queryKey: [QueryKeys.POLICY_COMPLIANCE],
-    queryFn: () => fetchPolicyCompliance(),
   });
 
 /** Admin linkage panel: per policy, its active version vs the reconciled marker,

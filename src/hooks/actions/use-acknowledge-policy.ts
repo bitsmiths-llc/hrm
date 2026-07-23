@@ -32,7 +32,6 @@ export function useAcknowledgePolicy(onSuccess?: () => void) {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.POLICY_ACKNOWLEDGMENTS],
       });
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.POLICY_COMPLIANCE] });
       onSuccess?.();
     }
     return result;
