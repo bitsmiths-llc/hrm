@@ -76,6 +76,7 @@ export type Employee = {
   leavePoolDaysOverride: number | null;
   medicalAccrualMonthlyOverride: number | null; // PKR
   medicalCapOverride: number | null; // PKR
+  otMultiplierOverride: number | null;
   status: AccountStatus;
   /** Admin's note when a submission is returned to onboarding (BIT-10). */
   reviewNote: string | null;

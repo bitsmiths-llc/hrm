@@ -100,6 +100,7 @@ export function toEmployee(row: EmployeeRow): Employee {
     leavePoolDaysOverride: work?.leave_pool_days_override ?? null,
     medicalAccrualMonthlyOverride: work?.medical_accrual_monthly_override ?? null,
     medicalCapOverride: work?.medical_cap_override ?? null,
+    otMultiplierOverride: work?.ot_multiplier_override ?? null,
     status: row.account_status,
     reviewNote: row.review_note,
     invitedAt: row.invited_at ?? '',
