@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       bank_details: {
@@ -704,6 +729,10 @@ export type Database = {
           employee_id: string
           id: string
           medical: number
+          notification_attempts: number
+          notification_last_error: string | null
+          notification_sent_at: string | null
+          notification_status: Database["public"]["Enums"]["notification_status"]
           overtime_hours: number
           overtime_hours_override: number | null
           overtime_multiplier: number | null
@@ -727,6 +756,10 @@ export type Database = {
           employee_id: string
           id?: string
           medical?: number
+          notification_attempts?: number
+          notification_last_error?: string | null
+          notification_sent_at?: string | null
+          notification_status?: Database["public"]["Enums"]["notification_status"]
           overtime_hours?: number
           overtime_hours_override?: number | null
           overtime_multiplier?: number | null
@@ -750,6 +783,10 @@ export type Database = {
           employee_id?: string
           id?: string
           medical?: number
+          notification_attempts?: number
+          notification_last_error?: string | null
+          notification_sent_at?: string | null
+          notification_status?: Database["public"]["Enums"]["notification_status"]
           overtime_hours?: number
           overtime_hours_override?: number | null
           overtime_multiplier?: number | null
@@ -923,24 +960,33 @@ export type Database = {
       projects: {
         Row: {
           created_at: string
+          description: string
           id: string
           is_active: boolean
           name: string
+          tech_stack: string[]
           updated_at: string
+          url: string | null
         }
         Insert: {
           created_at?: string
+          description?: string
           id?: string
           is_active?: boolean
           name: string
+          tech_stack?: string[]
           updated_at?: string
+          url?: string | null
         }
         Update: {
           created_at?: string
+          description?: string
           id?: string
           is_active?: boolean
           name?: string
+          tech_stack?: string[]
           updated_at?: string
+          url?: string | null
         }
         Relationships: []
       }
@@ -1026,21 +1072,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      // Hand-typed: dashboard_summary() returns jsonb, which the generator
-      // widens to `Json`. The shape is fixed by the RPC (see
-      // 20260720120000_m4_dashboard_rpcs.sql) — keep this block when
-      // regenerating.
-      dashboard_summary: {
-        Args: never
-        Returns: {
-          pending_leave: number
-          pending_medical: number
-          pending_overtime: number
-          pending_onboarding: number
-          active_employees: number
-          payroll_cycle: Database["public"]["Enums"]["payroll_status"] | null
-        }
-      }
+      dashboard_summary: { Args: never; Returns: Json }
       employees_by_status: {
         Args: never
         Returns: {
@@ -1164,6 +1196,7 @@ export type Database = {
       employment_type: "full_time" | "part_time" | "contract" | "internship"
       leave_type: "paid" | "sick" | "unpaid" | "half_day"
       medical_for: "self" | "parent" | "spouse" | "child"
+      notification_status: "pending" | "sent" | "failed"
       payroll_status: "open" | "locked"
       policy_category: "leave" | "medical" | "overtime" | "general"
       request_status: "pending" | "approved" | "rejected"
@@ -1301,12 +1334,16 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       account_status: ["invited", "onboarding", "submitted", "active"],
       employment_type: ["full_time", "part_time", "contract", "internship"],
       leave_type: ["paid", "sick", "unpaid", "half_day"],
       medical_for: ["self", "parent", "spouse", "child"],
+      notification_status: ["pending", "sent", "failed"],
       payroll_status: ["open", "locked"],
       policy_category: ["leave", "medical", "overtime", "general"],
       request_status: ["pending", "approved", "rejected"],
