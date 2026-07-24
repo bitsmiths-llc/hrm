@@ -121,6 +121,14 @@ on employees
 for select
 using (public.is_admin());
 
+-- Allow authenticated employee users to read the employee roster for the
+-- Company directory and onboarding introduction screen. Admins continue to
+-- use employees_select_admin for full access.
+create policy employees_select_authenticated
+on employees
+for select
+using (role = 'employee');
+
 create policy employees_update_self
 on employees
 for update

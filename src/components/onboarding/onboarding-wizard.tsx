@@ -1,9 +1,9 @@
 'use client';
 
 import { RotateCcw } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { PageHeader } from '@/components/hrm/page-header';
 import {
   useSaveBank,
   useSavePersonal,
@@ -12,7 +12,6 @@ import {
 } from '@/hooks/actions/onboarding';
 import { useOnboardingData } from '@/hooks/queries/onboarding';
 import { useUser } from '@/hooks/queries/user';
-
 import { StepIndicator } from '@/components/hrm/step-indicator';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,7 +19,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 import { onboardingSteps } from '@/constants/onboarding';
-import { paths } from '@/constants/paths';
 import {
   type BankInfoInput,
   type PersonalInfoInput,
@@ -30,6 +28,7 @@ import {
 import { BankInfoStep } from './bank-info-step';
 import { ConsentStep } from './consent-step';
 import { DocumentsStep } from './documents-step';
+import { OnboardingComplete } from './onboarding-complete';
 import { PersonalInfoStep } from './personal-info-step';
 import { SocialAccountsStep } from './social-accounts-step';
 
@@ -41,7 +40,6 @@ const succeeded = (result?: {
 }) => !!result && !result.serverError && !result.validationErrors;
 
 export function OnboardingWizard() {
-  const router = useRouter();
   const [step, setStep] = useState(0);
 
   const { data: user } = useUser();
@@ -78,12 +76,23 @@ export function OnboardingWizard() {
       // refreshed app_metadata.account_status. Pull a new access token so the
       // middleware funnel sees `submitted` and routes to the pending page.
       await createSupabaseBrowserClient().auth.refreshSession();
-      router.replace(paths.employee.pending);
+      // Show the welcome/intro screen before leaving the wizard.
+      setStep(5);
     }
   };
 
+  // Step 5 is the completion screen — no header, no step indicator, no card wrapper.
+  if (step === 5) {
+    const firstName = onboarding.personal?.fullName?.split(' ')[0];
+    return <OnboardingComplete firstName={firstName} />;
+  }
+
   return (
     <div className='flex flex-col gap-6'>
+      <PageHeader
+        title='Onboarding'
+        description='Complete the five sections below to activate your account.'
+      />
       {!!onboarding.reviewNote && (
         <div className='flex gap-3 rounded-lg border border-border bg-muted/50 p-4'>
           <RotateCcw

@@ -102,6 +102,10 @@ export type RunPayslipRow = {
   taxDeduction: number;
   customFields: CustomField[];
   totalPay: number;
+  notificationStatus?: 'pending' | 'sent' | 'failed';
+  notificationSentAt?: string | null;
+  notificationLastError?: string | null;
+  notificationAttempts?: number;
 };
 
 function toRunPayslipRow(row: PayslipDbRow): RunPayslipRow {
@@ -133,6 +137,10 @@ function toRunPayslipRow(row: PayslipDbRow): RunPayslipRow {
     taxDeduction: row.tax_deduction,
     customFields: toCustomFields(row.custom_fields),
     totalPay: row.total_pay,
+    notificationStatus: (row as any).notification_status ?? undefined,
+    notificationSentAt: (row as any).notification_sent_at ?? null,
+    notificationLastError: (row as any).notification_last_error ?? null,
+    notificationAttempts: (row as any).notification_attempts ?? undefined,
   };
 }
 
@@ -162,8 +170,8 @@ export const runRowToPayslip = (row: RunPayslipRow): Payslip => ({
 const fetchRunPayslips = authQuery(
   async ({ supabase, params }) => {
     const { data, error } = await supabase
-      .from('payslips')
-      .select('*, employees(full_name)')
+        .from('payslips')
+        .select('*, employees(full_name)')
       .eq('payroll_run_id', params.runId);
     if (error) throw new Error(error.message);
     return data

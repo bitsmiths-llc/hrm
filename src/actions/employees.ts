@@ -404,6 +404,7 @@ export const updateEmploymentDetails = authActionClient
       medical_accrual_monthly_override:
         parsedInput.medicalAccrualMonthlyOverride ?? null,
       medical_cap_override: parsedInput.medicalCapOverride ?? null,
+      ot_multiplier_override: parsedInput.otMultiplierOverride ?? null,
     });
     if (error) throw new Error(error.message);
   });

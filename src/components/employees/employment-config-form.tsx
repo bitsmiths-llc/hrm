@@ -64,6 +64,7 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
       leavePoolDaysOverride: employee.leavePoolDaysOverride,
       medicalAccrualMonthlyOverride: employee.medicalAccrualMonthlyOverride,
       medicalCapOverride: employee.medicalCapOverride,
+      otMultiplierOverride: employee.otMultiplierOverride,
     },
   });
 
@@ -246,6 +247,33 @@ export function EmploymentConfigForm({ employee }: EmploymentConfigFormProps) {
                       ? ` (${formatCurrency(settings.medicalBalanceCap)})`
                       : ''}
                     .
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='otMultiplierOverride'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Overtime multiplier</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min={0.01}
+                      max={9.99}
+                      step={0.01}
+                      placeholder={
+                        settings ? `${settings.overtimeMultiplier}x` : 'Inherit'
+                      }
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Blank inherits the global overtime multiplier
+                    {settings ? ` (${settings.overtimeMultiplier}x)` : ''}.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

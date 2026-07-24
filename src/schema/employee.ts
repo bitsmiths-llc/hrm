@@ -48,6 +48,18 @@ const allowanceOverride = (unit: string, max?: number) => {
     .optional();
 };
 
+const multiplierOverride = () =>
+  z
+    .union([
+      z.literal('').transform(() => null),
+      z.coerce
+        .number({ invalid_type_error: 'Enter an overtime multiplier' })
+        .positive('Must be greater than 0')
+        .max(9.99, 'This looks too high'),
+    ])
+    .nullable()
+    .optional();
+
 export const employmentConfigSchema = z.object({
   employmentType: z.enum(['full_time', 'part_time', 'contract', 'internship'], {
     required_error: 'Select an employment type',
@@ -68,6 +80,7 @@ export const employmentConfigSchema = z.object({
   leavePoolDaysOverride: allowanceOverride('days', 60),
   medicalAccrualMonthlyOverride: allowanceOverride('PKR'),
   medicalCapOverride: allowanceOverride('PKR'),
+  otMultiplierOverride: multiplierOverride(),
 });
 
 // Input (form field values) and output (parsed) types differ only on the

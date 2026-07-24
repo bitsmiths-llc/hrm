@@ -28,10 +28,15 @@ type EmployeeListRow = Pick<
     Tables<'employment_details'>,
     'designation' | 'department' | 'employment_type'
   > | null;
+  socials: Pick<
+    Tables<'socials'>,
+    'github_url' | 'linkedin_url' | 'twitter_url'
+  > | null;
 };
 
 function toEmployeeListItem(row: EmployeeListRow): EmployeeListItem {
   const work = row.employment_details;
+  const social = row.socials;
   return {
     id: row.id,
     fullName: row.full_name ?? '',
@@ -41,6 +46,13 @@ function toEmployeeListItem(row: EmployeeListRow): EmployeeListItem {
     employmentType: work?.employment_type ?? 'full_time',
     status: row.account_status,
     invitedAt: row.invited_at ?? '',
+    social: social
+      ? {
+          github: social.github_url ?? '',
+          linkedin: social.linkedin_url ?? '',
+          twitter: social.twitter_url ?? undefined,
+        }
+      : null,
   };
 }
 
@@ -88,6 +100,7 @@ export function toEmployee(row: EmployeeRow): Employee {
     leavePoolDaysOverride: work?.leave_pool_days_override ?? null,
     medicalAccrualMonthlyOverride: work?.medical_accrual_monthly_override ?? null,
     medicalCapOverride: work?.medical_cap_override ?? null,
+    otMultiplierOverride: work?.ot_multiplier_override ?? null,
     status: row.account_status,
     reviewNote: row.review_note,
     invitedAt: row.invited_at ?? '',
@@ -102,7 +115,7 @@ const fetchEmployees = authQuery(async ({ supabase }) => {
   const { data, error } = await supabase
     .from('employees')
     .select(
-      'id, full_name, email, account_status, invited_at, employment_details(designation, department, employment_type)',
+      'id, full_name, email, account_status, invited_at, employment_details(designation, department, employment_type), socials(github_url, linkedin_url, twitter_url)',
     )
     .eq('role', 'employee')
     .order('created_at', { ascending: false });

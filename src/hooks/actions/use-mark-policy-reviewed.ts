@@ -16,7 +16,9 @@ export function useMarkPolicyReviewed(onSuccess?: () => void) {
   const queryClient = useQueryClient();
   return useAction(markPolicyReviewed, {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.POLICY_LINKAGE] });
+      // Invalidate broader policy caches so UI reflects the updated marker.
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.POLICIES] });
+      // No policy compliance grid remains to refresh.
       onSuccess?.();
     },
     onError,

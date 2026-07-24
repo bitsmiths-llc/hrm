@@ -20,7 +20,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { highlightChangedBlocks } from '@/lib/policy-diff';
+import {
+  getPolicyDiffSummary,
+  highlightChangedBlocks,
+} from '@/lib/policy-diff';
 
 import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
@@ -62,16 +65,14 @@ export function PolicyDetailPageContent({
   // Diffed against whatever version the employee last acknowledged (not
   // necessarily the immediately-previous one, if they skipped an update),
   // so the highlighting always reflects everything new to them.
-  const previousAckedVersion = ack
-    ? policy.versions.find((v) => v.version === ack.acknowledgedVersion)
-    : undefined;
+  const previousVersion = policy.versions.at(-2);
   const displayHtml =
-    !upToDate && previousAckedVersion
-      ? highlightChangedBlocks(
-          previousAckedVersion.contentHtml,
-          latest.contentHtml,
-        )
+    previousVersion
+      ? highlightChangedBlocks(previousVersion.contentHtml, latest.contentHtml)
       : latest.contentHtml;
+  const diffSummary = previousVersion
+    ? getPolicyDiffSummary(previousVersion.contentHtml, latest.contentHtml)
+    : 0;
 
   const handleAcknowledge = async () => {
     const result = await executeAsync({ policyVersionId: latest.id });
@@ -124,13 +125,27 @@ export function PolicyDetailPageContent({
 
       <Card>
         <CardContent className='p-6'>
+          {diffSummary > 0 && (
+            <div className='mb-4 flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300'>
+              <Megaphone className='size-4 shrink-0' aria-hidden />
+              <span>
+                {diffSummary} change{diffSummary === 1 ? '' : 's'} since the
+                previous version are highlighted below.
+              </span>
+            </div>
+          )}
           <PolicyContent html={displayHtml} />
         </CardContent>
       </Card>
 
-      {upToDate && !!ack && (
+      {!!ack && (
         <p className='text-xs text-muted-foreground'>
-          Acknowledged on {format(ack.acknowledgedAt, 'MMM d, yyyy')}
+          {upToDate
+            ? `Acknowledged on ${format(ack.acknowledgedAt, 'MMM d, yyyy')}`
+            : `Last acknowledged version ${ack.acknowledgedVersion} on ${format(
+                ack.acknowledgedAt,
+                'MMM d, yyyy',
+              )}`}
         </p>
       )}
     </>

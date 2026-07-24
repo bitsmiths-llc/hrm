@@ -215,28 +215,28 @@ export function PayrollCyclePageContent({
                     isLoading={unlock.isPending}
                     onConfirm={() => unlock.execute({ run_id: run.id })}
                   />
-                  <ConfirmDialog
-                    trigger={
-                      <Button
-                        variant='outline'
-                        iconLeft={Send}
-                        disabled={busy || gridRows.length === 0}
-                      >
-                        Send notifications
-                      </Button>
-                    }
-                    title='Send payslip notifications?'
-                    description='Emails every employee in this run their payslip PDF. Sending again re-sends to everyone.'
-                    confirmLabel='Send notifications'
-                    isLoading={sendAll.isPending}
-                    onConfirm={() => sendAll.execute({ run_id: run.id })}
-                  />
+                  {/* Send notifications button moved to the end and styled primary */}
                 </>
               )}
               <ExportPayoneerSheet
                 runId={run.id}
                 rows={exportRows}
                 disabled={!locked}
+              />
+              <ConfirmDialog
+                trigger={
+                  <Button
+                    iconLeft={Send}
+                    disabled={busy || gridRows.length === 0}
+                  >
+                    Send notifications
+                  </Button>
+                }
+                title='Send payslip notifications?'
+                description='Emails every employee in this run their payslip PDF. Sending again re-sends to everyone.'
+                confirmLabel='Send notifications'
+                isLoading={sendAll.isPending}
+                onConfirm={() => sendAll.execute({ run_id: run.id })}
               />
             </div>
           </div>

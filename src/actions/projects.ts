@@ -2,7 +2,7 @@
 
 import { authActionClient } from '@/lib/server/safe-action';
 
-import { createProjectSchema, projectIdSchema } from '@/schema/project';
+import { createProjectSchema, projectIdSchema, toggleProjectSchema } from '@/schema/project';
 
 /** Admin gate. The role check is server-side even though RLS also enforces it
  *  (mirrors `actions/overtime.ts`). */
@@ -21,7 +21,13 @@ export const createProject = authActionClient
 
     const { data, error } = await supabase
       .from('projects')
-      .insert({ name: parsedInput.name })
+      .insert({
+        name: parsedInput.name,
+        description: parsedInput.description,
+        tech_stack: parsedInput.techStack.split(',').map((t) => t.trim()).filter(Boolean),
+        url: parsedInput.url || null,
+        is_active: true,
+      })
       .select('id, name')
       .single();
     if (error) {
@@ -36,9 +42,27 @@ export const createProject = authActionClient
   });
 
 /**
- * "Remove" a project (admin-only). Soft delete via `is_active = false` so
+ * Toggle a project's active state (admin-only). Soft delete via `is_active = false` so
  * historical overtime logs keep resolving through their FK; the dropdown queries
  * only active projects.
+ */
+export const toggleProject = authActionClient
+  .schema(toggleProjectSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { error } = await supabase
+      .from('projects')
+      .update({ is_active: parsedInput.active })
+      .eq('id', parsedInput.projectId);
+    if (error) throw new Error(error.message);
+
+    return { id: parsedInput.projectId };
+  });
+
+/**
+ * "Remove" a project (admin-only). Same as toggleProject with active = false, kept for backwards compatibility
+ * if needed, or we can just replace it.
  */
 export const deactivateProject = authActionClient
   .schema(projectIdSchema)
@@ -50,6 +74,32 @@ export const deactivateProject = authActionClient
       .update({ is_active: false })
       .eq('id', parsedInput.projectId);
     if (error) throw new Error(error.message);
+
+    return { id: parsedInput.projectId };
+  });
+
+/**
+ * Hard-delete a project (admin-only). The FK from overtime_logs prevents
+ * deleting a project that has been referenced by a log — Postgres returns
+ * error code 23503. We surface that as a user-friendly message so admins know
+ * to deactivate rather than delete.
+ */
+export const deleteProject = authActionClient
+  .schema(projectIdSchema)
+  .action(async ({ parsedInput, ctx: { supabase, authUser } }) => {
+    requireAdmin(authUser.user?.app_metadata.role);
+
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', parsedInput.projectId);
+    if (error) {
+      throw new Error(
+        error.code === '23503'
+          ? 'This project has overtime logs and cannot be deleted — deactivate it instead.'
+          : error.message,
+      );
+    }
 
     return { id: parsedInput.projectId };
   });

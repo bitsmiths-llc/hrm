@@ -109,12 +109,14 @@ export function ApprovalsQueue() {
       <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
         <TabsList>
           <TabsTrigger value='all'>All ({items.length})</TabsTrigger>
-          {(Object.keys(approvalKindLabels) as ApprovalKind[]).map((kind) => (
-            <TabsTrigger key={kind} value={kind}>
-              {approvalKindLabels[kind]} (
-              {items.filter((i) => i.kind === kind).length})
-            </TabsTrigger>
-          ))}
+          {(Object.keys(approvalKindLabels) as ApprovalKind[])
+            .filter((kind) => kind !== 'onboarding')
+            .map((kind) => (
+              <TabsTrigger key={kind} value={kind}>
+                {approvalKindLabels[kind]} (
+                {items.filter((i) => i.kind === kind).length})
+              </TabsTrigger>
+            ))}
         </TabsList>
       </Tabs>
 

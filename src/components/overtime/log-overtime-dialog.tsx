@@ -37,10 +37,12 @@ import { type OvertimeLogInput, overtimeLogSchema } from '@/schema/overtime';
 export function LogOvertimeDialog() {
   const [open, setOpen] = useState(false);
   const { data: projects } = useProjects();
-  const projectOptions = (projects ?? []).map((project) => ({
-    label: project.name,
-    value: project.id,
-  }));
+  const projectOptions = (projects ?? [])
+    .filter((project) => project.active)
+    .map((project) => ({
+      label: project.name,
+      value: project.id,
+    }));
 
   const form = useForm<OvertimeLogInput>({
     resolver: zodResolver(overtimeLogSchema),
@@ -111,6 +113,7 @@ export function LogOvertimeDialog() {
               label='Project'
               options={projectOptions}
               placeholder='Select a project'
+
             />
             <FormField
               control={form.control}

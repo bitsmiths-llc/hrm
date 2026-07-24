@@ -1,5 +1,6 @@
 import {
   Banknote,
+  Building2,
   CheckSquare,
   Clock,
   FileText,
@@ -34,6 +35,7 @@ export const employeeNav: NavConfig = {
       href: paths.employee.policies,
       icon: FileText,
     },
+    { label: 'Company', href: paths.employee.company, icon: Building2 },
     { label: 'Profile', href: paths.employee.profile, icon: UserCircle },
   ],
 };
@@ -59,7 +61,6 @@ export const adminNav: NavConfig = {
       icon: Wallet,
       requiresFlag: 'reimbursementsEnabled',
     },
-    { label: 'Settings', href: paths.admin.settings, icon: Settings },
     { label: 'Profile', href: paths.admin.profile, icon: UserCircle },
   ],
 };

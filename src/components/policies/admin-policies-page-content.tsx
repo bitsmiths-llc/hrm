@@ -22,7 +22,7 @@ import { policyCategoryLabels } from '@/constants/hrm-labels';
 import { paths } from '@/constants/paths';
 
 import { CreatePolicyDialog } from './create-policy-dialog';
-import { PolicyLinkagePanel } from './linkage-panel';
+// Linkage panel removed — configuration lives under the Configuration tab.
 
 const TAB_VALUES = ['documents', 'configuration', 'onboarding-email'] as const;
 
@@ -50,18 +50,12 @@ export function AdminPoliciesPageContent() {
       <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value='documents'>Documents</TabsTrigger>
-          <TabsTrigger value='linkage'>Linkage</TabsTrigger>
           <TabsTrigger value='configuration'>Configuration</TabsTrigger>
           <TabsTrigger value='onboarding-email'>Onboarding Email</TabsTrigger>
         </TabsList>
 
         <TabsContent value='documents' className='flex flex-col gap-4'>
           <div className='flex justify-end gap-2'>
-            <Link href={paths.admin.policyCompliance}>
-              <Button variant='outline' iconLeft={ClipboardCheck}>
-                Compliance
-              </Button>
-            </Link>
             <Button onClick={() => setCreateOpen(true)}>New Policy</Button>
           </div>
           {isLoading ? (
@@ -102,9 +96,7 @@ export function AdminPoliciesPageContent() {
           )}
         </TabsContent>
 
-        <TabsContent value='linkage'>
-          <PolicyLinkagePanel />
-        </TabsContent>
+        {/* Linkage tab removed; configuration is on the 'Configuration' tab. */}
 
         <TabsContent value='configuration'>
           <p className='mb-4 text-sm text-muted-foreground'>

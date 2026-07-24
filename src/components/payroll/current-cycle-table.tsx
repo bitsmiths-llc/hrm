@@ -4,6 +4,7 @@ import { type RunPayslipRow, runRowToPayslip } from '@/hooks/queries/payroll';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -12,11 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { formatCurrency } from '@/utils/number-functions';
 
@@ -86,11 +83,13 @@ export function CurrentCycleTable({
           </TableRow>
           <TableRow>
             <TableHead className='w-10'>
-              <Checkbox
-                checked={allSelected}
-                onCheckedChange={onToggleAll}
-                aria-label='Select all rows'
-              />
+              {!locked && (
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={onToggleAll}
+                  aria-label='Select all rows'
+                />
+              )}
             </TableHead>
             <TableHead>Employee</TableHead>
             <TableHead className='border-l border-border text-center'>
@@ -108,6 +107,7 @@ export function CurrentCycleTable({
             <TableHead className='border-l border-border text-center'>
               Net Salary
             </TableHead>
+            <TableHead className='text-center'>Notification</TableHead>
             <TableHead className='text-center'>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -132,12 +132,15 @@ export function CurrentCycleTable({
             return (
               <TableRow key={row.id}>
                 <TableCell>
-                  <Checkbox
-                    checked={selectedIds.has(row.id)}
-                    onCheckedChange={() => onToggleRow(row.id)}
-                    aria-label={`Select ${row.employeeName}`}
-                  />
+                  {!locked ? (
+                    <Checkbox
+                      checked={selectedIds.has(row.id)}
+                      onCheckedChange={() => onToggleRow(row.id)}
+                      aria-label={`Select ${row.employeeName}`}
+                    />
+                  ) : null}
                 </TableCell>
+                
                 <TableCell className='font-medium'>
                   {row.employeeName || '—'}
                 </TableCell>
@@ -282,6 +285,33 @@ export function CurrentCycleTable({
                 </TableCell>
                 <TableCell className='border-l border-border text-center font-semibold'>
                   {formatCurrency(row.totalPay)}
+                </TableCell>
+                <TableCell className='text-center'>
+                  <div className='flex items-center justify-center'>
+                    {row.notificationStatus === 'sent' ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant='default'>Sent</Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {row.notificationSentAt
+                            ? new Date(row.notificationSentAt).toLocaleString()
+                            : 'Sent'}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : row.notificationStatus === 'failed' ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge variant='destructive'>Failed</Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {row.notificationLastError ?? 'Error sending'}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Badge variant='secondary'>Pending</Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className='flex items-center justify-center gap-1'>

@@ -70,21 +70,55 @@ async function dispatchInvoices(payslipIds: string[]) {
         to,
         fullName: payslip.employeeName || null,
         cycleLabel: format(`${payslip.cycleMonth}-01`, 'MMMM yyyy'),
-        // `formatCurrency` renders a falsy amount as '' — a zero-net payslip
-        // still deserves a figure rather than a blank callout.
-        netPayLabel: formatCurrency(payslip.total) || 'Rs 0',
         payslipsUrl,
         pdf: { filename: payslipFileName(payslip), content },
       });
     }),
   );
 
-  const failures = results.filter((r) => r.status === 'rejected');
-  failures.forEach((failure) =>
-    Logger.error('Failed to send invoice email', failure.reason),
-  );
+  // Update DB per-recipient so UI can surface sent/failed statuses.
+  let sent = 0;
+  let failed = 0;
+  for (let i = 0; i < (rows ?? []).length; i += 1) {
+    const row = (rows ?? [])[i];
+    const res = results[i];
+    try {
+      if (res.status === 'fulfilled') {
+        sent += 1;
+        const { error: updateErr } = await supabaseAdmin
+          .from('payslips')
+          .update({
+            notification_status: 'sent',
+            notification_sent_at: new Date().toISOString(),
+            notification_attempts: ((row as any).notification_attempts ?? 0) + 1,
+            notification_last_error: null,
+          } as any)
+          .eq('id', row.id);
+        if (updateErr) Logger.error('Failed to update payslip notification status', updateErr.message);
+      } else {
+        failed += 1;
+        const errorText = (res as PromiseRejectedResult).reason?.message
+          ? String((res as PromiseRejectedResult).reason?.message)
+          : 'Unknown error';
+        const { error: updateErr } = await supabaseAdmin
+          .from('payslips')
+          .update({
+            notification_status: 'failed',
+            notification_attempts: ((row as any).notification_attempts ?? 0) + 1,
+            notification_last_error: errorText.slice(0, 1024),
+          } as any)
+          .eq('id', row.id);
+        if (updateErr) Logger.error('Failed to update payslip notification status', updateErr.message);
+      }
+    } catch (e) {
+      Logger.error('Error updating payslip notification status', e);
+    }
+  }
 
-  return { sent: results.length - failures.length, failed: failures.length };
+  const failures = results.filter((r) => r.status === 'rejected');
+  failures.forEach((failure) => Logger.error('Failed to send invoice email', failure));
+
+  return { sent, failed };
 }
 
 /** Last calendar day of the month a first-of-month ISO date falls in. Derived
