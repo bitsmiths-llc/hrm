@@ -17,6 +17,14 @@ export default defineConfig({
   test: {
     projects: [
       {
+        test: {
+          name: 'unit',
+          environment: 'jsdom',
+          include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+          exclude: ['src/**/*.stories.*', 'src/**/*.mdx'],
+        },
+      },
+      {
         extends: true,
         plugins: [
           // The plugin will run tests for the stories defined in your Storybook config
@@ -25,6 +33,7 @@ export default defineConfig({
         ],
         test: {
           name: 'storybook',
+          include: ['src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
           browser: {
             enabled: true,
             headless: true,
