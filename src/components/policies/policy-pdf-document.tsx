@@ -14,6 +14,7 @@ import {
   payslipPdfContact as contact,
   payslipPdfMetrics as metrics,
 } from '@/constants/payslip-pdf';
+
 import { Policy, PolicyVersion } from '@/types/hrm';
 
 const styles = StyleSheet.create({

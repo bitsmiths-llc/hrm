@@ -1,7 +1,7 @@
 import { Button, Heading, Section, Text } from '@react-email/components';
 
 import { EmailLayout } from '@/emails/components/email-layout';
-import { brand, emailStyles } from '@/emails/theme';
+import { emailStyles } from '@/emails/theme';
 
 export type InvoiceEmailProps = {
   /** Full name of the employee, when known. */

@@ -3,7 +3,6 @@
 import { RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
-import { PageHeader } from '@/components/hrm/page-header';
 import {
   useSaveBank,
   useSavePersonal,
@@ -12,6 +11,8 @@ import {
 } from '@/hooks/actions/onboarding';
 import { useOnboardingData } from '@/hooks/queries/onboarding';
 import { useUser } from '@/hooks/queries/user';
+
+import { PageHeader } from '@/components/hrm/page-header';
 import { StepIndicator } from '@/components/hrm/step-indicator';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';

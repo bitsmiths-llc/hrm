@@ -137,10 +137,10 @@ function toRunPayslipRow(row: PayslipDbRow): RunPayslipRow {
     taxDeduction: row.tax_deduction,
     customFields: toCustomFields(row.custom_fields),
     totalPay: row.total_pay,
-    notificationStatus: (row as any).notification_status ?? undefined,
-    notificationSentAt: (row as any).notification_sent_at ?? null,
-    notificationLastError: (row as any).notification_last_error ?? null,
-    notificationAttempts: (row as any).notification_attempts ?? undefined,
+    notificationStatus: row.notification_status,
+    notificationSentAt: row.notification_sent_at,
+    notificationLastError: row.notification_last_error,
+    notificationAttempts: row.notification_attempts,
   };
 }
 

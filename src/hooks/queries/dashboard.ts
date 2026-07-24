@@ -8,23 +8,37 @@ import {
   AccountStatus,
   DashboardSummary,
   EmployeeStatusCount,
+  PayrollCycleStatus,
 } from '@/types/hrm';
 
 // Admin home: the six org-wide counters in a single guarded RPC round-trip. The
 // RPC is security definer + asserts is_admin() itself (RLS is bypassed), so a
 // non-admin gets a 42501 rather than a partial read — the (admin) route guard
 // keeps them off the page in the first place.
+type DashboardSummaryRow = {
+  pending_leave: number;
+  pending_medical: number;
+  pending_overtime: number;
+  pending_onboarding: number;
+  active_employees: number;
+  payroll_cycle: PayrollCycleStatus | null;
+};
+
 const fetchDashboardSummary = authQuery(
   async ({ supabase }): Promise<DashboardSummary> => {
     const { data, error } = await supabase.rpc('dashboard_summary');
     if (error) throw new Error(error.message);
+    if (!data || typeof data !== 'object' || Array.isArray(data))
+      throw new Error('dashboard_summary returned no data');
+
+    const row = data as DashboardSummaryRow;
     return {
-      pendingLeave: data.pending_leave,
-      pendingMedical: data.pending_medical,
-      pendingOvertime: data.pending_overtime,
-      pendingOnboarding: data.pending_onboarding,
-      activeEmployees: data.active_employees,
-      payrollCycle: data.payroll_cycle,
+      pendingLeave: row.pending_leave,
+      pendingMedical: row.pending_medical,
+      pendingOvertime: row.pending_overtime,
+      pendingOnboarding: row.pending_onboarding,
+      activeEmployees: row.active_employees,
+      payrollCycle: row.payroll_cycle,
     };
   },
 );
@@ -42,7 +56,7 @@ const fetchEmployeesByStatus = authQuery(
   async ({ supabase }): Promise<EmployeeStatusCount[]> => {
     const { data, error } = await supabase.rpc('employees_by_status');
     if (error) throw new Error(error.message);
-    return data.map((row) => ({
+    return (data ?? []).map((row) => ({
       status: row.status as AccountStatus,
       count: row.count,
     }));

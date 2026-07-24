@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Palmtree,
   Receipt,
-  Settings,
   UserCircle,
   Users,
   Wallet,

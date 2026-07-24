@@ -1,7 +1,5 @@
 import { formatCurrency, formatNumber } from '@/utils/number-functions';
 
-import { paths } from '@/constants/paths';
-
 import type { HrmSettings } from '@/types/hrm';
 
 /** The enforced-rule settings a policy can surface — the subset of `HrmSettings`

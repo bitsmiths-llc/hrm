@@ -11,7 +11,6 @@ import { sendInvoiceEmail } from '@/lib/resend/send-invoice-emails';
 import { authActionClient } from '@/lib/server/safe-action';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import Logger from '@/utils/logger';
-import { formatCurrency } from '@/utils/number-functions';
 
 import { appConfig } from '@/config/app';
 import { paths } from '@/constants/paths';
@@ -90,9 +89,9 @@ async function dispatchInvoices(payslipIds: string[]) {
           .update({
             notification_status: 'sent',
             notification_sent_at: new Date().toISOString(),
-            notification_attempts: ((row as any).notification_attempts ?? 0) + 1,
+            notification_attempts: (row.notification_attempts ?? 0) + 1,
             notification_last_error: null,
-          } as any)
+          })
           .eq('id', row.id);
         if (updateErr) Logger.error('Failed to update payslip notification status', updateErr.message);
       } else {
@@ -104,9 +103,9 @@ async function dispatchInvoices(payslipIds: string[]) {
           .from('payslips')
           .update({
             notification_status: 'failed',
-            notification_attempts: ((row as any).notification_attempts ?? 0) + 1,
+            notification_attempts: (row.notification_attempts ?? 0) + 1,
             notification_last_error: errorText.slice(0, 1024),
-          } as any)
+          })
           .eq('id', row.id);
         if (updateErr) Logger.error('Failed to update payslip notification status', updateErr.message);
       }

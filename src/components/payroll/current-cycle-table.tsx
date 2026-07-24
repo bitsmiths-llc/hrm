@@ -2,9 +2,9 @@ import { RotateCcw } from 'lucide-react';
 
 import { type RunPayslipRow, runRowToPayslip } from '@/hooks/queries/payroll';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,

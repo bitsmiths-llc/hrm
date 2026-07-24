@@ -54,10 +54,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
+import { type CreateProjectInput, createProjectSchema } from '@/schema/project';
+
 import { SettingsCard } from './settings-card';
 
 import { Project } from '@/types/hrm';
-import { type CreateProjectInput, createProjectSchema } from '@/schema/project';
 
 /** Employees pick from this list when logging overtime (see
  *  log-overtime-dialog.tsx). Admins add or remove entries here; "remove" is a

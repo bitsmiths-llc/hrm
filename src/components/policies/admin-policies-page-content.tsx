@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { ClipboardCheck, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';

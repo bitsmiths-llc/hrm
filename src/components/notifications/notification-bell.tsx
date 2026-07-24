@@ -2,7 +2,6 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { Bell } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { useMarkNotificationRead } from '@/hooks/actions/use-mark-notification-read';
@@ -17,8 +16,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { Notification } from '@/types/hrm';
-
 /** Badges beyond 9 collapse to "9+" so the count never widens the bell. */
 const formatBadge = (count: number) => (count > 9 ? '9+' : String(count));
 
@@ -31,18 +28,11 @@ const formatBadge = (count: number) => (count > 9 ? '9+' : String(count));
  * 50-row feed cap); the per-row unread dot comes from each row's `readAt`.
  */
 export function NotificationBell() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
 
   const { data: notifications, isLoading } = useNotifications();
   const { data: unreadCount = 0 } = useUnreadCount();
   const markRead = useMarkNotificationRead();
-
-  const handleSelect = (notification: Notification) => {
-    if (!notification.readAt) markRead.execute({ id: notification.id });
-    setOpen(false);
-    if (notification.link) router.push(notification.link);
-  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

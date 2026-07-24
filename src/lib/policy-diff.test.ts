@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  POLICY_DIFF_HIGHLIGHT_CLASS,
   getPolicyDiffSummary,
   highlightChangedBlocks,
+  POLICY_DIFF_HIGHLIGHT_CLASS,
 } from './policy-diff';
 
 describe('policy diff helpers', () => {
